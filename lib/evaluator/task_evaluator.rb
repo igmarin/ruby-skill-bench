@@ -75,7 +75,14 @@ module Evaluator
                                             { success: false, response: { error: { message: 'No source path inferred' } } }
                                           end
 
-      judge_score = Judge.call(task_content, criteria_content, baseline_code_diff, context_code_diff, @client_params)
+      judge_score = if source_path
+                      Judge.call(task_content, criteria_content, baseline_code_diff, context_code_diff, @client_params)
+                    else
+                      { success: false, response: { error: { message: 'No source path - judge skipped' } } }
+                    end
+
+      # Propagate Judge failures
+      return judge_score unless judge_score[:success]
 
       {
         path: relative_path_str,

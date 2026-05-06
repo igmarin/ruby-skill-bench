@@ -5,6 +5,7 @@ require_relative 'clients/provider_registry'
 require_relative 'clients/providers/openai'
 require_relative 'clients/providers/gemini'
 require_relative 'clients/providers/ollama'
+require_relative 'clients/providers/anthropic'
 require_relative 'clients/providers/null_client'
 
 module Evaluator

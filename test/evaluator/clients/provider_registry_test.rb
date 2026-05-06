@@ -2,11 +2,19 @@
 
 require 'test_helper'
 require_relative '../../../lib/clients/provider_registry'
+require_relative '../../../lib/clients/providers/null_client'
 
 class ProviderRegistryTest < Minitest::Test
   def setup
-    # Clear the registry before each test
+    # Save original registry state
+    @original_providers = Evaluator::Clients::ProviderRegistry.instance_variable_get(:@providers).dup
+    # Clear the registry for test isolation
     Evaluator::Clients::ProviderRegistry.instance_variable_set(:@providers, {})
+  end
+
+  def teardown
+    # Restore original registry state
+    Evaluator::Clients::ProviderRegistry.instance_variable_set(:@providers, @original_providers)
   end
 
   def test_register_and_for

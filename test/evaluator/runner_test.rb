@@ -76,7 +76,9 @@ module Evaluator
       assert result[:success]
       assert_equal 'multiple (batch run)', result[:response][:source_path]
       assert_equal 1, result[:response][:tasks].size
-      assert_equal 'skills/ruby-service-objects', SourcePathResolver.call(eval_folder_path: result[:response][:tasks].first[:path])
+      task_result = result[:response][:tasks].first[:response]
+
+      assert_equal 'skills/ruby-service-objects', SourcePathResolver.call(eval_folder_path: task_result[:path])
     end
 
     def test_call_infers_source_path_for_workflow_evals
@@ -108,19 +110,18 @@ module Evaluator
       assert_equal 'skills/ruby-service-objects', result[:response][:source_path]
     end
 
-    def test_call_succeeds_without_context_when_source_path_cannot_be_inferred
+    def test_call_fails_without_context_when_source_path_cannot_be_inferred
       create_eval_fixture('tmp/custom-evals/unmapped-task')
 
       # Both modes are invoked; we allow at least once to cover baseline and (potential) context
       AgentRunner.expects(:call).at_least_once.returns(%w[output diff])
-      Judge.expects(:call).at_least_once.returns({ success: true, response: { content: '{}' } })
 
       result = Runner.call(
         eval_folder_path: 'tmp/custom-evals/unmapped-task',
         base_path: @base_path
       )
 
-      assert result[:success]
+      refute result[:success]
       assert_equal 'multiple (batch run)', result[:response][:source_path]
     end
 
@@ -134,7 +135,7 @@ module Evaluator
     end
 
     def expect_single_task_run(source_path:)
-      judge_result = '{"baseline_score":60,"context_score":85,"reasoning":"context is better"}'
+      judge_result = { success: true, response: { content: '{"baseline_score":60,"context_score":85,"reasoning":"context is better"}' } }
 
       AgentRunner.expects(:call).with(has_entry(mode: :baseline)).returns(
         ['baseline output', 'diff-baseline']

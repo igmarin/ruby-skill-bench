@@ -20,6 +20,8 @@ class OllamaProviderTest < Minitest::Test
   end
 
   def test_base_url_defaults_to_localhost
+    Evaluator::Config.reset
+
     provider = Evaluator::Clients::Providers::Ollama.new(system_prompt: 'test', messages: [])
 
     assert_equal 'http://localhost:11434', provider.send(:base_url)

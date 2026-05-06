@@ -44,16 +44,24 @@ module Evaluator
       end
 
       results = Parallel.map(task_dirs, in_threads: 4) do |task_dir|
-        TaskEvaluator.call(
+        task_result = TaskEvaluator.call(
           full_eval_path: task_dir,
           base_path: @base_path,
           skill_path: @skill_path,
           client_params: @client_params
         )
+        # Normalize to uniform envelope
+        if task_result.key?(:success)
+          task_result
+        else
+          { success: true, response: task_result }
+        end
       end
 
+      overall_success = results.all? { |task_result| task_result[:success] }
+
       {
-        success: true,
+        success: overall_success,
         response: {
           source_path: @skill_path || 'multiple (batch run)',
           tasks: results

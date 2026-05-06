@@ -10,39 +10,36 @@ module Evaluator
         Evaluator::Tools::ReadFile.expects(:call).with('test.txt', anything).returns('file content')
         result = Dispatcher.call('read_file', '{"path":"test.txt"}', Dir.pwd, nil)
 
-        assert result[:success]
-        assert_equal 'file content', result[:response][:result]
+        assert_equal 'file content', result
       end
 
       def test_execute_write_file
         Evaluator::Tools::WriteFile.expects(:call).with('new_file.txt', 'New text', anything).returns('success')
         result = Dispatcher.call('write_file', '{"path":"new_file.txt", "content":"New text"}', Dir.pwd, nil)
 
-        assert result[:success]
-        assert_equal 'success', result[:response][:result]
+        assert_equal 'success', result
       end
 
       def test_execute_run_command
         Evaluator::Tools::RunCommand.expects(:call).with('echo test', anything, nil).returns('command output')
         result = Dispatcher.call('run_command', '{"command":"echo test"}', Dir.pwd, nil)
 
-        assert result[:success]
-        assert_equal 'command output', result[:response][:result]
+        assert_equal 'command output', result
       end
 
       def test_execute_unknown_tool
-        result = Dispatcher.call('unknown', '{}', Dir.pwd)
-
-        refute result[:success]
-        assert_match(/Unknown tool 'unknown'/, result[:response][:error][:message])
+        error = assert_raises(StandardError) do
+          Dispatcher.call('unknown', '{}', Dir.pwd)
+        end
+        assert_match(/Unknown tool/, error.message)
       end
 
       def test_execute_rescues_standard_error
         Evaluator::Tools::ReadFile.expects(:call).raises(StandardError, 'Oops')
-        result = Dispatcher.call('read_file', '{"path":"test.txt"}', Dir.pwd, nil)
-
-        refute result[:success]
-        assert_equal 'Error executing tool: Oops', result[:response][:error][:message]
+        error = assert_raises(StandardError) do
+          Dispatcher.call('read_file', '{"path":"test.txt"}', Dir.pwd, nil)
+        end
+        assert_equal 'Oops', error.message
       end
     end
   end

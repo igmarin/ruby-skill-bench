@@ -16,19 +16,18 @@ module Evaluator
       # @param arguments [String] A JSON string containing the arguments for the tool.
       # @param working_dir [String] The base directory in which the tool should operate.
       # @param container_id [String, nil] The Docker container ID for isolated execution.
-      # @return [Hash] Result with :success key and :response containing tool output or error.
-      # @raise [StandardError] when execution or argument parsing fails (rescued internally)
+      # @return tool execution result or raises exception.
+      # @raise [StandardError] when execution or argument parsing fails
       def self.call(name, arguments, working_dir, container_id = nil)
         args = ArgumentParser.call(arguments)
         return args if args.is_a?(Hash) && args[:success] == false
 
         working_dir_path = Pathname.new(working_dir).expand_path
 
-        result = execute_tool(name, args, working_dir_path, container_id)
-        { success: true, response: { result: result } }
+        execute_tool(name, args, working_dir_path, container_id)
       rescue StandardError => e
         log_error(e)
-        { success: false, response: { error: { message: "Error executing tool: #{e.message}" } } }
+        raise
       end
 
       class << self

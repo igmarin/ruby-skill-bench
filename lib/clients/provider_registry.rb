@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'providers/null_client'
+
 module Evaluator
   module Clients
     # ProviderRegistry manages registration and lookup of LLM provider classes.

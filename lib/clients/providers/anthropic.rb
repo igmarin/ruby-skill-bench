@@ -65,11 +65,17 @@ module Evaluator
         private
 
         # Extracts the message from Anthropic's response format.
+        # Iterates over content blocks to find the first text block.
         #
         # @param body [Hash] The parsed JSON response body.
-        # @return [Hash, nil]
+        # @return [Hash, nil] the text content or nil if not found
         def extract_message(body)
-          body.dig('content', 0, 'text')
+          content = body['content']
+          return nil unless content.is_a?(Array)
+
+          # :reek:disable DuplicateMethodCall
+          text_block = content.find { |block| block.is_a?(Hash) && block['type'] == 'text' && block.key?('text') }
+          text_block&.dig('text')
         end
       end
     end
