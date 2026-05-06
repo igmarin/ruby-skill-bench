@@ -95,6 +95,7 @@ detectors:
       - "Evaluator::EvaluateCommand#print_task_result"
       - "Evaluator::HistoryRecorder#normalize_score"
       - "Evaluator::HistoryRecorder#self.summarize"
+      - "Evaluator::Clients::Providers::Anthropic#parse_tool_arguments"
   NestedIterators:
     exclude:
       - "Evaluator::EvaluateCommand#parse_options"

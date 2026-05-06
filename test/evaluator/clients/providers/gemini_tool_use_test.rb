@@ -12,6 +12,7 @@ module Evaluator
           config.set_provider_api_key(:gemini, 'test_gemini_key')
           config.set_provider_project_id(:gemini, 'test-project')
           config.set_provider_location(:gemini, 'us-central1')
+          config.set_provider_model(:gemini, 'test-model')
         end
       end
 

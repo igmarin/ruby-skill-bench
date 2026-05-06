@@ -98,7 +98,7 @@ Every client, regardless of its internal complexity, guarantees a standard respo
 ## 🧪 Adding Your Own Provider
 
 1. **Subclass `BaseClient`**: Create `lib/clients/providers/my_ai.rb`.
-2. **Implement Methods**: Define `base_url`, `request_path`, `extract_message`, and `valid_config?`.
+        2. **Implement Methods**: Define `base_url`, `request_path`, `extract_message`, `valid_config?`, and `request_headers` (override to inject auth headers).
 3. **Register It**:
    ```ruby
    Evaluator::Clients::ProviderRegistry.register(:my_ai, self)

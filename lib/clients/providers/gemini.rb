@@ -23,6 +23,8 @@ module Evaluator
         # @param messages [Array<Hash>] Conversation history
         # @param tools [Array<Hash>] Definitions of tools available to the AI
         # @param options [Hash] Provider-specific configuration
+        # @option options [String] :api_key The Google API key for authentication
+        # @option options [String] :model The Gemini model name (e.g., 'gemini-1.5-flash-latest')
         # @option options [String] :location The Google Cloud location (e.g., 'us-central1')
         # @option options [String] :project_id The Google Cloud Project ID
         # @raise [StandardError] if configuration is invalid (handled gracefully in call)

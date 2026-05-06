@@ -41,7 +41,7 @@ module Evaluator
         #
         # @return [String]
         def base_url
-          @endpoint.to_s
+          endpoint.to_s
         end
 
         # Returns the request path including the deployment name and API version.
@@ -66,7 +66,7 @@ module Evaluator
         # @return [Boolean]
         def valid_config?
           !@api_key.to_s.strip.empty? &&
-            !@endpoint.to_s.strip.empty? &&
+            !endpoint.to_s.strip.empty? &&
             !@model.to_s.strip.empty?
         end
 
@@ -76,7 +76,7 @@ module Evaluator
         def config_error
           missing = []
           missing << 'AZURE_OPENAI_API_KEY' if @api_key.to_s.strip.empty?
-          missing << 'AZURE_OPENAI_ENDPOINT' if @endpoint.to_s.strip.empty?
+          missing << 'AZURE_OPENAI_ENDPOINT' if endpoint.to_s.strip.empty?
           missing << 'AZURE_OPENAI_MODEL' if @model.to_s.strip.empty?
 
           message = if missing.length > 1

@@ -7,6 +7,7 @@ module Evaluator
       # Mapping from environment variable names to provider configuration keys.
       ENV_TO_PROVIDER_SETTINGS = {
         'OPENAI_API_KEY' => %i[openai api_key],
+        'ANTHROPIC_API_KEY' => %i[anthropic api_key],
         'OPENAI_MODEL' => %i[openai model],
         'GEMINI_API_KEY' => %i[gemini api_key],
         'GEMINI_LOCATION' => %i[gemini location],

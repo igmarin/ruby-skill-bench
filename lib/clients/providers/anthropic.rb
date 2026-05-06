@@ -55,7 +55,7 @@ module Evaluator
           body
         end
 
-        # Validates that both API key and model are present.
+        # Validates that the ANTHROPIC API key is set.
         #
         # @return [Boolean]
         def valid_config?
@@ -78,7 +78,7 @@ module Evaluator
         # @return [Hash, nil] the text content or nil if not found
         def extract_message(body)
           content_blocks = body['content']
-          return nil unless content_blocks.is_a?(Array)
+          return { 'role' => 'assistant', 'content' => '' } unless content_blocks.is_a?(Array)
 
           grouped = content_blocks.group_by { |block| block['type'] }
           text_block = grouped['text']&.first
@@ -105,6 +105,28 @@ module Evaluator
           message
         end
 
+        # Translates a list of messages to Anthropic's expected format.
+        # Handles user, assistant, and tool result message types.
+        #
+        # @param messages [Array<Hash>] List of standardized messages.
+        # @return [Array<Hash>] List of messages formatted for Anthropic.
+        def translate_messages(messages)
+          messages.map { |msg| translate_single_message(msg) }
+        end
+
+        # :reek:FeatureEnvy
+        # Translates a single message to Anthropic format.
+        def translate_single_message(msg)
+          klass = self.class
+          role = (msg[:role] || msg['role']).to_s
+          case role
+          when 'assistant' then klass.translate_assistant_message(msg)
+          when 'tool'      then klass.translate_tool_message(msg)
+          else
+            { role: role, content: msg[:content] || msg['content'] }
+          end
+        end
+
         class << self
           # Translates standard tool definitions to Anthropic tool format.
           #
@@ -129,14 +151,8 @@ module Evaluator
             text = msg[:content] || msg['content']
             content << { type: 'text', text: text } if text && !text.empty?
 
-            tool_calls = msg[:tool_calls] || msg['tool_calls']
-            tool_calls&.each do |tc|
-              content << {
-                type: 'tool_use',
-                id: tc['id'],
-                name: tc.dig('function', 'name'),
-                input: JSON.parse(tc.dig('function', 'arguments'))
-              }
+            (msg[:tool_calls] || msg['tool_calls'])&.each do |tool_call|
+              content << build_tool_use_block(tool_call)
             end
 
             { role: 'assistant', content: content }
@@ -158,27 +174,26 @@ module Evaluator
               ]
             }
           end
-        end
 
-        # Translates a list of messages to Anthropic's expected format.
-        # Handles user, assistant, and tool result message types.
-        #
-        # @param messages [Array<Hash>] List of standardized messages.
-        # @return [Array<Hash>] List of messages formatted for Anthropic.
-        def translate_messages(messages)
-          messages.map { |msg| translate_single_message(msg) }
-        end
+          private
 
-        # :reek:FeatureEnvy
-        # Translates a single message to Anthropic format.
-        def translate_single_message(msg)
-          klass = self.class
-          role = (msg[:role] || msg['role']).to_s
-          case role
-          when 'assistant' then klass.translate_assistant_message(msg)
-          when 'tool'      then klass.translate_tool_message(msg)
-          else
-            { role: role, content: msg[:content] || msg['content'] }
+          def build_tool_use_block(tool_call)
+            {
+              type: 'tool_use',
+              id: tool_call[:id] || tool_call['id'],
+              name: tool_call.dig(:function, :name) || tool_call.dig('function', 'name'),
+              input: parse_tool_arguments(tool_call.dig(:function, :arguments) || tool_call.dig('function', 'arguments'))
+            }
+          end
+
+          def parse_tool_arguments(args_raw)
+            return nil if args_raw.nil?
+            return args_raw if args_raw.is_a?(Hash)
+            return nil unless args_raw.is_a?(String)
+
+            JSON.parse(args_raw)
+          rescue JSON::ParserError
+            nil
           end
         end
       end

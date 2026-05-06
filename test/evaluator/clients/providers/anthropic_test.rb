@@ -4,6 +4,7 @@ require 'test_helper'
 
 module Evaluator
   module Clients
+    # rubocop:disable Metrics/ClassLength
     class AnthropicTest < Minitest::Test
       def setup
         Config.reset
@@ -184,6 +185,41 @@ module Evaluator
         assert_equal 'tc_1', content[0][:tool_use_id]
         assert_equal 'result', content[0][:content]
       end
+
+      def test_valid_config_missing_api_key
+        client = Providers::Anthropic.new(
+          system_prompt: 'System',
+          messages: [],
+          api_key: nil
+        )
+
+        refute client.send(:valid_config?)
+        result = client.send(:config_error)
+
+        assert_equal Providers::Anthropic::ANTHROPIC_API_KEY_NOT_SET, result[:response][:error][:message]
+      end
+
+      def test_call_with_malformed_response
+        stub_request(:post, 'https://api.anthropic.com/v1/messages')
+          .to_return(
+            status: 200,
+            body: { id: 'msg_123', role: 'assistant', content: 'not_an_array' }.to_json,
+            headers: { 'Content-Type' => 'application/json' }
+          )
+
+        result = Providers::Anthropic.call(
+          api_key: 'test_key',
+          system_prompt: 'System',
+          messages: [{ role: 'user', content: 'Hi' }]
+        )
+
+        assert result[:success]
+        message = result[:response][:message]
+
+        assert_equal 'assistant', message['role']
+        assert_equal '', message['content']
+      end
     end
+    # rubocop:enable Metrics/ClassLength
   end
 end
