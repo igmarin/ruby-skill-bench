@@ -24,6 +24,7 @@ module Evaluator
       # @return [Hash, nil] provider configuration by provider name
       attr_reader :llm_providers_config
 
+      # Initializes a new configuration store with empty provider settings.
       def initialize
         @llm_providers_config = {}
       end

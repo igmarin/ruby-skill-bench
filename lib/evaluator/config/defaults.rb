@@ -27,7 +27,8 @@ module Evaluator
               location: 'us-central1',
               project_id: nil
             },
-            ollama: { api_key: nil, model: 'qwen:7b', base_url: nil }
+            ollama: { api_key: nil, model: 'qwen:7b', base_url: nil },
+            azure: { api_key: nil, model: 'gpt-4', endpoint: nil, api_version: nil }
           }
         }
       end

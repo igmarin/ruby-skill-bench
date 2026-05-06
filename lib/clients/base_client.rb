@@ -75,6 +75,8 @@ module Evaluator
         raise NotImplementedError
       end
 
+      # Returns the default headers for the API request.
+      #
       # @return [Hash]
       def request_headers
         {
@@ -83,21 +85,34 @@ module Evaluator
         }
       end
 
+      # Returns the body of the API request.
+      #
       # @return [Hash]
       def request_body
         body = {
-          model: @model,
+          model: model_name,
           messages: [{ role: 'system', content: @system_prompt }] + @messages
         }
         body[:tools] = @tools if @tools && !@tools.empty?
         body
       end
 
+      # Returns the model name used for the provider.
+      #
+      # @return [String]
+      def model_name
+        @model
+      end
+
+      # Validates the client configuration.
+      #
       # @return [Boolean]
       def valid_config?
         !!@api_key
       end
 
+      # Abstract method: must return a standardized error response for configuration failures.
+      #
       # @return [Hash]
       def config_error
         raise NotImplementedError

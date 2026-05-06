@@ -15,10 +15,10 @@ module Evaluator
 
         protected
 
-        # Base URL for the Ollama service.
+        # Returns the base URL for Ollama service.
         # Checks the OLLAMA_BASE_URL env var, then the evaluator config, then falls back to localhost.
-        # @return [String] the base URL for the Ollama API endpoint
-        # :reek:UtilityFunction - intentionally checks ENV and Config, not instance state
+        #
+        # @return [String]
         def base_url
           env_url = ENV.fetch('OLLAMA_BASE_URL', nil)
           return env_url unless env_url.to_s.empty?
@@ -29,26 +29,30 @@ module Evaluator
           'http://localhost:11434'
         end
 
-        # Path for chat completions. Ollama follows the OpenAI compatible endpoint.
-        # @return [String] the API path for chat completions
+        # Returns the request path for chat completions.
+        #
+        # @return [String]
         def request_path
           '/v1/chat/completions'
         end
 
-        # Error returned when the model is not configured.
-        # @return [Hash] error response with :success => false and error message
+        # Standardized error response when model is missing.
+        #
+        # @return [Hash]
         def config_error
-          { success: false, response: { error: { message: 'model not set in config for Ollama' } } }
+          { success: false, response: { error: { message: 'OLLAMA_MODEL not set for Ollama' } } }
         end
 
-        # Ollama does not require an API key; validation only checks for a model.
-        # @return [Boolean] true if a model is configured, false otherwise
+        # Validates that a model is configured.
+        #
+        # @return [Boolean]
         def valid_config?
           !@model.to_s.empty?
         end
 
-        # Request headers omit Authorization if no API key is set.
-        # @return [Hash] HTTP headers for the request, including Content-Type and optional Authorization
+        # Returns headers for the request.
+        #
+        # @return [Hash]
         def request_headers
           headers = { 'Content-Type' => 'application/json' }
           headers['Authorization'] = "Bearer #{@api_key}" if @api_key && !@api_key.to_s.empty?

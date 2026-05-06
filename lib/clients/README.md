@@ -1,88 +1,114 @@
-# LLM Clients (`lib/clients`)
+# 🧠 LLM Clients Layer
 
-This directory contains LLM provider integrations for the Evaluator system.
+The `lib/clients` directory is the **Intelligence Bridge** of the Evaluator system. It provides a standardized, unified interface to interact with diverse Large Language Model (LLM) providers, from global leaders like OpenAI and Anthropic to local powerhouses via Ollama.
 
-## Architecture
+---
 
-### Base Client (`base_client.rb`)
+## 🏛️ Architecture & Patterns
 
-Abstract base class implementing the **Template Method pattern**:
-- Defines the algorithm: `call` → `valid_config?` → `execute_request` → `handle_response`
-- Subclasses override: `base_url`, `request_path`, `request_headers`, `valid_config?`, `config_error`
-- Common Faraday setup with timeout handling and JSON parsing
-- Standardized response contract: `{ success: bool, response: { ... } }`
+The client layer is built on the **Template Method pattern** and a **Decoupled Provider Registry**, ensuring that adding a new AI backend requires zero changes to the core evaluation engine.
 
-**Key methods:**
-- `self.call(system_prompt:, messages:, tools: [])` - Entry point with `@raise` tags for Faraday errors
-- `execute_request` - Sets up Faraday connection and POSTs to provider
-- `extract_message(body)` - Provider-specific message extraction (override in subclasses)
+### System Flow
+```mermaid
+graph TD
+    %% Nodes
+    Dispatcher[Evaluator::Client]
+    Registry[Provider Registry]
+    Base[BaseClient]
+    
+    %% Providers
+    OpenAI[OpenAI]
+    Anthropic[Anthropic]
+    Gemini[Gemini]
+    Azure[AzureOpenAI]
+    Ollama[Ollama]
 
-### Provider Registry (`provider_registry.rb`)
+    %% Connections
+    Dispatcher -->|1. resolve| Registry
+    Registry -->|2. instantiate| Base
+    
+    subgraph "Inheritance Chain"
+        Base -.-> OpenAI
+        Base -.-> Anthropic
+        Base -.-> Gemini
+        Base -.-> Azure
+        Base -.-> Ollama
+    end
 
-Extensible registry for provider lookup (replaces hard-coded case statements):
-
-```ruby
-# Register a provider
-Evaluator::Clients::ProviderRegistry.register(:openai, Evaluator::Clients::Providers::OpenAI)
-
-# Look up a provider
-provider_class = Evaluator::Clients::ProviderRegistry.for(:openai)
-# Returns NullClient if not found
+    %% Styling
+    style Dispatcher fill:#2563eb,color:#fff,stroke-width:2px
+    style Registry fill:#7c3aed,color:#fff
+    style Base fill:#475569,color:#fff
 ```
 
-**Adding a new provider:**
-1. Create `providers/your_provider.rb` inheriting from `BaseClient`
-2. Implement required template methods
-3. Add `Evaluator::Clients::ProviderRegistry.register(:your_provider, self)` in class body
-4. Add `require_relative 'clients/providers/your_provider'` to `client.rb`
+### Core Components
+- **`BaseClient`**: The abstract backbone. It handles connection management (Faraday), JSON orchestration, standardized error recovery, and performance logging.
+- **`ProviderRegistry`**: The discovery mechanism. It allows providers to self-register using unique symbols, enabling dynamic selection at runtime.
+- **`ToolSet` Integration**: Clients are natively aware of tool definitions, translating them into the specific JSON schema required by each provider.
 
-## Providers
+---
 
-### OpenAI (`providers/openai.rb`)
-- **Base URL**: `https://api.openai.com`
-- **Endpoint**: `/v1/chat/completions`
-- **Config**: `api_key`, `model` (default: `gpt-4o`)
-- **Registry name**: `:openai`
+## 🛠️ Supported Providers
 
-### Gemini (`providers/gemini.rb`)
-- **Base URL**: `https://{location}-aiplatform.googleapis.com`
-- **Endpoint**: `/v1/projects/{project_id}/locations/{location}/endpoints/openapi/chat/completions`
-- **Config**: `api_key`, `model`, `location`, `project_id`
-- **Registry name**: `:gemini`
+| Provider | Registry Key | Config Identity | Deployment Strategy |
+| :--- | :--- | :--- | :--- |
+| **OpenAI** | `:openai` | `OPENAI_*` | Global Cloud (GPT-4o, GPT-4 Turbo) |
+| **Anthropic** | `:anthropic` | `ANTHROPIC_*` | Global Cloud (Claude 3.5 Sonnet, Opus) |
+| **Google Gemini** | `:gemini` | `GEMINI_*` | Vertex AI / Google Cloud Platform |
+| **Azure OpenAI** | `:azure` | `AZURE_OPENAI_*` | Enterprise Private Cloud (Azure) |
+| **Ollama** | `:ollama` | `OLLAMA_*` | Local-First (Llama 3, Qwen, Mistral) |
+| **Null Client** | `:null` | N/A | Mock / Fallback testing |
 
-### Ollama (`providers/ollama.rb`)
-- **Base URL**: `http://localhost:11434` (configurable via `OLLAMA_BASE_URL` env var or config)
-- **Endpoint**: `/v1/chat/completions` (OpenAI-compatible)
-- **Config**: `model` (default: `qwen:7b`), optional `api_key` for Bearer auth
-- **Registry name**: `:ollama`
-- **Note**: Does not require API key by default
+---
 
-### Anthropic Claude (`providers/anthropic.rb`)
-- **Base URL**: `https://api.anthropic.com`
-- **Endpoint**: `/v1/messages`
-- **Config**: `api_key`, `model`, `max_tokens` (default: 4096)
-- **Headers**: `x-api-key`, `anthropic-version: 2023-06-01`
-- **Registry name**: `:anthropic`
+## 🔌 Configuration & Setup
 
-### NullClient (`providers/null_client.rb`)
-- **Purpose**: Null Object pattern for unsupported providers
-- **Behavior**: Always returns config error with provider name
-- **Note**: Extends `BaseClient` for interface consistency
+### Environment Variable Mapping
+The system supports direct injection via environment variables for rapid prototyping:
 
-## Response Contract
+- **Azure OpenAI**: `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION`
+- **Gemini**: `GEMINI_API_KEY`, `GEMINI_PROJECT_ID`, `GEMINI_LOCATION`
+- **Anthropic**: `ANTHROPIC_API_KEY`
 
-All providers return standardized responses:
+### Registry Key Alignment
+> [!IMPORTANT]
+> When using the `Evaluator.set_provider(:key)` method, ensure the key matches the registry. Note that for Azure, the key is simply `:azure`.
+
+---
+
+## 🚀 Standardized Contract
+
+Every client, regardless of its internal complexity, guarantees a standard response format. This allows the Evaluator to process results without caring about the source.
 
 ```ruby
-# Success
-{ success: true, response: { message: { 'content' => '...' } } }
-
-# Error
-{ success: false, response: { error: { message: '...' } } }
+# The "Golden" Response Format
+{
+  success: true,
+  response: { 
+    message: { 
+      'content' => '...',      # String content
+      'tool_calls' => [...]    # Optional tool interactions
+    } 
+  }
+}
 ```
 
-## Error Handling
+---
 
-- Faraday connection errors are rescued and returned as structured errors
-- Provider-specific validation via `valid_config?` and `config_error`
-- All errors logged with message AND backtrace (per coding standards)
+## 🧪 Adding Your Own Provider
+
+1. **Subclass `BaseClient`**: Create `lib/clients/providers/my_ai.rb`.
+        2. **Implement Methods**: Define `base_url`, `request_path`, `extract_message`, `valid_config?`, and `request_headers` (override to inject auth headers).
+3. **Register It**:
+   ```ruby
+   Evaluator::Clients::ProviderRegistry.register(:my_ai, self)
+   ```
+4. **Load It**: Ensure it is required in the main `lib/client.rb` or your entry point.
+
+---
+
+## 🛡️ Resilience & Observability
+
+- **Timeouts**: Every request is guarded by a 60s timeout (configurable).
+- **Silent Errors**: We prioritize "Fail Fast, Fail Clean". Errors are caught, logged with 5-line backtraces, and returned as `{ success: false }`.
+- **JSON Safety**: Robust parsing prevents malformed LLM responses from crashing the system.

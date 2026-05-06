@@ -7,7 +7,7 @@ class OllamaProviderTest < Minitest::Test
   def test_config_error_returns_message
     error = Evaluator::Clients::Providers::Ollama.new(system_prompt: 'test', messages: []).send(:config_error)
 
-    assert_equal({ success: false, response: { error: { message: 'model not set in config for Ollama' } } }, error)
+    assert_equal({ success: false, response: { error: { message: 'OLLAMA_MODEL not set for Ollama' } } }, error)
   end
 
   def test_base_url_uses_env_when_set

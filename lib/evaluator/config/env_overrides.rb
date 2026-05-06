@@ -7,10 +7,18 @@ module Evaluator
       # Mapping from environment variable names to provider configuration keys.
       ENV_TO_PROVIDER_SETTINGS = {
         'OPENAI_API_KEY' => %i[openai api_key],
+        'ANTHROPIC_API_KEY' => %i[anthropic api_key],
+        'OPENAI_MODEL' => %i[openai model],
         'GEMINI_API_KEY' => %i[gemini api_key],
         'GEMINI_LOCATION' => %i[gemini location],
         'GEMINI_PROJECT_ID' => %i[gemini project_id],
-        'OLLAMA_BASE_URL' => %i[ollama base_url]
+        'GEMINI_MODEL' => %i[gemini model],
+        'OLLAMA_BASE_URL' => %i[ollama base_url],
+        'OLLAMA_MODEL' => %i[ollama model],
+        'AZURE_OPENAI_API_KEY' => %i[azure api_key],
+        'AZURE_OPENAI_ENDPOINT' => %i[azure endpoint],
+        'AZURE_OPENAI_API_VERSION' => %i[azure api_version],
+        'AZURE_OPENAI_MODEL' => %i[azure model]
       }.freeze
 
       # Returns provider overrides from the given environment.

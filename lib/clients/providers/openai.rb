@@ -13,16 +13,22 @@ module Evaluator
 
         protected
 
+        # Returns the base URL for OpenAI API.
+        #
         # @return [String]
         def base_url
           'https://api.openai.com'
         end
 
+        # Returns the request path for chat completions.
+        #
         # @return [String]
         def request_path
           '/v1/chat/completions'
         end
 
+        # Standardized error response when configuration is missing.
+        #
         # @return [Hash]
         def config_error
           { success: false, response: { error: { message: 'OPENAI_API_KEY is not set in config for OpenAI' } } }

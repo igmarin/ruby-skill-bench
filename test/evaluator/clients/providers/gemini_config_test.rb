@@ -15,6 +15,7 @@ module Evaluator
           config.set_provider_api_key(:gemini, nil)
           config.set_provider_project_id(:gemini, 'test-project')
           config.set_provider_location(:gemini, 'us-central1')
+          config.set_provider_model(:gemini, 'gemini-1.5-flash')
         end
 
         result = Providers::Gemini.call(
@@ -32,6 +33,7 @@ module Evaluator
           config.set_provider_api_key(:gemini, 'test_gemini_key')
           config.set_provider_project_id(:gemini, nil)
           config.set_provider_location(:gemini, 'us-central1')
+          config.set_provider_model(:gemini, 'gemini-1.5-flash')
         end
 
         result = Providers::Gemini.call(
@@ -49,6 +51,7 @@ module Evaluator
           config.set_provider_api_key(:gemini, 'test_gemini_key')
           config.set_provider_project_id(:gemini, 'test-project')
           config.set_provider_location(:gemini, nil)
+          config.set_provider_model(:gemini, 'gemini-1.5-flash')
         end
 
         result = Providers::Gemini.call(
@@ -61,11 +64,30 @@ module Evaluator
         assert_equal 'GEMINI_LOCATION not set for Gemini', result[:response][:error][:message]
       end
 
+      def test_call_returns_error_on_missing_model
+        Config.setup do |config|
+          config.set_provider_api_key(:gemini, 'test_gemini_key')
+          config.set_provider_project_id(:gemini, 'test-project')
+          config.set_provider_location(:gemini, 'us-central1')
+          config.set_provider_model(:gemini, nil)
+        end
+
+        result = Providers::Gemini.call(
+          api_key: 'test_gemini_key',
+          system_prompt: 'System',
+          messages: []
+        )
+
+        refute result[:success]
+        assert_equal 'GEMINI_MODEL not set for Gemini', result[:response][:error][:message]
+      end
+
       def test_call_returns_error_on_api_key_and_project_id_missing
         Config.setup do |config|
           config.set_provider_api_key(:gemini, nil)
           config.set_provider_project_id(:gemini, nil)
           config.set_provider_location(:gemini, 'us-central1')
+          config.set_provider_model(:gemini, 'gemini-1.5-flash')
         end
 
         result = Providers::Gemini.call(
