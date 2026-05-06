@@ -61,8 +61,15 @@ agent-eval run evals/refactor-controller --skill=skills/service-objects --provid
 agent-eval run evals/refactor-controller --ci
 ```
 
-## 5. Implementation Steps (TDD Workflow)
-All steps follow: write failing test → implement → verify test passes.
+## 5. Implementation Steps (Mandatory TDD Workflow)
+All steps MUST follow this strict flow:
+1. Write failing test first (RED)
+2. Implement minimal code to pass test (GREEN)
+3. Run full test suite to verify all tests are GREEN
+4. Run linters: `rubocop` and `reek` (configure .reek.yml to ignore acceptable warnings)
+5. Add YARD documentation to all new methods
+6. Add README.md to any new folder explaining its purpose and code structure
+7. Verify tests still pass after changes
 
 1. **Core Models**: Define `Skill`, `Eval`, `Provider`, `Config` classes with YARD docs. Test model validation/serialization.
 2. **Init Command**: Implement `init` with `--rails` flag. Generate `.agent-eval.yml` with default and Rails-specific config. Test config generation.

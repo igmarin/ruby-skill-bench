@@ -1,1 +1,9 @@
-{"pass": true}
+{
+  "runtime": "generic",
+  "pass": {
+    "score_threshold": 0.8
+  },
+  "fail": {
+    "score_threshold": 0.5
+  }
+}

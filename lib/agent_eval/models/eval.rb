@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "json"
-require "pathname"
+require 'json'
+require 'pathname'
 
 module AgentEval
   module Models
@@ -14,7 +14,7 @@ module AgentEval
       # @param task [String] Task description from task.md
       # @param criteria [Hash] Criteria from criteria.json
       # @param source_code [String] Source code to evaluate
-      def initialize(name:, path:, task: "", criteria: {}, source_code: "")
+      def initialize(name:, path:, task: '', criteria: {}, source_code: '')
         @name = name
         @path = path
         @task = task
@@ -31,9 +31,11 @@ module AgentEval
         raise Errno::ENOENT, "Eval directory not found: #{dir_path}" unless path.exist?
 
         name = path.basename.to_s
-        task = path.join("task.md").exist? ? File.read(path.join("task.md")) : ""
-        criteria = path.join("criteria.json").exist? ? JSON.parse(File.read(path.join("criteria.json")), symbolize_names: true) : {}
-        source_code = ""
+        task_md = path.join('task.md')
+        criteria_json = path.join('criteria.json')
+        task = task_md.exist? ? File.read(task_md) : ''
+        criteria = criteria_json.exist? ? JSON.parse(File.read(criteria_json), symbolize_names: true) : {}
+        source_code = ''
 
         new(name: name, path: dir_path, task: task, criteria: criteria, source_code: source_code)
       end
