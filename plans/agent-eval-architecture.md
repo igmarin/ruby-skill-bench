@@ -4,7 +4,7 @@
 - Existing repo has skills (modular capabilities) and evals (test scenarios)
 - Current gem requires code-level provider config → poor usability
 - Feels like a library, not a tool
-- Naming/scope unclear (rails-agent-eval vs agent-eval)
+- Naming/scope unclear (agent-eval vs agent-eval)
 - Core value (skills + eval execution) not accessible via CLI
 - UX for config/execution undefined
 

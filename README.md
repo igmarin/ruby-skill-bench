@@ -1,15 +1,12 @@
 # Rails Agent Eval 🚀
 
-<div align="center">
-  <img width="800" alt="rails-agent-eval-banner" src="https://github.com/user-attachments/assets/f69b673e-39c5-4768-bbe6-9c00ecc3b4f2" />
-  <p><em>The gold standard for benching AI agent performance in real-world Ruby on Rails environments.</em></p>
-</div>
+*The gold standard for benching AI agent performance in real-world Ruby on Rails environments.*
 
 ---
 
 ## 💎 The Vision
 
-`rails-agent-eval` is a high-fidelity evaluation engine designed to rigorously validate AI agent skills, context hydration strategies, and reasoning workflows. It orchestrates side-by-side execution runs within **Isolated Git Sandboxes**, providing objective, data-driven insights into agent reliability and code quality.
+`agent-eval` is a high-fidelity evaluation engine designed to rigorously validate AI agent skills, context hydration strategies, and reasoning workflows. It orchestrates side-by-side execution runs within **Isolated Git Sandboxes**, providing objective, data-driven insights into agent reliability and code quality.
 
 ---
 
@@ -89,7 +86,7 @@ end
 ### Installation
 Add to your `Gemfile`:
 ```ruby
-gem 'rails-agent-eval', github: 'igmarin/rails-agent-eval'
+gem 'agent-eval', github: 'igmarin/agent-eval'
 ```
 
 ### Usage: The 3-Step Flow

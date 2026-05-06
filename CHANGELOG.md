@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the `rails-agent-eval` gem will be documented in this file.
+All notable changes to the `agent-eval` gem will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -72,7 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.1] - 2024-05-04
 
 ### Added
-- Initial release of `rails-agent-eval`
+- Initial release of `agent-eval`
 - Support for OpenAI and Gemini providers
 - ReAct loop implementation
 - Side-by-side evaluation (baseline vs context-hydrated)

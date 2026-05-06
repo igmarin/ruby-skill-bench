@@ -5,13 +5,13 @@ require 'test_helper'
 module Evaluator
   class GemspecTest < Minitest::Test
     def setup
-      gemspec_path = File.expand_path('../../rails-agent-eval.gemspec', __dir__)
+      gemspec_path = File.expand_path('../../agent-eval.gemspec', __dir__)
       @spec = Gem::Specification.load(gemspec_path)
     end
 
     def test_package_metadata_points_to_project_sources
-      assert_equal 'https://github.com/igmarin/rails-agent-eval', @spec.homepage
-      assert_equal 'https://github.com/igmarin/rails-agent-eval',
+      assert_equal 'https://github.com/igmarin/agent-eval', @spec.homepage
+      assert_equal 'https://github.com/igmarin/agent-eval',
                    @spec.metadata['source_code_uri']
       assert_equal 'true', @spec.metadata['rubygems_mfa_required']
     end
