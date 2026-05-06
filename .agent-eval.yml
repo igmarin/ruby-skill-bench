@@ -1,0 +1,13 @@
+---
+providers:
+  openai:
+    runtime: opencode
+    llm: openai
+    config:
+      api_key: "${AGENT_EVAL_OPENAI_API_KEY}"
+rails:
+  skill_paths:
+  - skills/
+  eval_paths:
+  - evals/
+  rails_env: test

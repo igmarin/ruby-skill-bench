@@ -75,6 +75,9 @@ detectors:
       - "Evaluator::Clients::Providers::Gemini#config_error"
       - "Evaluator::Clients::Providers::Anthropic#config_error"
       - "Evaluator::Clients::Providers::AzureOpenAI#config_error"
+  BooleanParameter:
+    exclude:
+      - "AgentEval::Commands::Init#self.run"
   UtilityFunction:
     exclude:
       - "Evaluator::Clients::BaseClient#failure_response"
