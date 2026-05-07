@@ -6,22 +6,21 @@ require_relative '../provider_registry'
 module Evaluator
   module Clients
     module Providers
-      # OpenAI-specific LLM client.
-      # Inherits common logic from BaseClient.
-      class OpenAI < BaseClient
-        Evaluator::Clients::ProviderRegistry.register(:openai, self)
+      # OpenCode-specific LLM client.
+      class OpenCode < BaseClient
+        Evaluator::Clients::ProviderRegistry.register(:opencode, self)
 
         def provider_name
-          :openai
+          :opencode
         end
 
         protected
 
-        # Returns the base URL for OpenAI API.
+        # Returns the base URL for OpenCode API.
         #
         # @return [String]
         def base_url
-          @base_url_config || 'https://api.openai.com'
+          @base_url_config || 'https://api.opencode.ai'
         end
 
         # Returns the request path for chat completions.

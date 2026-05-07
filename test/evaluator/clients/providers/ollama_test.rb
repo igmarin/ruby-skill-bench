@@ -5,9 +5,14 @@ require_relative '../../../../lib/clients/providers/ollama'
 
 class OllamaProviderTest < Minitest::Test
   def test_config_error_returns_message
-    error = Evaluator::Clients::Providers::Ollama.new(system_prompt: 'test', messages: []).send(:config_error)
+    provider = Evaluator::Clients::Providers::Ollama.new(system_prompt: 'test', messages: [])
+    # Force @model to nil to simulate missing configuration regardless of ~/.evaluator.json
+    provider.instance_variable_set(:@model, nil)
 
-    assert_equal({ success: false, response: { error: { message: 'OLLAMA_MODEL not set for Ollama' } } }, error)
+    error = provider.send(:config_error)
+
+    refute error[:success]
+    assert_equal 'OLLAMA_MODEL not set for Ollama', error.dig(:response, :error, :message)
   end
 
   def test_base_url_uses_env_when_set

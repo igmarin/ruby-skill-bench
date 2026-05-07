@@ -7,6 +7,7 @@ require_relative 'clients/providers/gemini'
 require_relative 'clients/providers/ollama'
 require_relative 'clients/providers/anthropic'
 require_relative 'clients/providers/azure_openai'
+require_relative 'clients/providers/opencode'
 require_relative 'clients/providers/null_client'
 
 module Evaluator

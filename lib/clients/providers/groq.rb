@@ -6,22 +6,22 @@ require_relative '../provider_registry'
 module Evaluator
   module Clients
     module Providers
-      # OpenAI-specific LLM client.
-      # Inherits common logic from BaseClient.
-      class OpenAI < BaseClient
-        Evaluator::Clients::ProviderRegistry.register(:openai, self)
+      # Groq-specific LLM client.
+      # Uses OpenAI-compatible chat completions API.
+      class Groq < BaseClient
+        Evaluator::Clients::ProviderRegistry.register(:groq, self)
 
         def provider_name
-          :openai
+          :groq
         end
 
         protected
 
-        # Returns the base URL for OpenAI API.
+        # Returns the base URL for Groq API.
         #
         # @return [String]
         def base_url
-          @base_url_config || 'https://api.openai.com'
+          @base_url_config || 'https://api.groq.com/openai'
         end
 
         # Returns the request path for chat completions.

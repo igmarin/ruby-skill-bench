@@ -9,6 +9,7 @@ module Evaluator
         'OPENAI_API_KEY' => %i[openai api_key],
         'ANTHROPIC_API_KEY' => %i[anthropic api_key],
         'OPENAI_MODEL' => %i[openai model],
+        'OPENAI_BASE_URL' => %i[openai base_url],
         'GEMINI_API_KEY' => %i[gemini api_key],
         'GEMINI_LOCATION' => %i[gemini location],
         'GEMINI_PROJECT_ID' => %i[gemini project_id],
@@ -18,7 +19,11 @@ module Evaluator
         'AZURE_OPENAI_API_KEY' => %i[azure api_key],
         'AZURE_OPENAI_ENDPOINT' => %i[azure endpoint],
         'AZURE_OPENAI_API_VERSION' => %i[azure api_version],
-        'AZURE_OPENAI_MODEL' => %i[azure model]
+        'AZURE_OPENAI_MODEL' => %i[azure model],
+        'ANTHROPIC_MODEL' => %i[anthropic model],
+        'OPENCODE_API_KEY' => %i[opencode api_key],
+        'OPENCODE_BASE_URL' => %i[opencode base_url],
+        'OPENCODE_MODEL' => %i[opencode model]
       }.freeze
 
       # Returns provider overrides from the given environment.

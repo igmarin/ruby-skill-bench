@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'fileutils'
+require_relative '../rails/skill_templates'
 
 module AgentEval
   module Commands
@@ -8,10 +9,11 @@ module AgentEval
     class SkillNew
       # Run the skill new command
       # @param name [String] Skill name
-      # @param mode [String] "simple" or "advanced"
+      # @param mode [String] "simple", "advanced", or "rails"
+      # @param template [String] Rails template type (service_object, concern, active_record_model)
       # @return [void]
       # @raise [ArgumentError] if mode is invalid
-      def self.run(name:, mode: 'simple')
+      def self.run(name:, mode: 'simple', template: 'service_object')
         skill_path = File.join('skills', name)
         FileUtils.mkdir_p(skill_path)
 
@@ -20,8 +22,10 @@ module AgentEval
           create_simple_skill(skill_path, name)
         when 'advanced'
           create_advanced_skill(skill_path, name)
+        when 'rails'
+          create_rails_skill(skill_path, name, template)
         else
-          raise ArgumentError, "Invalid mode: #{mode}. Use 'simple' or 'advanced'."
+          raise ArgumentError, "Invalid mode: #{mode}. Use 'simple', 'advanced', or 'rails'."
         end
       end
 
@@ -86,6 +90,18 @@ module AgentEval
             end
           end
         RUBY
+      end
+
+      # Create a Rails skill using templates
+      # @param path [String] Skill directory path
+      # @param name [String] Skill name
+      # @param template [String] Template type (service_object, concern, active_record_model)
+      # @return [void]
+      def self.create_rails_skill(path, name, template)
+        template_method = template.to_sym
+        file_name = "#{template.sub('_object', '').sub('active_record_', '')}.rb"
+        content = Rails::SkillTemplates.send(template_method, name)
+        File.write(File.join(path, file_name), content)
       end
     end
   end

@@ -7,10 +7,10 @@ module AgentEval
     # Handles the `agent-eval init` command
     class Init
       # Run the init command to generate config
-      # @param options [Hash] Options for init (e.g., rails: true)
+      # @param options [Hash] Options for init (e.g., rails: true, force: true)
       # @return [void]
       def self.run(options = {})
-        raise 'Config file already exists. Use --force to overwrite or backup the file first.' if File.exist?('.agent-eval.yml')
+        raise 'Config file already exists. Use --force to overwrite or backup the file first.' if File.exist?('.agent-eval.yml') && !options[:force]
 
         config = default_config
         config['rails'] = rails_config if options[:rails]

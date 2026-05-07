@@ -45,6 +45,21 @@ module Evaluator
       def model
         store.model
       end
+
+      # Returns the base URL for the current LLM provider.
+      #
+      # @return [String, nil] base URL for the current provider
+      def base_url
+        store.base_url
+      end
+
+      # Returns configuration for a specific provider.
+      #
+      # @param provider [Symbol] provider name
+      # @return [Hash] configuration for the provider
+      def for_provider(provider)
+        store.for_provider(provider)
+      end
     end
   end
 end
