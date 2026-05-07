@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'cgi'
 
 module AgentEval
   # Handles formatting output for different use cases (human, CI, etc.)
@@ -58,11 +59,13 @@ module AgentEval
     # @return [String] JUnit XML-formatted string
     def self.format_junit(result)
       status = result[:pass] ? 'passed' : 'failed'
-      failure_xml = result[:pass] ? '' : "<failure message=\"Score: #{result[:score]}\">Eval #{status}</failure>"
+      eval_name = CGI.escapeHTML(result[:eval_name].to_s)
+      score = CGI.escapeHTML(result[:score].to_s)
+      failure_xml = result[:pass] ? '' : "<failure message=\"Score: #{score}\">Eval #{status}</failure>"
       <<~XML
         <?xml version="1.0"?>
         <testsuite name="AgentEval" tests="1" failures="#{result[:pass] ? 0 : 1}">
-          <testcase name="#{result[:eval_name]}" classname="AgentEval">
+          <testcase name="#{eval_name}" classname="AgentEval">
             #{failure_xml}
           </testcase>
         </testsuite>

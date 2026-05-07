@@ -6,6 +6,7 @@ module AgentEval
   module Services
     class RunnerServiceTest < Minitest::Test
       def setup
+        @original_dir = Dir.pwd
         @tmp_dir = Dir.mktmpdir('runner_service_test')
         @eval_dir = File.join(@tmp_dir, 'evals', 'test-eval')
         FileUtils.mkpath(@eval_dir)
@@ -20,7 +21,7 @@ module AgentEval
       end
 
       def teardown
-        Dir.chdir('/')
+        Dir.chdir(@original_dir)
         FileUtils.rm_rf(@tmp_dir)
       end
 

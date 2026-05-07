@@ -20,9 +20,7 @@ module AgentEval
     end
 
     def test_run_does_not_raise_error
-      Interactive.run
-    rescue StandardError => e
-      flunk "Interactive.run raised an error: #{e.message}"
+      assert_silent { Interactive.run }
     end
 
     def test_run_returns_result

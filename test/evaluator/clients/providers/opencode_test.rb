@@ -31,6 +31,7 @@ module Evaluator
             system_prompt: 'System',
             messages: [{ role: 'user', content: 'Hi' }]
           )
+        ensure
           $stderr = old_stderr
 
           assert result[:success]
@@ -53,6 +54,7 @@ module Evaluator
             system_prompt: 'System',
             messages: [{ role: 'user', content: 'Hi' }]
           )
+        ensure
           $stderr = old_stderr
 
           refute result[:success]

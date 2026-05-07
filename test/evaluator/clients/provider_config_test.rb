@@ -32,7 +32,7 @@ module Evaluator
       end
 
       def test_call_returns_nil_for_missing_api_key
-        # Reset config and clear any env vars
+        original_api_key = ENV.fetch('OPENAI_API_KEY', nil)
         ENV.delete('OPENAI_API_KEY')
         Config.reset
 
@@ -40,7 +40,11 @@ module Evaluator
 
         assert_nil result[:api_key]
       ensure
-        ENV.delete('OPENAI_API_KEY')
+        if original_api_key
+          ENV['OPENAI_API_KEY'] = original_api_key
+        else
+          ENV.delete('OPENAI_API_KEY')
+        end
       end
 
       def test_call_includes_provider_specific_extras

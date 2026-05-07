@@ -92,15 +92,22 @@ module AgentEval
         RUBY
       end
 
+      RAILS_TEMPLATES = {
+        'service_object' => 'service.rb',
+        'concern' => 'concern.rb',
+        'active_record_model' => 'model.rb'
+      }.freeze
+
       # Create a Rails skill using templates
       # @param path [String] Skill directory path
       # @param name [String] Skill name
       # @param template [String] Template type (service_object, concern, active_record_model)
       # @return [void]
       def self.create_rails_skill(path, name, template)
-        template_method = template.to_sym
-        file_name = "#{template.sub('_object', '').sub('active_record_', '')}.rb"
-        content = Rails::SkillTemplates.send(template_method, name)
+        file_name = RAILS_TEMPLATES[template]
+        raise ArgumentError, "Invalid template: #{template}. Use one of: #{RAILS_TEMPLATES.keys.join(', ')}." unless file_name
+
+        content = Rails::SkillTemplates.public_send(template.to_sym, name)
         File.write(File.join(path, file_name), content)
       end
     end

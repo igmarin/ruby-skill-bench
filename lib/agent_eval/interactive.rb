@@ -32,26 +32,30 @@ module AgentEval
 
     # Display main menu using gum
     # @return [String, nil] User's choice or nil
+    # @raise [NotImplementedError] Raised when gum integration is not enabled
     def self.gum_choose
-      'Run Eval' # Placeholder for gum integration
+      raise NotImplementedError, 'Interactive selection not implemented; enable gum integration'
     end
 
     # Select an eval from available evals
     # @return [String, nil] Eval name or nil
+    # @raise [NotImplementedError] Raised when gum integration is not enabled
     def self.select_eval
-      'test-eval' # Placeholder
+      raise NotImplementedError, 'Interactive selection not implemented; enable gum integration'
     end
 
     # Select a skill from available skills
     # @return [String, nil] Skill name or nil
+    # @raise [NotImplementedError] Raised when gum integration is not enabled
     def self.select_skill
-      'test-skill' # Placeholder
+      raise NotImplementedError, 'Interactive selection not implemented; enable gum integration'
     end
 
     # Select a provider from available providers
     # @return [String, nil] Provider name or nil
+    # @raise [NotImplementedError] Raised when gum integration is not enabled
     def self.select_provider
-      'openai' # Placeholder
+      raise NotImplementedError, 'Interactive selection not implemented; enable gum integration'
     end
   end
 end

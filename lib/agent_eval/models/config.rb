@@ -51,9 +51,9 @@ module AgentEval
       # Returns configured providers
       # @return [Hash] Provider configurations keyed by provider name
       def providers
-        @data.fetch(:providers, {}).transform_values do |config|
-          Provider.new(
-            name: config[:name] || 'unknown',
+        @data.fetch(:providers, {}).each_with_object({}) do |(key, config), result|
+          result[key] = Provider.new(
+            name: key.to_s,
             runtime: config[:runtime],
             llm: config[:llm],
             config: config[:config] || {}

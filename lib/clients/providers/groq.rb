@@ -24,14 +24,14 @@ module Evaluator
         #
         # @return [String]
         def base_url
-          @base_url_config || 'https://api.groq.com/openai'
+          @base_url_config || 'https://api.groq.com/openai/v1'
         end
 
         # Returns the request path for chat completions.
         #
         # @return [String]
         def request_path
-          @request_path_config || '/v1/chat/completions'
+          @request_path_config || '/chat/completions'
         end
       end
     end
