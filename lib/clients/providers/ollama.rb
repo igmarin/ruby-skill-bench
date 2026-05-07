@@ -11,7 +11,13 @@ module Evaluator
       # Ollama does not require an API key but requires a model to be configured.
       class Ollama < BaseClient
         Evaluator::Clients::ProviderRegistry.register(:ollama, self)
-        # api_key and model are inherited from BaseClient
+
+        # Returns the provider identifier.
+        #
+        # @return [Symbol]
+        def provider_name
+          :ollama
+        end
 
         protected
 
@@ -36,27 +42,20 @@ module Evaluator
           '/v1/chat/completions'
         end
 
-        # Standardized error response when model is missing.
-        #
-        # @return [Hash]
-        def config_error
-          { success: false, response: { error: { message: 'OLLAMA_MODEL not set for Ollama' } } }
-        end
-
-        # Validates that a model is configured.
-        #
-        # @return [Boolean]
-        def valid_config?
-          !@model.to_s.empty?
-        end
-
-        # Returns headers for the request.
+        # Returns headers for the request. Authorization is included only when an API key is present.
         #
         # @return [Hash]
         def request_headers
           headers = { 'Content-Type' => 'application/json' }
           headers['Authorization'] = "Bearer #{@api_key}" if @api_key && !@api_key.to_s.empty?
           headers
+        end
+
+        # Ollama only requires a model; an API key is optional.
+        #
+        # @return [Array<String>]
+        def missing_config_keys
+          @model.to_s.strip.empty? ? ['OLLAMA_MODEL'] : []
         end
       end
     end

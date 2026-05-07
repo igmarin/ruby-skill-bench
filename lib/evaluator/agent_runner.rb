@@ -8,8 +8,6 @@ module Evaluator
   # Responsible for executing a specific scenario (baseline or context-hydrated)
   # within an isolated sandbox. Handles the system prompt generation and agent execution.
   class AgentRunner
-    SEPARATOR = '================================================='
-
     # Executes the agent run scenario.
     #
     # @param params [Hash] The configuration parameters for the run.

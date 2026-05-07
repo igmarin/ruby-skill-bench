@@ -27,9 +27,8 @@ module Evaluator
 
         { success: false, response: { error: { message: ReactAgent::MAX_ITERATIONS_REACHED } } }
       rescue StandardError => e
-        error_msg = e.message
-        Rails.logger.error("ReactAgent Error: #{error_msg}") if defined?(Rails)
-        { success: false, response: { error: { message: error_msg } } }
+        Evaluator::ErrorLogger.log_error(e, 'ReactAgent Error')
+        { success: false, response: { error: { message: e.message } } }
       end
     end
   end

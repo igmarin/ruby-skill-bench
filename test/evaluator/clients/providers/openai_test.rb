@@ -47,7 +47,7 @@ module Evaluator
 
         # Assert
         refute result[:success]
-        assert_equal 'OPENAI_API_KEY is not set in config for OpenAI', result[:response][:error][:message]
+        assert_equal 'API Key not set for Openai', result[:response][:error][:message]
       end
 
       def test_call_returns_error_on_api_failure

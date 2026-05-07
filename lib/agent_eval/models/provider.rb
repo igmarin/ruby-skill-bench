@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'active_support/core_ext/hash/keys'
+
 module AgentEval
   module Models
     # Represents an agent runtime + LLM provider
@@ -15,19 +17,8 @@ module AgentEval
         @name = name
         @runtime = runtime
         @llm = llm
-        @config = self.class.symbolize_keys(config)
+        @config = config.deep_symbolize_keys
       end
-
-      # Convert string keys to symbols (shallow, non-recursive)
-      # @param hash [Hash] Hash to symbolize
-      # @return [Hash] Hash with symbolized keys
-      def self.symbolize_keys(hash)
-        hash.each_with_object({}) do |(key, value), result|
-          result[key.to_sym] = value
-        end
-      end
-
-      private_class_method :symbolize_keys
 
       # Returns merged config with environment variable fallbacks
       # @return [Hash] Merged configuration

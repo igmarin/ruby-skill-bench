@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'providers/null_client'
+require_relative '../evaluator/error_logger'
 
 module Evaluator
   module Clients
@@ -18,12 +19,29 @@ module Evaluator
         end
 
         # Looks up a provider class by name.
-        # Returns NullClient if the provider is not registered.
+        # Returns NullClient if the provider is not registered (with a warning).
         #
         # @param name [Symbol] the provider identifier
         # @return [Class] the provider class or NullClient
         def for(name)
-          providers.fetch(name, Providers::NullClient)
+          providers.fetch(name) do
+            Evaluator::ErrorLogger.log_error(
+              StandardError.new("Unknown provider '#{name}', falling back to NullClient"),
+              'ProviderRegistry Warning'
+            )
+            Providers::NullClient
+          end
+        end
+
+        # Looks up a provider class by name, raising if not found.
+        #
+        # @param name [Symbol] the provider identifier
+        # @return [Class] the provider class
+        # @raise [ArgumentError] if the provider is not registered
+        def for!(name)
+          providers.fetch(name) do
+            raise ArgumentError, "Unknown provider '#{name}'. Registered: #{providers.keys.join(', ')}"
+          end
         end
 
         # Returns all registered providers.

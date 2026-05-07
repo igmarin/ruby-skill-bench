@@ -20,7 +20,7 @@ class AzureOpenAITest < Minitest::Test
 
     client = create_client
 
-    assert_equal 'https://my-resource.openai.azure.com', client.send(:endpoint)
+    assert_equal 'https://my-resource.openai.azure.com', client.send(:base_url)
     assert_equal "/openai/deployments/gpt-4/chat/completions?api-version=#{Evaluator::Clients::Providers::AzureOpenAI::DEFAULT_API_VERSION}", client.send(:request_path)
   end
 

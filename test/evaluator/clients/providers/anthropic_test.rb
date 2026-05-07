@@ -196,7 +196,7 @@ module Evaluator
         refute client.send(:valid_config?)
         result = client.send(:config_error)
 
-        assert_equal Providers::Anthropic::ANTHROPIC_API_KEY_NOT_SET, result[:response][:error][:message]
+        assert_equal 'API Key not set for Anthropic', result[:response][:error][:message]
       end
 
       def test_call_with_malformed_response

@@ -22,6 +22,7 @@ module Evaluator
       include Config::FacadeWriters
 
       # Returns the mutable configuration store behind the facade.
+      # Lazily initializes configuration on first access.
       #
       # @return [Config::Store] configuration state store
       def store
@@ -43,6 +44,7 @@ module Evaluator
       # @return [void]
       # @raise [Errno::ENOENT] if a discovered config file disappears before it can be read
       def reset
+        @store = Config::Store.new
         apply_defaults
         apply_json_config
         apply_env_overrides
@@ -80,7 +82,5 @@ module Evaluator
         apply_config(result[:response][:config]) if result[:success]
       end
     end
-
-    reset
   end
 end

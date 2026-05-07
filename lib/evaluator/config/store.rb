@@ -43,6 +43,21 @@ module Evaluator
         llm_providers_config.dig(current_llm_provider, :model)
       end
 
+      # Returns the base URL for the current provider.
+      #
+      # @return [String, nil] configured base URL
+      def base_url
+        llm_providers_config.dig(current_llm_provider, :base_url)
+      end
+
+      # Returns configuration for a specific provider.
+      #
+      # @param provider [Symbol] provider name
+      # @return [Hash] configuration for the provider
+      def for_provider(provider)
+        llm_providers_config[provider.to_sym] || {}
+      end
+
       # Applies provider-specific configuration values.
       #
       # @param providers [Hash] provider configuration by provider name

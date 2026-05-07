@@ -8,6 +8,13 @@ module Evaluator
       # Null Object implementation for unsupported LLM providers.
       # Extends BaseClient for interface consistency.
       class NullClient < BaseClient
+        # Returns the provider identifier.
+        #
+        # @return [Symbol]
+        def provider_name
+          :null
+        end
+
         protected
 
         # Always returns an empty string for the base URL.

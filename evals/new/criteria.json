@@ -1,5 +1,5 @@
 {
-  "runtime": "generic",
+  "runtime": "rails",
   "pass": {
     "score_threshold": 0.8
   },

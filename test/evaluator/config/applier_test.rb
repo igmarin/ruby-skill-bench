@@ -71,13 +71,15 @@ module Evaluator
       end
 
       def test_call_returns_error_on_exception
-        # Make assign_current_llm_provider raise when called
+        old_stderr = $stderr
+        $stderr = StringIO.new
         @store.stubs(:assign_current_llm_provider).raises(StandardError.new('fail'))
         @store.stubs(:assign_max_execution_time)
         @store.stubs(:assign_allowed_commands)
         @store.stubs(:apply_provider_config)
 
         result = Applier.call(store: @store, data: { current_llm_provider: :openai })
+        $stderr = old_stderr
 
         refute result[:success]
         assert_match(/fail/, result[:response][:error][:message])

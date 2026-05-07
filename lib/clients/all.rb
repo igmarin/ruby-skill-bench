@@ -1,0 +1,15 @@
+# frozen_string_literal: true
+
+require_relative 'response_parser'
+require_relative 'response_error_handler'
+require_relative 'request_builder'
+require_relative 'base_client'
+require_relative 'provider_registry'
+require_relative 'providers/anthropic'
+require_relative 'providers/openai'
+require_relative 'providers/gemini'
+require_relative 'providers/ollama'
+require_relative 'providers/azure_openai'
+require_relative 'providers/opencode'
+require_relative 'providers/groq'
+require_relative 'providers/deepseek'

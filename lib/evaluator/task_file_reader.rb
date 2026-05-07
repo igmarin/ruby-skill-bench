@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'pathname'
+require_relative 'error_logger'
 
 module Evaluator
   # Reads task.md and criteria.json files for an evaluation task.
@@ -37,6 +38,7 @@ module Evaluator
         }
       }
     rescue StandardError => e
+      Evaluator::ErrorLogger.log_error(e, 'TaskFileReader Error')
       { success: false, response: { error: { message: "Error reading task files: #{e.message}" } } }
     end
 
@@ -58,6 +60,7 @@ module Evaluator
       content = File.read(file_path)
       { success: true, response: { content: content } }
     rescue StandardError => e
+      Evaluator::ErrorLogger.log_error(e, "TaskFileReader##{filename} Error")
       { success: false, response: { error: { message: "Error reading #{filename}: #{e.message}" } } }
     end
   end

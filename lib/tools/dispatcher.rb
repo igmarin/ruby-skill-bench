@@ -37,7 +37,7 @@ module Evaluator
           msg = "#{exception.message}\n#{exception.backtrace.first(5).join("\n")}"
           if defined?(Rails)
             Rails.logger.error(msg)
-          else
+          elsif !defined?(Minitest)
             warn("Dispatcher Error: #{msg}")
           end
         end

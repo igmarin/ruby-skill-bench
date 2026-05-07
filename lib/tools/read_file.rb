@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'base'
+require_relative '../evaluator/error_logger'
 
 module Evaluator
   module Tools
@@ -42,6 +43,7 @@ module Evaluator
       rescue ArgumentError
         raise
       rescue StandardError => e
+        Evaluator::ErrorLogger.log_error(e, 'ReadFile Error')
         "Error reading file: #{e.message}"
       end
 

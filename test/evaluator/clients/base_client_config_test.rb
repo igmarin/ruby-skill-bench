@@ -10,6 +10,10 @@ module Evaluator
       def setup
         Config.reset
         @client_class = Class.new(BaseClient) do
+          def provider_name
+            :test_provider
+          end
+
           def base_url
             'https://api.example.com'
           end
@@ -24,6 +28,13 @@ module Evaluator
 
           def config_error
             { success: false, response: { error: { message: 'Config error' } } }
+          end
+
+          def extract_message(body)
+            choices = body[:choices] || body['choices']
+            return nil unless choices&.any?
+
+            choices.first[:message] || choices.first['message']
           end
         end
       end

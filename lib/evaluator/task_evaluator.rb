@@ -7,13 +7,12 @@ require_relative 'sandbox'
 require_relative 'judge'
 require_relative 'agent_runner'
 require_relative 'source_path_resolver'
+require_relative 'error_logger'
 
 module Evaluator
   # Evaluates a single task by running baseline and context-hydrated evaluations.
   # Orchestrates AgentRunner calls and Judge scoring.
   class TaskEvaluator
-    SEPARATOR = '================================================='
-
     # Evaluates a single task.
     #
     # @param full_eval_path [Pathname] The path to the evaluation directory.
@@ -93,6 +92,7 @@ module Evaluator
         judge_score: judge_score
       }
     rescue StandardError => e
+      Evaluator::ErrorLogger.log_error(e, 'TaskEvaluator Error')
       { success: false, response: { error: { message: "Error evaluating task: #{e.message}" } } }
     end
   end

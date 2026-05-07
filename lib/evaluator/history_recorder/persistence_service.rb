@@ -37,7 +37,8 @@ module Evaluator
         history << entry
 
         File.write(history_file, JSON.pretty_generate(history))
-        puts "History recorded to #{history_file}"
+        logger = defined?(Rails) ? Rails.logger : nil
+        logger&.info("History recorded to #{history_file}")
         true
       rescue StandardError => e
         log_error(e)

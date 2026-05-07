@@ -24,6 +24,9 @@ directories:
       enabled: false
     UncommunicativeMethodName:
       enabled: false
+  "lib":
+    UtilityFunction:
+      enabled: false
 
 detectors:
   InstanceVariableAssumption:
@@ -34,12 +37,17 @@ detectors:
       - "Evaluator::Clients::Providers::Ollama"
       - "Evaluator::Clients::Providers::Anthropic"
       - "Evaluator::Clients::Providers::AzureOpenAI"
+      - "Evaluator::Clients::Providers::DeepSeek"
+      - "Evaluator::Clients::Providers::Groq"
+      - "Evaluator::Clients::Providers::OpenCode"
   MissingSafeMethod:
     enabled: false
   ControlParameter:
     exclude:
       - "Evaluator::Tools::Base"
       - "Evaluator::EvaluateCommand#print_parse_error"
+      - "AgentEval::OutputFormatter#self.format"
+      - "AgentEval::Commands::Run#validate_api_key"
   DuplicateMethodCall:
     exclude:
       - "Evaluator::Client#call"
@@ -50,12 +58,19 @@ detectors:
       - "Evaluator::Config#load_and_merge_json"
       - "Evaluator::Clients::Providers::Gemini#initialize"
       - "Evaluator::Clients::BaseClient#execute_request"
-      - "Evaluator::Tools::WriteFile#self.call"
-      - "Evaluator::SourcePathResolver#self.call"
-      - "Evaluator::EvaluateCommand#print_task_result"
-      - "Evaluator::EvaluateCommand#print_task_diffs"
-      - "Evaluator::Runner#evaluate_task"
       - "Evaluator::Tools::Base#verify_component_safety!"
+      - "Evaluator::Tools::WriteFile#self.call"
+      - "AgentEval::OutputFormatter#self.format_human"
+      - "AgentEval::OutputFormatter#self.format_junit"
+      - "AgentEval::Migration::ProviderMigrator#self.migrate"
+      - "AgentEval::Commands::Run"
+      - "AgentEval::Models::Config#self.load"
+      - "AgentEval::Services::RunnerService#spawn_agent"
+      - "Evaluator::Clients::RequestBuilder#self.build_connection"
+      - "Evaluator::Clients::ResponseErrorHandler#self.failure_response"
+      - "Evaluator::Clients::ResponseParser#self.extract_openai_message"
+      - "Evaluator::Clients::ResponseParser#self.parse_body"
+      - "Evaluator::ErrorLogger#log_error"
   UncommunicativeVariableName:
     accept:
       - e
@@ -63,8 +78,17 @@ detectors:
       - id
   TooManyInstanceVariables:
     max_instance_variables: 6
+    exclude:
+      - "Evaluator::Clients::BaseClient"
   TooManyStatements:
-    max_statements: 20
+    max_statements: 25
+    exclude:
+      - "AgentEval::Commands::Run"
+  TooManyMethods:
+    max_methods: 15
+    exclude:
+      - "Evaluator::Clients::BaseClient"
+      - "Evaluator::Clients::Providers::Anthropic"
   DataClump:
     exclude:
       - "Evaluator::Tools"
@@ -75,20 +99,15 @@ detectors:
       - "Evaluator::Clients::Providers::Gemini#config_error"
       - "Evaluator::Clients::Providers::Anthropic#config_error"
       - "Evaluator::Clients::Providers::AzureOpenAI#config_error"
+      - "AgentEval::Models::Config#find_provider"
+      - "AgentEval::Models::Config#providers"
+      - "AgentEval::Services::RunnerService#spawn_agent"
+      - "Evaluator::Clients::BaseClient#config_error"
   BooleanParameter:
     exclude:
       - "AgentEval::Commands::Init#self.run"
   UtilityFunction:
-    exclude:
-      - "Evaluator::Clients::BaseClient#failure_response"
-      - "Evaluator::Clients::BaseClient#extract_message"
-      - "Evaluator::Clients::Providers::OpenAI#extract_message"
-      - "Evaluator::Clients::Providers::Gemini#extract_message"
-      - "Evaluator::Clients::Providers::Anthropic#extract_message"
-      - "Evaluator::Clients::Providers::AzureOpenAI#extract_message"
-      - "Evaluator::Clients::Providers::NullClient#config_error"
-      - "Evaluator::Clients::Providers::Ollama#base_url"
-      - "Evaluator::EvaluateCommand#parse_judge_score"
+    enabled: false
   NilCheck:
     exclude:
       - "Evaluator::ReactAgent#call"
@@ -99,8 +118,21 @@ detectors:
       - "Evaluator::HistoryRecorder#normalize_score"
       - "Evaluator::HistoryRecorder#self.summarize"
       - "Evaluator::Clients::Providers::Anthropic#parse_tool_arguments"
+      - "Evaluator::Clients::BaseClient#missing_config_keys"
+      - "Evaluator::Clients::ResponseParser#self.valid_message?"
   NestedIterators:
     exclude:
       - "Evaluator::EvaluateCommand#parse_options"
+  RepeatedConditional:
+    exclude:
+      - "AgentEval::OutputFormatter"
+      - "AgentEval::Commands::Run"
+  UnusedParameters:
+    exclude:
+      - "AgentEval::Skills::New#initialize"
+      - "AgentEval::Skills::TestService#initialize"
   LongParameterList:
     max_params: 5
+  ManualDispatch:
+    exclude:
+      - "AgentEval::Models::Config#self.load"

@@ -12,7 +12,13 @@ module Evaluator
         Evaluator::Clients::ProviderRegistry.register(:anthropic, self)
 
         VERSION = '2023-06-01'
-        ANTHROPIC_API_KEY_NOT_SET = 'ANTHROPIC_API_KEY not set for Anthropic'
+
+        # Returns the provider identifier.
+        #
+        # @return [Symbol]
+        def provider_name
+          :anthropic
+        end
 
         protected
 
@@ -20,14 +26,14 @@ module Evaluator
         #
         # @return [String]
         def base_url
-          'https://api.anthropic.com'
+          @base_url_config || 'https://api.anthropic.com'
         end
 
         # Returns the request path for the Messages API.
         #
         # @return [String]
         def request_path
-          '/v1/messages'
+          @request_path_config || '/v1/messages'
         end
 
         # Returns the headers required for Anthropic API.
@@ -55,54 +61,66 @@ module Evaluator
           body
         end
 
-        # Validates that the ANTHROPIC API key is set.
-        #
-        # @return [Boolean]
-        def valid_config?
-          !@api_key.to_s.strip.empty?
-        end
-
-        # Standardized error response when configuration is missing.
-        #
-        # @return [Hash]
-        def config_error
-          { success: false, response: { error: { message: ANTHROPIC_API_KEY_NOT_SET } } }
-        end
-
         private
 
-        # Extracts the message from Anthropic's response format.
-        # Iterates over content blocks to find the first text block.
-        #
-        # @param body [Hash] The parsed JSON response body.
-        # @return [Hash, nil] the text content or nil if not found
         def extract_message(body)
-          content_blocks = body['content']
-          return { 'role' => 'assistant', 'content' => '' } unless content_blocks.is_a?(Array)
+          content_blocks = body[:content] || body['content']
+          return default_message unless content_blocks.is_a?(Array)
 
-          grouped = content_blocks.group_by { |block| block['type'] }
-          text_block = grouped['text']&.first
-          tool_use_blocks = grouped['tool_use'] || []
-
-          message = {
-            'role' => 'assistant',
-            'content' => text_block&.dig('text') || ''
-          }
-
-          if tool_use_blocks.any?
-            message['tool_calls'] = tool_use_blocks.map do |block|
-              {
-                'id' => block['id'],
-                'type' => 'function',
-                'function' => {
-                  'name' => block['name'],
-                  'arguments' => block['input'].to_json
-                }
-              }
-            end
-          end
-
+          grouped = content_blocks.group_by { |block| block_type(block) }
+          message = build_base_message(grouped)
+          add_tool_calls(message, grouped) if grouped['tool_use']&.any?
           message
+        end
+
+        def default_message
+          { 'role' => 'assistant', 'content' => '' }
+        end
+
+        def block_type(block)
+          (block[:type] || block['type']).to_s
+        end
+
+        def build_base_message(grouped)
+          text_block = grouped['text']&.first
+          {
+            'role' => 'assistant',
+            'content' => extract_text(text_block)
+          }
+        end
+
+        def extract_text(text_block)
+          return '' unless text_block
+
+          text_block[:text] || text_block['text'] || ''
+        end
+
+        def add_tool_calls(message, grouped)
+          message['tool_calls'] = grouped['tool_use'].map do |block|
+            {
+              'id' => block[:id] || block['id'],
+              'type' => 'function',
+              'function' => {
+                'name' => block[:name] || block['name'],
+                'arguments' => (block[:input] || block['input']).to_json
+              }
+            }
+          end
+        end
+
+        # Extracts token usage from Anthropic's response.
+        #
+        # @param body [Hash]
+        # @return [Hash]
+        def extract_usage(body)
+          usage = body[:usage] || body['usage'] || {}
+          input = usage[:input_tokens] || usage['input_tokens'] || 0
+          output = usage[:output_tokens] || usage['output_tokens'] || 0
+          {
+            prompt_tokens: input,
+            completion_tokens: output,
+            total_tokens: input + output
+          }
         end
 
         # Translates a list of messages to Anthropic's expected format.
