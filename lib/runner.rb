@@ -3,6 +3,7 @@
 require 'pathname'
 require 'parallel'
 require_relative 'evaluator/task_evaluator'
+require_relative 'evaluator/error_logger'
 
 module Evaluator
   # Orchestrates the entire evaluation process.
@@ -68,6 +69,7 @@ module Evaluator
         }
       }
     rescue StandardError => e
+      Evaluator::ErrorLogger.log_error(e, 'Runner Error')
       { success: false, response: { error: { message: e.message } } }
     end
 

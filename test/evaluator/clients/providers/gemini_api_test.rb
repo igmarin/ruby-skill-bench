@@ -64,11 +64,15 @@ module Evaluator
         stub_request(:post, %r{https://us-central1-aiplatform\.googleapis\.com/v1/projects/test-project/locations/us-central1/endpoints/openapi/chat/completions})
           .to_raise(Faraday::TimeoutError)
 
+        # Silence stderr to suppress expected error log output
+        old_stderr = $stderr
+        $stderr = StringIO.new
         result = Providers::Gemini.call(
           api_key: 'test_gemini_key',
           system_prompt: 'System',
           messages: [{ role: 'user', content: 'Hi' }]
         )
+        $stderr = old_stderr
 
         refute result[:success]
       end

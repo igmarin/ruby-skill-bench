@@ -15,6 +15,9 @@ module Evaluator
       class Gemini < BaseClient
         Evaluator::Clients::ProviderRegistry.register(:gemini, self)
 
+        # Returns the provider identifier.
+        #
+        # @return [Symbol]
         def provider_name
           :gemini
         end

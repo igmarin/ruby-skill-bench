@@ -10,16 +10,28 @@ module AgentEval
   module Services
     # Orchestrates the execution of an eval
     class RunnerService
+      # Runs an eval with the given parameters.
+      #
+      # @param eval_name [String] Name or path of the eval to run
+      # @param skill_name [String] Name of the skill to use
+      # @param provider_name [String] Name of the provider to use
+      # @return [Hash] Result with pass/fail and score
       def self.call(eval_name:, skill_name:, provider_name:)
         new(eval_name: eval_name, skill_name: skill_name, provider_name: provider_name).call
       end
 
+      # @param eval_name [String] Name or path of the eval
+      # @param skill_name [String] Name of the skill
+      # @param provider_name [String] Name of the provider
       def initialize(eval_name:, skill_name:, provider_name:)
         @eval_name = eval_name
         @skill_name = skill_name
         @provider_name = provider_name
       end
 
+      # Executes the eval: resolves entities, spawns agent, scores result.
+      #
+      # @return [Hash] Scored result with pass/fail status
       def call
         eval = resolve_eval
         skill = resolve_skill

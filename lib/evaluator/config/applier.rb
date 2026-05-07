@@ -31,6 +31,7 @@ module Evaluator
         apply_provider_values
         { success: true, response: { applied: true } }
       rescue StandardError => e
+        Evaluator::ErrorLogger.log_error(e, 'Applier Error')
         { success: false, response: { error: { message: e.message } } }
       end
 

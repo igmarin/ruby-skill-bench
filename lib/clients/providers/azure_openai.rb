@@ -18,6 +18,9 @@ module Evaluator
         # Default API version if none is provided.
         DEFAULT_API_VERSION = '2024-02-15-preview'
 
+        # Returns the provider identifier.
+        #
+        # @return [Symbol]
         def provider_name
           :azure
         end

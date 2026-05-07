@@ -11,6 +11,9 @@ module Evaluator
       class OpenAI < BaseClient
         Evaluator::Clients::ProviderRegistry.register(:openai, self)
 
+        # Returns the provider identifier.
+        #
+        # @return [Symbol]
         def provider_name
           :openai
         end

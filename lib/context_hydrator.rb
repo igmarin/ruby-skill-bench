@@ -46,7 +46,7 @@ module Evaluator
 
       { success: true, response: { context: xml_context } }
     rescue StandardError => e
-      Rails.logger.error("Hydration Error: #{e.message}") if defined?(Rails)
+      Evaluator::ErrorLogger.log_error(e, 'Hydration Error')
       { success: false, response: { error: { message: e.message } } }
     end
 

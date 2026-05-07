@@ -1,18 +1,17 @@
 # frozen_string_literal: true
 
-require 'faraday'
-require 'json'
 require_relative '../config'
 require_relative 'provider_config'
+require_relative 'response_parser'
+require_relative 'response_error_handler'
+require_relative 'request_builder'
 
 module Evaluator
   module Clients
     # Base class for all LLM provider clients.
-    # Implements common Faraday logic, response handling, and error logging.
+    # Orchestrates request execution, response parsing, and error handling.
     # Following the Template Method pattern and ruby-service-objects standards.
     class BaseClient
-      API_FAILED = 'API Request failed'
-
       attr_reader :messages, :system_prompt, :tools, :api_key, :model, :options
 
       # Standard entry point for the service object.
@@ -37,7 +36,6 @@ module Evaluator
         @request_path_config = config[:request_path]
         @provider_display_name = config[:provider_name]
 
-        # Provider-specific extras (nil when not used by the provider)
         @location = config[:location]
         @project_id = config[:project_id]
         @endpoint = config[:endpoint]
@@ -64,11 +62,11 @@ module Evaluator
         response = execute_request
         handle_response(response)
       rescue Faraday::Error => e
-        handle_exception(e, 'Network Error')
+        ResponseErrorHandler.handle_exception(e, 'Network Error')
       rescue JSON::ParserError => e
-        handle_exception(e, 'Parsing Error')
+        ResponseErrorHandler.handle_exception(e, 'Parsing Error')
       rescue StandardError => e
-        handle_exception(e, 'Unexpected Error')
+        ResponseErrorHandler.handle_exception(e, 'Unexpected Error')
       end
 
       protected
@@ -145,62 +143,35 @@ module Evaluator
       # @param body [Hash]
       # @return [Hash, nil]
       def extract_message(body)
-        choices = body[:choices] || body['choices']
-        return nil unless choices&.any?
-
-        choices.first[:message] || choices.first['message']
+        ResponseParser.extract_openai_message(body)
       end
 
       # Extracts token usage from the provider-specific response.
       # @param body [Hash]
       # @return [Hash]
       def extract_usage(body)
-        body[:usage] || body['usage'] || {}
+        ResponseParser.extract_openai_usage(body)
       end
 
       private
 
       def execute_request
-        conn = Faraday.new(url: base_url) do |f|
-          f.request :json
-          f.response :json
-          f.options.open_timeout = 5
-          f.options.timeout = 10
-        end
-
-        conn.post(request_path) do |req|
-          req.headers.update(request_headers)
-          req.body = request_body.to_json
-        end
+        connection = RequestBuilder.build_connection(base_url)
+        RequestBuilder.execute(connection, request_path, headers: request_headers, body: request_body)
       end
 
       def handle_response(response)
-        parsed = parse_response_body(response)
+        parsed = ResponseParser.parse_body(response)
         return failure_response(response, parsed) unless response.success?
 
         message = extract_message(parsed)
-        return missing_message_response(response, parsed) unless valid_message?(message)
+        return missing_message_response(response, parsed) unless ResponseParser.valid_message?(message)
 
         success_response(parsed, message)
       end
 
-      def parse_response_body(response)
-        response.body.is_a?(Hash) ? response.body : JSON.parse(response.body, symbolize_names: true)
-      rescue JSON::ParserError
-        { error: { message: response.body.to_s } }
-      end
-
-      def valid_message?(message)
-        return false if message.nil?
-
-        content = message.is_a?(Hash) ? (message[:content] || message['content']) : message
-        tool_calls = message.is_a?(Hash) ? (message[:tool_calls] || message['tool_calls']) : nil
-
-        !content.nil? || (tool_calls && !tool_calls.empty?)
-      end
-
       def success_response(parsed, message)
-        content = message.is_a?(Hash) ? (message[:content] || message['content']) : message
+        content = ResponseParser.extract_content(message)
         {
           success: true,
           result: content,
@@ -211,54 +182,11 @@ module Evaluator
       end
 
       def failure_response(response, parsed)
-        error_msg = "#{API_FAILED}: #{response.status}"
-        detail = parsed.is_a?(Hash) ? (parsed[:error] || parsed['error'] || parsed) : parsed
-
-        if detail.is_a?(Hash) && (detail[:message] || detail['message'])
-          error_msg += " - #{detail[:message] || detail['message']}"
-        elsif !detail.to_s.empty?
-          error_msg += " - #{detail}"
-        end
-
-        {
-          success: false,
-          result: error_msg,
-          usage: extract_usage(parsed),
-          response: { error: { message: error_msg } },
-          status: 'error',
-          code: response.status
-        }
+        ResponseErrorHandler.failure_response(response, parsed) { |body| extract_usage(body) }
       end
 
       def missing_message_response(response, parsed)
-        error_msg = 'LLM response missing message content'
-        {
-          success: false,
-          result: error_msg,
-          usage: extract_usage(parsed),
-          response: { error: { message: error_msg } },
-          status: 'error',
-          code: response.status
-        }
-      end
-
-      def handle_exception(error, type)
-        log_error(error)
-        { success: false, result: "#{type}: #{error.message}", status: 'error' }
-      end
-
-      def log_error(error)
-        message = "#{self.class.name} Error: #{error.message}"
-        backtrace = error.backtrace.first(5).join("\n")
-
-        logger = defined?(Rails) ? Rails.logger : nil
-        if logger
-          logger.error(message)
-          logger.error(backtrace)
-        else
-          warn(message)
-          warn(backtrace)
-        end
+        ResponseErrorHandler.missing_message_response(response, parsed) { |body| extract_usage(body) }
       end
     end
   end

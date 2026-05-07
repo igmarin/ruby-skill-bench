@@ -11,6 +11,9 @@ module Evaluator
       class Groq < BaseClient
         Evaluator::Clients::ProviderRegistry.register(:groq, self)
 
+        # Returns the provider identifier.
+        #
+        # @return [Symbol]
         def provider_name
           :groq
         end

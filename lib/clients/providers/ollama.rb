@@ -12,6 +12,9 @@ module Evaluator
       class Ollama < BaseClient
         Evaluator::Clients::ProviderRegistry.register(:ollama, self)
 
+        # Returns the provider identifier.
+        #
+        # @return [Symbol]
         def provider_name
           :ollama
         end

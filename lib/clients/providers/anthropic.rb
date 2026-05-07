@@ -13,6 +13,9 @@ module Evaluator
 
         VERSION = '2023-06-01'
 
+        # Returns the provider identifier.
+        #
+        # @return [Symbol]
         def provider_name
           :anthropic
         end
@@ -62,31 +65,47 @@ module Evaluator
 
         def extract_message(body)
           content_blocks = body[:content] || body['content']
-          return { 'role' => 'assistant', 'content' => '' } unless content_blocks.is_a?(Array)
+          return default_message unless content_blocks.is_a?(Array)
 
-          grouped = content_blocks.group_by { |block| (block[:type] || block['type']).to_s }
-          text_block = grouped['text']&.first
-          tool_use_blocks = grouped['tool_use'] || []
-
-          message = {
-            'role' => 'assistant',
-            'content' => (text_block&.dig(:text) || text_block&.dig('text')) || ''
-          }
-
-          if tool_use_blocks.any?
-            message['tool_calls'] = tool_use_blocks.map do |block|
-              {
-                'id' => block[:id] || block['id'],
-                'type' => 'function',
-                'function' => {
-                  'name' => block[:name] || block['name'],
-                  'arguments' => (block[:input] || block['input']).to_json
-                }
-              }
-            end
-          end
-
+          grouped = content_blocks.group_by { |block| block_type(block) }
+          message = build_base_message(grouped)
+          add_tool_calls(message, grouped) if grouped['tool_use']&.any?
           message
+        end
+
+        def default_message
+          { 'role' => 'assistant', 'content' => '' }
+        end
+
+        def block_type(block)
+          (block[:type] || block['type']).to_s
+        end
+
+        def build_base_message(grouped)
+          text_block = grouped['text']&.first
+          {
+            'role' => 'assistant',
+            'content' => extract_text(text_block)
+          }
+        end
+
+        def extract_text(text_block)
+          return '' unless text_block
+
+          text_block[:text] || text_block['text'] || ''
+        end
+
+        def add_tool_calls(message, grouped)
+          message['tool_calls'] = grouped['tool_use'].map do |block|
+            {
+              'id' => block[:id] || block['id'],
+              'type' => 'function',
+              'function' => {
+                'name' => block[:name] || block['name'],
+                'arguments' => (block[:input] || block['input']).to_json
+              }
+            }
+          end
         end
 
         # Extracts token usage from Anthropic's response.

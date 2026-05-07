@@ -5,12 +5,19 @@ require 'yaml'
 
 module Evaluator
   class CiIntegrationTest < Minitest::Test
+    def setup
+      @project_root = File.expand_path('../..', __dir__)
+    end
+
     def test_github_actions_workflow_exists
-      assert_path_exists '.github/workflows/ci.yml', 'GitHub Actions workflow should exist at .github/workflows/ci.yml'
+      workflow_path = File.join(@project_root, '.github', 'workflows', 'ci.yml')
+
+      assert_path_exists workflow_path, 'GitHub Actions workflow should exist at .github/workflows/ci.yml'
     end
 
     def test_workflow_runs_required_checks
-      workflow = YAML.safe_load_file('.github/workflows/ci.yml')
+      workflow_path = File.join(@project_root, '.github', 'workflows', 'ci.yml')
+      workflow = YAML.safe_load_file(workflow_path)
       steps = workflow['jobs']['test']['steps']
       step_names = steps.map { |s| s['name'] || s['run'] }.join(' ')
 

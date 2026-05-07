@@ -19,6 +19,9 @@ module Evaluator
         @config = Evaluator::Config.for_provider(@provider) || {}
       end
 
+      # Loads and returns standardized provider configuration.
+      #
+      # @return [Hash] Standardized configuration with api_key, model, base_url, etc.
       def call
         {
           api_key: fetch_config(:api_key),

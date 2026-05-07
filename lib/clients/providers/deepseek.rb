@@ -11,6 +11,9 @@ module Evaluator
       class DeepSeek < BaseClient
         Evaluator::Clients::ProviderRegistry.register(:deepseek, self)
 
+        # Returns the provider identifier.
+        #
+        # @return [Symbol]
         def provider_name
           :deepseek
         end

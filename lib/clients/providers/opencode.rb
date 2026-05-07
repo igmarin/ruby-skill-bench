@@ -10,6 +10,9 @@ module Evaluator
       class OpenCode < BaseClient
         Evaluator::Clients::ProviderRegistry.register(:opencode, self)
 
+        # Returns the provider identifier.
+        #
+        # @return [Symbol]
         def provider_name
           :opencode
         end

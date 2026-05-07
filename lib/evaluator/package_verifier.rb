@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'rubygems/package'
+require_relative 'error_logger'
 
 module Evaluator
   # Verifies that a built gem package includes the files required for release.
@@ -57,6 +58,7 @@ module Evaluator
 
       { success: true, response: { missing_files: [], packaged_files: files } }
     rescue StandardError => e
+      Evaluator::ErrorLogger.log_error(e, 'PackageVerifier Error')
       failure(e.message)
     end
 
