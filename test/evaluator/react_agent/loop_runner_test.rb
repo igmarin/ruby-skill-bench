@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   class LoopRunnerTest < Minitest::Test
     def test_call_returns_success_when_agent_completes
       # Arrange

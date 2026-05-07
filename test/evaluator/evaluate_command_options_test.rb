@@ -3,7 +3,7 @@
 require 'stringio'
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   class EvaluateCommandOptionsTest < Minitest::Test
     def setup
       @stdout = StringIO.new

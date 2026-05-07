@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   # Tests for the Evaluator::Tools routing module
   class ToolsTest < Minitest::Test
     def test_definitions_delegates_to_registry

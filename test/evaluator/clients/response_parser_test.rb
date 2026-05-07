@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   module Clients
     class ResponseParserTest < Minitest::Test
       def test_parse_body_with_hash_response

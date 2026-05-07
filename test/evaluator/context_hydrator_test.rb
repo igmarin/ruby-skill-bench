@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   class ContextHydratorTest < Minitest::Test
     def test_call_returns_success_and_hydrated_context
       # Arrange

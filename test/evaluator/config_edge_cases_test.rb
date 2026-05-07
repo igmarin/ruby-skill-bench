@@ -4,7 +4,7 @@ require 'test_helper'
 require 'tmpdir'
 require 'fileutils'
 
-module Evaluator
+module SkillBench
   class ConfigEdgeCasesTest < Minitest::Test
     def setup
       @home_dir = Dir.mktmpdir

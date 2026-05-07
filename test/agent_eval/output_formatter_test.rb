@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module AgentEval
+module SkillBench
   class OutputFormatterTest < Minitest::Test
     def test_format_human_with_pass
       result = { eval_name: 'test-eval', skill_name: 'test-skill', provider_name: 'mock', pass: true, score: 1.0 }

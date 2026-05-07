@@ -1,25 +1,25 @@
 # frozen_string_literal: true
 
-require_relative 'lib/evaluator/version'
+require_relative 'lib/skill_bench/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'agent-eval'
-  spec.version       = Evaluator::VERSION
+  spec.name          = 'ruby-skill-bench'
+  spec.version       = SkillBench::VERSION
   spec.authors       = ['Ismael Marin']
   spec.email         = ['ismael.marin@gmail.com']
-  spec.summary       = 'The evaluation engine for Evals Relaeted to Ruby on Rails Agent Skills.'
-  spec.homepage      = 'https://github.com/igmarin/agent-eval'
+  spec.summary       = 'The evaluation engine for AI Agent Skills benchmarking.'
+  spec.homepage      = 'https://github.com/igmarin/ruby-skill-bench'
   spec.description   = <<~DESC
-    agent-eval orchestrates side-by-side evaluation runs of an LLM coding agent
-    (baseline vs. skill-hydrated) inside isolated git sandboxes, then scores the
-    resulting diffs using an LLM judge.
+    ruby-skill-bench orchestrates evaluation runs of AI coding agents
+    inside isolated git sandboxes, then scores the results using deterministic
+    and LLM-powered judges.
   DESC
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 3.1'
 
   spec.files         = Dir.chdir(__dir__) { Dir['lib/**/*.rb', 'bin/*', 'docs/**/*.md', 'README.md', 'LICENSE'] }
   spec.bindir        = 'bin'
-  spec.executables   = ['evaluate']
+  spec.executables   = ['skill-bench']
   spec.require_paths = ['lib']
 
   # Runtime dependencies
@@ -30,5 +30,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'json',     '~> 2.19'
   spec.add_dependency 'parallel', '~> 1.26'
   spec.metadata['rubygems_mfa_required'] = 'true'
-  spec.metadata['source_code_uri'] = 'https://github.com/igmarin/agent-eval'
+  spec.metadata['source_code_uri'] = 'https://github.com/igmarin/ruby-skill-bench'
 end

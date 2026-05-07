@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   class SourcePathResolverTest < Minitest::Test
     def test_infers_skill_source_path_from_eval_path
       resolved = SourcePathResolver.call(

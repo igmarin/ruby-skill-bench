@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   class GemspecTest < Minitest::Test
     def setup
       gemspec_path = File.expand_path('../../agent-eval.gemspec', __dir__)

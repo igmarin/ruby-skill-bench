@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   class ReactAgent
     class ToolExecutorTest < Minitest::Test
       def test_call_executes_tools_and_returns_messages

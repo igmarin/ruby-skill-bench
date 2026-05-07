@@ -3,7 +3,7 @@
 require 'test_helper'
 require 'tmpdir'
 
-module Evaluator
+module SkillBench
   class Config
     class JsonLoaderTest < Minitest::Test
       def test_loads_scalar_values_and_provider_hashes

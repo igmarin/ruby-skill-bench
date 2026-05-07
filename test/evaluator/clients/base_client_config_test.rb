@@ -4,7 +4,7 @@ require 'test_helper'
 require 'faraday'
 require 'json'
 
-module Evaluator
+module SkillBench
   module Clients
     class BaseClientConfigTest < Minitest::Test
       def setup

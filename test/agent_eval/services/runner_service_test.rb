@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module AgentEval
+module SkillBench
   module Services
     class RunnerServiceTest < Minitest::Test
       def setup

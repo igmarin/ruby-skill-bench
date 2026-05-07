@@ -3,7 +3,7 @@
 require 'test_helper'
 require 'rubygems/package'
 
-module Evaluator
+module SkillBench
   class PackageVerifierTest < Minitest::Test
     def test_returns_success_envelope_when_package_contains_required_files
       package = stub(spec: stub(files: %w[README.md LICENSE lib/runner.rb]))

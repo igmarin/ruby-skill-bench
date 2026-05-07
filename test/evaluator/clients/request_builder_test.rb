@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   module Clients
     class RequestBuilderTest < Minitest::Test
       def test_build_connection_returns_faraday_connection

@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   module Tools
     # Tests for the Evaluator::Tools::ArgumentParser
     class ArgumentParserTest < Minitest::Test

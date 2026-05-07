@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   class Config
     class StoreTest < Minitest::Test
       def test_applies_defaults_as_independent_provider_config

@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   module Clients
     module Providers
       class NullClientTest < Minitest::Test

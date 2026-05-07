@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module AgentEval
+module SkillBench
   module Commands
     class EvalNewTest < Minitest::Test
       def setup

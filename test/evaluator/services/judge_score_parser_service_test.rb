@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   module Services
     class JudgeScoreParserServiceTest < Minitest::Test
       def test_call_with_json_string

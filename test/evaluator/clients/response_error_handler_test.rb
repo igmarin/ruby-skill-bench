@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   module Clients
     class ResponseErrorHandlerTest < Minitest::Test
       def test_failure_response_with_error_message

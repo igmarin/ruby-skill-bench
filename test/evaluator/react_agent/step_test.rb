@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   class ReactAgent
     class StepTest < Minitest::Test
       def setup

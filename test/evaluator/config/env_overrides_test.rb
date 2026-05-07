@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   class Config
     class EnvOverridesTest < Minitest::Test
       def test_returns_nested_provider_overrides_for_present_env_values

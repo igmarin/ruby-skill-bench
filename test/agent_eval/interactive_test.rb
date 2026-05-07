@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module AgentEval
+module SkillBench
   class InteractiveTest < Minitest::Test
     def setup
       # Common stubs for interactive tests
@@ -12,11 +12,11 @@ module AgentEval
       Interactive.stubs(:select_provider).returns('openai')
 
       # Correct namespace for run command might need verification
-      # Based on spec it was AgentEval::Commands::Run
+      # Based on spec it was SkillBench::Commands::Run
       # Let's ensure it's stubbed correctly
-      return unless defined?(AgentEval::Commands::Run)
+      return unless defined?(SkillBench::Commands::Run)
 
-      AgentEval::Commands::Run.stubs(:run).returns({ pass: true })
+      SkillBench::Commands::Run.stubs(:run).returns({ pass: true })
     end
 
     def test_run_does_not_raise_error
@@ -24,7 +24,7 @@ module AgentEval
     end
 
     def test_run_returns_result
-      skip unless defined?(AgentEval::Commands::Run)
+      skip unless defined?(SkillBench::Commands::Run)
 
       result = Interactive.run
 

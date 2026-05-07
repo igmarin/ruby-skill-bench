@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   # Tests for Evaluator::Runner
   class RunnerTest < Minitest::Test
     def setup

@@ -4,7 +4,7 @@ require 'test_helper'
 require 'tmpdir'
 require 'pathname'
 
-module Evaluator
+module SkillBench
   module Tools
     class ReadFileTest < Minitest::Test
       def setup

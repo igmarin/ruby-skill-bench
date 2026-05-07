@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   class ReactAgentTest < Minitest::Test
     def test_call_delegates_to_loop_runner
       # Arrange

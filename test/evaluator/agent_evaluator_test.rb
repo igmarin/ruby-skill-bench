@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   class AgentEvaluatorTest < Minitest::Test
     def test_module_is_defined
       assert defined?(Evaluator)

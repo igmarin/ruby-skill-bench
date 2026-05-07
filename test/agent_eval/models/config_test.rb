@@ -3,7 +3,7 @@
 require 'test_helper'
 require 'yaml'
 
-module AgentEval
+module SkillBench
   module Models
     class ConfigTest < Minitest::Test
       def setup

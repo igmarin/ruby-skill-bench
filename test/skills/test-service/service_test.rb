@@ -3,7 +3,7 @@
 require 'test_helper'
 require_relative '../../../skills/test-service/service'
 
-module AgentEval
+module SkillBench
   module Skills
     class TestServiceTest < Minitest::Test
       def test_call_returns_success_by_default

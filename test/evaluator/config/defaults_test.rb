@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   class Config
     class DefaultsTest < Minitest::Test
       def test_call_returns_success

@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   module Tools
     # Tests for Evaluator::Tools::ReadFile
     class ReadFileTest < Minitest::Test

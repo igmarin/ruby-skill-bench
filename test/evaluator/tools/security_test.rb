@@ -4,7 +4,7 @@ require 'test_helper'
 require 'tools/write_file'
 require 'tools/read_file'
 
-module Evaluator
+module SkillBench
   module Tools
     class SecurityTest < Minitest::Test
       def setup

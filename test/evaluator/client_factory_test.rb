@@ -7,7 +7,7 @@ require_relative '../../lib/clients/providers/gemini'
 require_relative '../../lib/clients/providers/ollama'
 require_relative '../../lib/clients/providers/null_client'
 
-module Evaluator
+module SkillBench
   class ClientFactoryTest < Minitest::Test
     include Mocha::API # Include Mocha API for class method stubbing
 

@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module AgentEval
+module SkillBench
   module Rails
     class SkillTemplatesTest < Minitest::Test
       def test_service_object_generates_valid_ruby

@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   module Clients
     class GeminiToolUseTest < Minitest::Test
       def setup

@@ -3,7 +3,7 @@
 require 'test_helper'
 require 'stringio'
 
-module Evaluator
+module SkillBench
   module Services
     class ResultPrinterServiceTest < Minitest::Test
       def setup

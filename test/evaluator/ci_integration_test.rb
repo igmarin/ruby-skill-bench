@@ -3,7 +3,7 @@
 require 'test_helper'
 require 'yaml'
 
-module Evaluator
+module SkillBench
   class CiIntegrationTest < Minitest::Test
     def setup
       @project_root = File.expand_path('../..', __dir__)

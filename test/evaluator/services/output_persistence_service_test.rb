@@ -3,7 +3,7 @@
 require 'test_helper'
 require 'tempfile'
 
-module Evaluator
+module SkillBench
   module Services
     class OutputPersistenceServiceTest < Minitest::Test
       def setup

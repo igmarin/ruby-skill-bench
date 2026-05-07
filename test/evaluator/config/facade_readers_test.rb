@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   class Config
     class FacadeReadersTest < Minitest::Test
       def setup

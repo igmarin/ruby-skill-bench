@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-module Evaluator
+module SkillBench
   module Clients
     # rubocop:disable Metrics/ClassLength
     class AnthropicTest < Minitest::Test
