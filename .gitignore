@@ -13,3 +13,4 @@ gems-report.csv
 .windsurfrules
 .github/copilot-instructions.md
 .github/hooks/rtk-rewrite.json
+*.gem

@@ -67,11 +67,16 @@ module SkillBench
         Config::EnvOverrides.call
       end
 
-      # Resets the configuration store to defaults.
+      # Resets and reloads configuration from all sources.
+      # Pipeline: Defaults → Home JSON → Local JSON → ENV overrides.
       #
       # @return [void]
       def reset
-        @store = nil
+        @store = Config::Store.new
+        apply_defaults
+        apply_json_config(Pathname.new(Dir.home).join(CONFIG_FILENAME))
+        apply_json_config(Pathname.new(Dir.pwd).join(CONFIG_FILENAME))
+        apply_env_overrides
       end
 
       # Sets up configuration with a block.
@@ -108,7 +113,7 @@ module SkillBench
       # @param provider [Symbol] Provider name
       # @return [void]
       def current_llm_provider=(provider)
-        store.current_llm_provider = provider
+        store.assign_current_llm_provider(provider)
       end
 
       # Returns LLM providers configuration.
@@ -130,6 +135,31 @@ module SkillBench
       # @return [String, nil] Model name
       def model
         store.model
+      end
+
+      private
+
+      def apply_defaults
+        result = Config::Defaults.call
+        return unless result[:success]
+
+        Config::Applier.call(store: store, data: result[:response][:config])
+      end
+
+      def apply_json_config(path)
+        return unless File.exist?(path)
+
+        result = Config::JsonLoader.call(path)
+        return unless result[:success]
+
+        Config::Applier.call(store: store, data: result[:response][:config])
+      end
+
+      def apply_env_overrides
+        result = Config::EnvOverrides.call
+        return unless result[:success]
+
+        store.apply_provider_config(result[:response][:overrides])
       end
     end
   end

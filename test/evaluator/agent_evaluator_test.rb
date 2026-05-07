@@ -5,8 +5,8 @@ require 'test_helper'
 module SkillBench
   class AgentEvaluatorTest < Minitest::Test
     def test_module_is_defined
-      assert defined?(Evaluator)
-      assert_kind_of Module, Evaluator
+      assert defined?(SkillBench)
+      assert_kind_of Module, SkillBench
     end
 
     def test_version_is_accessible
@@ -15,8 +15,7 @@ module SkillBench
     end
 
     def test_module_is_already_loaded
-      # The module should already be loaded by test_helper
-      assert defined?(Evaluator)
+      assert defined?(SkillBench)
     end
   end
 end

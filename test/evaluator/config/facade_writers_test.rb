@@ -11,7 +11,6 @@ module SkillBench
       end
 
       def teardown
-        # Clean up by removing the constant if it exists
         Object.send(:remove_const, :Rails) if Object.const_defined?(:Rails)
       end
 
