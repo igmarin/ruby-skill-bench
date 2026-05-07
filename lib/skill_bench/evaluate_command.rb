@@ -75,9 +75,12 @@ module SkillBench
 
     def run_evaluation
       skill_option = @options[:skill]
+      eval_path = safe_expand_path(@options[:eval])
+      skill_path = skill_option ? safe_expand_path(skill_option) : nil
+
       result = SkillBench::Runner.call(
-        eval_folder_path: File.expand_path(@options[:eval]),
-        skill_path: skill_option ? File.expand_path(skill_option) : nil
+        eval_folder_path: eval_path,
+        skill_path: skill_path
       )
       Services::ResultPrinterService.call(result, stdout: @stdout)
       result
@@ -95,6 +98,17 @@ module SkillBench
         @stdout.puts "Error saving report: #{output_response[:error][:message]}"
         false
       end
+    end
+
+    def safe_expand_path(path)
+      expanded = File.expand_path(path)
+
+      if path.include?('..')
+        base = File.expand_path(Dir.pwd)
+        raise ArgumentError, "Path '#{path}' resolves outside the current working directory" unless expanded.start_with?("#{base}/") || expanded == base
+      end
+
+      expanded
     end
   end
 end

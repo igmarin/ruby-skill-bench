@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'cgi'
 require_relative '../base_client'
 require_relative '../provider_registry'
 
@@ -28,14 +29,14 @@ module SkillBench
         #
         # @return [String]
         def base_url
-          "https://#{@location}-aiplatform.googleapis.com"
+          "https://#{CGI.escape(@location.to_s)}-aiplatform.googleapis.com"
         end
 
         # Returns the request path for the Vertex AI OpenAI-compatible endpoint.
         #
         # @return [String]
         def request_path
-          "/v1/projects/#{@project_id}/locations/#{@location}/endpoints/openapi/chat/completions"
+          "/v1/projects/#{CGI.escape(@project_id.to_s)}/locations/#{CGI.escape(@location.to_s)}/endpoints/openapi/chat/completions"
         end
 
         # Model name formatted for Vertex AI.

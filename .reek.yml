@@ -113,6 +113,7 @@ detectors:
       - "SkillBench::Clients::BaseClient#config_error"
       - "SkillBench::Services::ScoringService#load_thresholds"
       - "SkillBench::Services::ScoringService#test_pass_rate"
+      - "SkillBench::EvaluateCommand#safe_expand_path"
   BooleanParameter:
     exclude:
       - "SkillBench::Commands::Init#self.run"

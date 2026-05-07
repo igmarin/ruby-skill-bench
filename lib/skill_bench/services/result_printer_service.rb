@@ -46,11 +46,12 @@ module SkillBench
         @stdout.puts RESULTS_BANNER
 
         unless @result[:success]
-          @stdout.puts "Evaluation failed: #{@result[:response][:error][:message]}"
+          error_msg = @result.dig(:response, :error, :message) || 'Unknown error'
+          @stdout.puts "Evaluation failed: #{error_msg}"
           return { success: true, response: {} }
         end
 
-        @result[:tasks].each do |task_result|
+        @result[:tasks]&.each do |task_result|
           @stdout.puts "\n========================================="
           @stdout.puts "       RESULTS: #{task_result[:path]}    "
           @stdout.puts "=========================================\n"

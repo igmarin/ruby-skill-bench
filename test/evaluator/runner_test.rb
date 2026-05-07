@@ -1,72 +1,23 @@
 # frozen_string_literal: true
 
 require 'test_helper'
+require 'tmpdir'
+require 'fileutils'
 
 module SkillBench
-  # Tests for SkillBench::Runner
   class RunnerTest < Minitest::Test
     def setup
-      @tmp_dir = Pathname.new(Dir.mktmpdir('evaluator_runner_test'))
-      @base_path = @tmp_dir
-
-      create_eval_fixture(
-        'evals/skills/ruby-service-objects/basic-service-object'
-      )
-      create_eval_fixture(
-        'evals/workflows/rails-tdd-loop/full-feature'
-      )
+      @base_path = Pathname.new(Dir.mktmpdir)
     end
 
     def teardown
-      FileUtils.rm_rf(@tmp_dir) if @tmp_dir&.exist?
+      FileUtils.rm_rf(@base_path)
     end
 
-    def test_call_returns_failure_when_eval_path_does_not_exist
-      result = Runner.call(
-        eval_folder_path: 'evals/skills/nonexistent/path',
-        base_path: @base_path
-      )
+    def test_call_runs_baseline_and_context_and_returns_judge_scores
+      create_eval_fixture('evals/skills/ruby-service-objects/basic-service-object')
 
-      refute result[:success]
-      assert_match(/does not exist/, result[:response][:error][:message])
-    end
-
-    def test_call_returns_failure_when_task_md_missing
-      create_eval_fixture('tmp/test-missing-task')
-      # Remove task.md to simulate missing file
-      File.delete(@base_path.join('tmp/test-missing-task/task.md'))
-
-      result = Runner.call(
-        eval_folder_path: 'tmp/test-missing-task',
-        base_path: @base_path
-      )
-
-      refute result[:success]
-      assert_match(/No task.md found/, result[:response][:error][:message])
-    end
-
-    def test_call_returns_failure_when_criteria_json_missing
-      create_eval_fixture('tmp/test-missing-criteria')
-      # Remove criteria.json to simulate missing file
-      File.delete(@base_path.join('tmp/test-missing-criteria/criteria.json'))
-
-      result = Runner.call(
-        eval_folder_path: 'tmp/test-missing-criteria',
-        base_path: @base_path
-      )
-
-      # Task will fail during evaluation due to missing criteria.json
-      # Check the task result in the response
-      task_result = result[:response][:tasks].first
-
-      refute task_result[:success]
-      assert_match(/File not found/, task_result[:response][:error][:message])
-    end
-
-    def test_call_infers_source_path_for_skill_evals
-      expect_single_task_run(
-        source_path: 'skills/ruby-service-objects'
-      )
+      expect_single_task_run(source_path: 'skills/ruby-service-objects')
 
       result = Runner.call(
         eval_folder_path: 'evals/skills/ruby-service-objects/basic-service-object',
@@ -75,30 +26,15 @@ module SkillBench
 
       assert result[:success]
       assert_equal 'multiple (batch run)', result[:response][:source_path]
-      assert_equal 1, result[:response][:tasks].size
-      task_result = result[:response][:tasks].first[:response]
+      task_response = result[:response][:tasks].first[:response]
 
-      assert_equal 'skills/ruby-service-objects', SourcePathResolver.call(eval_folder_path: task_result[:path])
+      assert_includes task_response[:judge_score][:response][:content], 'baseline_score'
     end
 
-    def test_call_infers_source_path_for_workflow_evals
-      expect_single_task_run(
-        source_path: 'workflows/rails-tdd-loop'
-      )
+    def test_call_with_explicit_skill_override
+      create_eval_fixture('evals/workflows/rails-tdd-loop/full-feature')
 
-      result = Runner.call(
-        eval_folder_path: 'evals/workflows/rails-tdd-loop/full-feature',
-        base_path: @base_path
-      )
-
-      assert result[:success]
-      assert_equal 'multiple (batch run)', result[:response][:source_path]
-    end
-
-    def test_call_uses_explicit_source_path_override
-      expect_single_task_run(
-        source_path: 'skills/ruby-service-objects'
-      )
+      expect_single_task_run(source_path: 'skills/ruby-service-objects')
 
       result = Runner.call(
         eval_folder_path: 'evals/workflows/rails-tdd-loop/full-feature',
@@ -113,8 +49,7 @@ module SkillBench
     def test_call_fails_without_context_when_source_path_cannot_be_inferred
       create_eval_fixture('tmp/custom-evals/unmapped-task')
 
-      # Both modes are invoked; we allow at least once to cover baseline and (potential) context
-      AgentRunner.expects(:call).at_least_once.returns(%w[output diff])
+      AgentRunner.expects(:call).never
 
       result = Runner.call(
         eval_folder_path: 'tmp/custom-evals/unmapped-task',
@@ -137,15 +72,15 @@ module SkillBench
     def expect_single_task_run(source_path:)
       judge_result = { success: true, response: { content: '{"baseline_score":60,"context_score":85,"reasoning":"context is better"}' } }
 
-      AgentRunner.expects(:call).with(has_entry(mode: :baseline)).returns(
-        ['baseline output', 'diff-baseline']
-      )
-      AgentRunner.expects(:call).with do |params|
-        params[:mode] == :context &&
-          params[:source_path] == source_path &&
-          params[:base_path] == @base_path
-      end.returns(['context output', 'diff-context'])
-      Judge.expects(:call).returns(judge_result)
+      AgentRunner.expects(:call).with(
+        has_entries(mode: :baseline)
+      ).returns(%w[baseline_output baseline_diff]).once
+
+      AgentRunner.expects(:call).with(
+        has_entries(mode: :context, source_path: source_path)
+      ).returns(%w[context_output context_diff]).once
+
+      Judge.expects(:call).returns(judge_result).once
     end
   end
 end

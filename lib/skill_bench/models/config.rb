@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'yaml'
 require_relative 'provider'
 
 module SkillBench
@@ -9,7 +10,7 @@ module SkillBench
       # @param data [Hash] Raw configuration data
       # @raise [ArgumentError] if data is not a Hash
       def initialize(data = {})
-        raise ArgumentError, 'Config data must be a Hash' unless data.is_a?(Hash)
+        raise ArgumentError, 'Config-data must be a Hash' unless data.is_a?(Hash)
 
         @data = self.class.send(:recursive_symbolize_keys, data)
       end
@@ -37,7 +38,7 @@ module SkillBench
       # @return [SkillBench::Models::Config] Loaded config instance
       # @note Missing config files are handled by logging and returning an empty config
       def self.load(path = '.agent-eval.yml')
-        raw_data = YAML.safe_load_file(path, permitted_classes: [Symbol]) || {}
+        raw_data = YAML.safe_load_file(path, permitted_classes: [], aliases: true) || {}
         new(raw_data)
       rescue Errno::ENOENT
         if defined?(::Rails) && ::Rails.respond_to?(:logger) && ::Rails.logger

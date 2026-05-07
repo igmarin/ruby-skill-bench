@@ -18,8 +18,8 @@ module SkillBench
           function_name = tool_call.dig('function', 'name')
           arguments = tool_call.dig('function', 'arguments')
 
-          puts "=== Calling Tool: #{function_name} ==="
-          puts "Args: #{arguments}"
+          warn "=== Calling Tool: #{function_name} ==="
+          warn "Args: #{arguments}"
 
           result = Tools.execute(function_name, arguments, working_dir, container_id)
 

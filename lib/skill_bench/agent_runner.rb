@@ -48,7 +48,12 @@ module SkillBench
         )
 
         response = agent_result[:response]
-        final_answer = agent_result[:success] ? response[:content] : "Error: #{response[:error][:message]}"
+        final_answer = if agent_result[:success]
+                         response&.dig(:content) || 'Error: Empty response from agent'
+                       else
+                         error_msg = response&.dig(:error, :message) || 'Unknown error'
+                         "Error: #{error_msg}"
+                       end
         [final_answer, Sandbox.capture_diff(working_dir)]
       end
     end

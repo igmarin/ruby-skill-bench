@@ -22,7 +22,9 @@ module SkillBench
 
         return { continue: false, result: client_result } unless client_result[:success]
 
-        response_msg = client_result[:response][:message]
+        response_msg = client_result.dig(:response, :message)
+        return { continue: false, result: { success: false, response: { error: { message: 'Empty response from LLM' } } } } unless response_msg
+
         messages << response_msg
 
         tool_calls = response_msg['tool_calls']
@@ -31,8 +33,8 @@ module SkillBench
         return { continue: false, result: { success: true, response: { content: content } } } if Array(tool_calls).empty?
 
         if content
-          puts "\n=== Agent Thought ==="
-          puts content
+          warn "\n=== Agent Thought ==="
+          warn content
         end
 
         messages.concat(ToolExecutor.call(tool_calls, config[:working_dir], config[:container_id]))

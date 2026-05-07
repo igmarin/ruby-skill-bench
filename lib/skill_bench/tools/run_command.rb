@@ -9,6 +9,22 @@ module SkillBench
   module Tools
     # Handles executing a shell command within the working directory.
     class RunCommand
+      # Commands that are always blocked even if listed in allowed_commands,
+      # because they can be used to escape the sandbox or execute arbitrary code.
+      DANGEROUS_COMMANDS = %w[
+        bash sh zsh fish dash ksh csh tcsh
+        python python3 python2 ruby perl node
+        php lua tcl wish
+        curl wget nc ncat socat
+        eval exec
+        sudo su doas
+        chmod chown mount umount
+        dd mkfs fdisk parted
+        insmod rmmod modprobe
+        systemctl service
+        passwd useradd userdel groupadd groupdel
+      ].freeze
+
       # @return [Hash] The tool definition for the LLM API.
       def self.definition
         {
@@ -40,19 +56,20 @@ module SkillBench
       # @raise [Timeout::Error] Internally rescued; returns a timeout message string.
       def self.call(command, working_dir_path, container_id = nil)
         argv = command.shellsplit
+        return 'Error: Empty command.' if argv.empty?
+
         base_cmd = argv.first
+        return "Error: Command '#{base_cmd}' is blocked for security reasons." if DANGEROUS_COMMANDS.include?(base_cmd)
+
         allowed = SkillBench::Config.allowed_commands
-        return "Error: Command '#{base_cmd}' is not permitted. Allowed commands are: #{allowed.join(', ')}." if allowed && !allowed.include?(base_cmd)
+        return "Error: Command '#{base_cmd}' is not permitted. Allowed: #{allowed.join(', ')}." if allowed && !allowed.include?(base_cmd)
 
         max_time = SkillBench::Config.max_execution_time
         Timeout.timeout(max_time) do
           stdout_str, stderr_str, status = if container_id
-                                             # Execute inside the Docker container
-                                             # Environment is naturally scrubbed as docker exec doesn't inherit host ENV
                                              docker_cmd = ['docker', 'exec', '-w', '/sandbox', container_id] + argv
                                              Open3.capture3(*docker_cmd)
                                            else
-                                             # Fallback to host execution
                                              Open3.capture3(*argv, chdir: working_dir_path.to_s)
                                            end
           <<~RESULT

@@ -76,7 +76,12 @@ module SkillBench
       return judge_result unless judge_result[:success]
 
       response = judge_result[:response]
-      { success: true, response: { content: response[:message]['content'] } }
+      message = response[:message] || response['message']
+      content = message.is_a?(Hash) ? (message[:content] || message['content']) : nil
+
+      return { success: false, response: { error: { message: 'Empty response from judge' } } } unless content
+
+      { success: true, response: { content: content } }
     end
   end
 end

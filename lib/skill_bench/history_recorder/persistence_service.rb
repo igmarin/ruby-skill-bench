@@ -36,7 +36,7 @@ module SkillBench
 
         history << entry
 
-        File.write(history_file, JSON.pretty_generate(history))
+        atomic_write(history_file, history)
         logger = defined?(Rails) && Rails.respond_to?(:logger) ? Rails.logger : nil
 
         logger&.info("History recorded to #{history_file}")
@@ -50,20 +50,22 @@ module SkillBench
       #
       # @return [String, nil] Path to writable file, or nil if none found.
       def self.determine_history_file
-        # 1. Check ENV variable first
         env_history_file = ENV.fetch('EVALUATOR_HISTORY_FILE', nil)
-        return env_history_file if env_history_file && !env_history_file.to_s.strip.empty?
+        return nil if env_history_file.to_s.strip.empty?
 
-        # 2. Try current working directory (for backward compat)
+        env_path = File.expand_path(env_history_file)
+        allowed_prefixes = allowed_history_prefixes
+        return nil unless allowed_prefixes.any? { |prefix| env_path.start_with?(prefix) }
+
+        return env_path if prepare_and_writable?(env_path)
+
         cwd_path = File.join(Dir.pwd, 'benchmarks.json')
         return cwd_path if writable?(cwd_path)
 
-        # 3. Try user's local share directory
         home_dir = Dir.home
         local_path = File.join(home_dir, '.local', 'share', 'agent_evaluator', 'benchmarks.json')
         return local_path if prepare_and_writable?(local_path)
 
-        # 4. Try XDG data home
         xdg_data_home = ENV.fetch('XDG_DATA_HOME', File.join(home_dir, '.local', 'share'))
         xdg_path = File.join(xdg_data_home, 'agent_evaluator', 'benchmarks.json')
         return xdg_path if prepare_and_writable?(xdg_path)
@@ -120,6 +122,33 @@ module SkillBench
           warn("HistoryRecorder Error: #{msg}")
         end
       end
+
+      # Returns allowed directory prefixes for history files.
+      #
+      # @return [Array<String>] allowed directory paths
+      def self.allowed_history_prefixes
+        [Dir.pwd, File.join(Dir.home, '.local', 'share', 'agent_evaluator')]
+      end
+      private_class_method :allowed_history_prefixes
+
+      # Writes data atomically using a temp file and rename.
+      #
+      # @param path [String] target file path
+      # @param data [Object] data to serialize as JSON
+      # @return [void]
+      def self.atomic_write(path, data)
+        dir = File.dirname(path)
+        FileUtils.mkpath(dir)
+
+        temp_path = "#{path}.tmp.#{Process.pid}"
+        File.open(temp_path, File::RDWR | File::CREAT, 0o644) do |f|
+          f.flock(File::LOCK_EX)
+          f.write(JSON.pretty_generate(data))
+          f.fsync
+        end
+        File.rename(temp_path, path)
+      end
+      private_class_method :atomic_write
     end
   end
 end

@@ -74,7 +74,7 @@ module SkillBench
       def reset
         @store = Config::Store.new
         apply_defaults
-        apply_json_config(Pathname.new(Dir.home).join(CONFIG_FILENAME))
+        apply_json_config(home_config_path)
         apply_json_config(Pathname.new(Dir.pwd).join(CONFIG_FILENAME))
         apply_env_overrides
       end
@@ -139,6 +139,12 @@ module SkillBench
 
       private
 
+      def home_config_path
+        Pathname.new(Dir.home).join(CONFIG_FILENAME)
+      rescue ArgumentError
+        nil
+      end
+
       def apply_defaults
         result = Config::Defaults.call
         return unless result[:success]
@@ -147,6 +153,7 @@ module SkillBench
       end
 
       def apply_json_config(path)
+        return unless path
         return unless File.exist?(path)
 
         result = Config::JsonLoader.call(path)

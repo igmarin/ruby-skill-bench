@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'cgi'
 require_relative '../base_client'
 require_relative '../provider_registry'
 
@@ -39,7 +40,7 @@ module SkillBench
         # @return [String]
         def request_path
           api_ver = @api_version || DEFAULT_API_VERSION
-          "/openai/deployments/#{@model}/chat/completions?api-version=#{api_ver}"
+          "/openai/deployments/#{CGI.escape(@model.to_s)}/chat/completions?api-version=#{CGI.escape(api_ver.to_s)}"
         end
 
         # Returns the headers required for Azure OpenAI authentication.

@@ -54,6 +54,8 @@ module SkillBench
         skill_path: @skill_path
       )
 
+      return { success: false, response: { error: { message: 'No source path inferred' } } } unless source_path
+
       baseline_result, baseline_code_diff = AgentRunner.call(
         mode: :baseline,
         full_eval_path: @full_eval_path,
@@ -61,26 +63,16 @@ module SkillBench
         client_params: @client_params
       )
 
-      context_result, context_code_diff = if source_path
-                                            AgentRunner.call(
-                                              mode: :context,
-                                              full_eval_path: @full_eval_path,
-                                              task_content: task_content,
-                                              client_params: @client_params,
-                                              source_path: source_path,
-                                              base_path: @base_path
-                                            )
-                                          else
-                                            { success: false, response: { error: { message: 'No source path inferred' } } }
-                                          end
+      context_result, context_code_diff = AgentRunner.call(
+        mode: :context,
+        full_eval_path: @full_eval_path,
+        task_content: task_content,
+        client_params: @client_params,
+        source_path: source_path,
+        base_path: @base_path
+      )
 
-      judge_score = if source_path
-                      Judge.call(task_content, criteria_content, baseline_code_diff, context_code_diff, @client_params)
-                    else
-                      { success: false, response: { error: { message: 'No source path - judge skipped' } } }
-                    end
-
-      # Propagate Judge failures
+      judge_score = Judge.call(task_content, criteria_content, baseline_code_diff, context_code_diff, @client_params)
       return judge_score unless judge_score[:success]
 
       {
