@@ -1,4 +1,4 @@
-# Evaluator Services
+# SkillBench Services
 
 This module contains service objects that implement the Single Responsibility Principle for the `EvaluateCommand` class. Each service handles a specific aspect of the evaluation workflow with proper error handling and standardized response formats.
 
@@ -69,6 +69,42 @@ result = OutputPersistenceService.call(evaluation_result, output_path: 'output.j
 # => { success: true, response: { message: 'Report saved to output.json' } }
 ```
 
+### ScoringService
+
+Computes deterministic composite scores from eval results using weighted components.
+
+**Responsibilities:**
+- Calculate test pass rate (50% weight)
+- Calculate timing compliance (30% weight)
+- Calculate error handling score (20% weight)
+- Load thresholds from criteria.json
+- Return pass/fail decision with detailed breakdown
+
+**Usage:**
+
+```ruby
+result = ScoringService.call(
+  eval: eval_instance,
+  result: { status: 'success', test_results: [...] },
+  skill_name: 'my-skill',
+  provider_name: 'openai'
+)
+# => {
+#      pass: true,
+#      score: 0.92,
+#      eval_name: 'my-eval',
+#      skill_name: 'my-skill',
+#      provider_name: 'openai',
+#      details: {
+#        test_pass_rate: 1.0,
+#        timing_score: 0.8,
+#        error_score: 1.0,
+#        pass_threshold: 0.8,
+#        fail_threshold: 0.5
+#      }
+#    }
+```
+
 ## Response Contract
 
 All services follow the standardized response contract:
@@ -89,6 +125,7 @@ Each service implements proper error handling:
 - **JudgeScoreParserService**: Handles `JSON::ParserError` and nil inputs gracefully
 - **ResultPrinterService**: Uses JudgeScoreParserService internally and handles parse errors
 - **OutputPersistenceService**: Catches `SystemCallError` for file system operations
+- **ScoringService**: Handles missing keys, empty arrays, and division-by-zero edge cases
 
 ## Testing
 
@@ -110,7 +147,7 @@ def call
   return 1 unless options_result[:success]
   
   # Run evaluation
-  result = Evaluator::Runner.call(...)
+  result = SkillBench::Runner.call(...)
   
   # Print results
   Services::ResultPrinterService.call(result, stdout: @stdout)
@@ -119,7 +156,7 @@ def call
   Services::OutputPersistenceService.call(result, output_path: options[:output])
   
   # Record history
-  Evaluator::HistoryRecorder.record(...)
+  SkillBench::HistoryRecorder.record(...)
 end
 ```
 

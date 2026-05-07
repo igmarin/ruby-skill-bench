@@ -1,6 +1,6 @@
 # 🧠 LLM Clients Layer
 
-The `lib/clients` directory is the **Intelligence Bridge** of the Evaluator system. It provides a standardized, unified interface to interact with diverse Large Language Model (LLM) providers, from global leaders like OpenAI and Anthropic to local powerhouses via Ollama.
+The `lib/skill_bench/clients` directory is the **Intelligence Bridge** of the SkillBench system. It provides a standardized, unified interface to interact with diverse Large Language Model (LLM) providers, from global leaders like OpenAI and Anthropic to local powerhouses via Ollama.
 
 ---
 
@@ -12,7 +12,7 @@ The client layer is built on the **Template Method pattern** and a **Decoupled P
 ```mermaid
 graph TD
     %% Nodes
-    Dispatcher[Evaluator::Client]
+    Dispatcher[SkillBench::Client]
     Registry[Provider Registry]
     Base[BaseClient]
     
@@ -44,6 +44,9 @@ graph TD
 ### Core Components
 - **`BaseClient`**: The abstract backbone. It handles connection management (Faraday), JSON orchestration, standardized error recovery, and performance logging.
 - **`ProviderRegistry`**: The discovery mechanism. It allows providers to self-register using unique symbols, enabling dynamic selection at runtime.
+- **`RequestBuilder`**: Handles Faraday connection setup with configurable timeouts (default: 120s for LLM calls).
+- **`ResponseParser`**: Robust JSON parsing with nil-safety for diverse provider response formats.
+- **`ResponseErrorHandler`**: Standardized error handling with Rails logger integration.
 - **`ToolSet` Integration**: Clients are natively aware of tool definitions, translating them into the specific JSON schema required by each provider.
 
 ---
@@ -57,6 +60,9 @@ graph TD
 | **Google Gemini** | `:gemini` | `GEMINI_*` | Vertex AI / Google Cloud Platform |
 | **Azure OpenAI** | `:azure` | `AZURE_OPENAI_*` | Enterprise Private Cloud (Azure) |
 | **Ollama** | `:ollama` | `OLLAMA_*` | Local-First (Llama 3, Qwen, Mistral) |
+| **Groq** | `:groq` | `GROQ_*` | High-speed inference |
+| **DeepSeek** | `:deepseek` | `DEEPSEEK_*` | Cost-effective alternative |
+| **OpenCode** | `:opencode` | `OPENCODE_*` | Custom endpoint |
 | **Null Client** | `:null` | N/A | Mock / Fallback testing |
 
 ---
@@ -72,13 +78,13 @@ The system supports direct injection via environment variables for rapid prototy
 
 ### Registry Key Alignment
 > [!IMPORTANT]
-> When using the `Evaluator.set_provider(:key)` method, ensure the key matches the registry. Note that for Azure, the key is simply `:azure`.
+> When using the `SkillBench::Config.set_provider(:key)` method, ensure the key matches the registry. Note that for Azure, the key is simply `:azure`.
 
 ---
 
 ## 🚀 Standardized Contract
 
-Every client, regardless of its internal complexity, guarantees a standard response format. This allows the Evaluator to process results without caring about the source.
+Every client, regardless of its internal complexity, guarantees a standard response format. This allows SkillBench to process results without caring about the source.
 
 ```ruby
 # The "Golden" Response Format
@@ -97,18 +103,19 @@ Every client, regardless of its internal complexity, guarantees a standard respo
 
 ## 🧪 Adding Your Own Provider
 
-1. **Subclass `BaseClient`**: Create `lib/clients/providers/my_ai.rb`.
-        2. **Implement Methods**: Define `base_url`, `request_path`, `extract_message`, `valid_config?`, and `request_headers` (override to inject auth headers).
+1. **Subclass `BaseClient`**: Create `lib/skill_bench/clients/providers/my_ai.rb`.
+2. **Implement Methods**: Define `base_url`, `request_path`, `extract_message`, `valid_config?`, and `request_headers` (override to inject auth headers).
 3. **Register It**:
    ```ruby
-   Evaluator::Clients::ProviderRegistry.register(:my_ai, self)
+   SkillBench::Clients::ProviderRegistry.register(:my_ai, self)
    ```
-4. **Load It**: Ensure it is required in the main `lib/client.rb` or your entry point.
+4. **Load It**: Ensure it is required in the main `lib/skill_bench/client.rb` or your entry point.
 
 ---
 
 ## 🛡️ Resilience & Observability
 
-- **Timeouts**: Every request is guarded by a 60s timeout (configurable).
+- **Timeouts**: Every request is guarded by a 120s timeout (configurable via `RequestBuilder`).
 - **Silent Errors**: We prioritize "Fail Fast, Fail Clean". Errors are caught, logged with 5-line backtraces, and returned as `{ success: false }`.
 - **JSON Safety**: Robust parsing prevents malformed LLM responses from crashing the system.
+- **URL Sanitization**: All provider URL parameters are CGI-escaped to prevent injection attacks.
