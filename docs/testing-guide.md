@@ -29,9 +29,9 @@ Score: 0.95
 ============================================================
 ```
 
-**JSON (CI mode):**
+**JSON:**
 ```bash
-skill-bench run my-eval --skill=my-skill --ci
+skill-bench run my-eval --skill=my-skill --format json
 ```
 
 **JUnit XML:**

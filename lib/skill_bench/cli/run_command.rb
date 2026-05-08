@@ -32,10 +32,9 @@ module SkillBench
         return error_missing_skill unless options[:skill_name]
 
         options[:eval_name] = eval_name
-        exec_options = options.reject { |key| %i[ci format].include?(key) }
+        exec_options = options.reject { |key| key == :format }
         result = Commands::Run.run(**exec_options)
-        format = options[:ci] ? :json : (options[:format] || :human)
-        ResultPrinter.call(result, format: format)
+        ResultPrinter.call(result, format: options[:format] || :human)
       rescue HelpRequested
         0
       rescue StandardError => e
@@ -49,7 +48,6 @@ module SkillBench
         OptionParser.new do |opts|
           opts.banner = 'Usage: skill-bench run <eval> [options]'
           opts.on('--skill NAME', 'Skill to use') { |v| options[:skill_name] = v }
-          opts.on('--ci', 'Output JSON for CI/CD') { options[:ci] = true }
           opts.on('--format FORMAT', 'Output format (human, json, junit)') { |v| options[:format] = v.to_sym }
           opts.on('-h', '--help', 'Prints this help') do
             puts opts

@@ -71,12 +71,15 @@ The output shows:
 - Pass/fail status
 - Score
 
-For CI mode:
+For JSON output:
 ```bash
-skill-bench run my-first-eval --skill=my-service --ci
+skill-bench run my-first-eval --skill=my-service --format json
 ```
 
-This outputs JSON/JUnit XML for CI/CD integration.
+For JUnit XML output:
+```bash
+skill-bench run my-first-eval --skill=my-service --format junit
+```
 
 ## Next Steps
 

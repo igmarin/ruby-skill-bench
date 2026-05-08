@@ -116,8 +116,8 @@ Provider is read from `skill-bench.json` — no `--provider` flag needed.
 
 **Output Formats:**
 - Human-readable (default)
-- JSON: `--ci` flag
-- JUnit XML: for CI/CD integration
+- JSON: `--format json`
+- JUnit XML: `--format junit`
 
 ---
 
@@ -189,7 +189,7 @@ GitHub Actions workflow included (`.github/workflows/ci.yml`):
 
 ```bash
 # Run locally with CI output
-skill-bench run my-eval --skill=my-skill --ci
+skill-bench run my-eval --skill=my-skill --format json
 ```
 
 ---
