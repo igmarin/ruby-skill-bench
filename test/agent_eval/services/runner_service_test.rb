@@ -56,7 +56,7 @@ module SkillBench
       def test_call_raises_when_skill_not_found
         Models::Config.instance_variable_set(:@loaded, nil)
 
-        assert_raises(RuntimeError) do
+        assert_raises(ArgumentError) do
           RunnerService.call(
             eval_name: 'test-eval',
             skill_name: 'nonexistent',

@@ -82,6 +82,7 @@ detectors:
       - f
       - id
       - t
+      - v
   TooManyInstanceVariables:
     max_instance_variables: 6
     exclude:
@@ -114,6 +115,11 @@ detectors:
       - "SkillBench::Services::ScoringService#load_thresholds"
       - "SkillBench::Services::ScoringService#test_pass_rate"
       - "SkillBench::EvaluateCommand#safe_expand_path"
+      - "SkillBench::Services::OptionParserService#parser"
+      - "SkillBench::CLI#handle_run"
+      - "SkillBench::CLI#handle_skill_new"
+      - "SkillBench::CLI#handle_eval_new"
+      - "SkillBench::CLI#print_result"
   BooleanParameter:
     exclude:
       - "SkillBench::Commands::Init#self.run"
@@ -131,9 +137,15 @@ detectors:
       - "SkillBench::Clients::Providers::Anthropic#parse_tool_arguments"
       - "SkillBench::Clients::BaseClient#missing_config_keys"
       - "SkillBench::Clients::ResponseParser#self.valid_message?"
+      - "SkillBench::CLI#handle_skill"
+      - "SkillBench::CLI#handle_eval"
   NestedIterators:
     exclude:
       - "SkillBench::EvaluateCommand#parse_options"
+      - "SkillBench::Services::OptionParserService#parser"
+      - "SkillBench::CLI#handle_run"
+      - "SkillBench::CLI#handle_skill_new"
+      - "SkillBench::CLI#handle_eval_new"
   RepeatedConditional:
     exclude:
       - "SkillBench::OutputFormatter"

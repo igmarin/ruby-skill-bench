@@ -4,4 +4,4 @@
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 require 'skill_bench'
 
-exit SkillBench::EvaluateCommand.call(ARGV)
+exit SkillBench::CLI.call(ARGV)

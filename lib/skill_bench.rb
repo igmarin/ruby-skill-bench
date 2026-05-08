@@ -4,10 +4,11 @@
 #
 # @example Basic usage
 #   require 'skill_bench'
-#   SkillBench::EvaluateCommand.call(ARGV)
+#   SkillBench::CLI.call(ARGV)
 
 # Core modules
 require_relative 'skill_bench/version'
+require_relative 'skill_bench/cli'
 require_relative 'skill_bench/evaluate_command'
 require_relative 'skill_bench/agent_runner'
 require_relative 'skill_bench/judge'

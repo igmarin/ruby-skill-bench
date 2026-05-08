@@ -21,6 +21,8 @@ Metrics/AbcSize:
 
 Metrics/ClassLength:
   Max: 150
+  Exclude:
+    - 'lib/skill_bench/cli.rb'
 
 Metrics/BlockLength:
   Max: 40

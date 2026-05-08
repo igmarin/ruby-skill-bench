@@ -5,6 +5,7 @@ require_relative '../models/skill'
 require_relative '../models/config'
 require_relative '../clients/all'
 require_relative 'scoring_service'
+require_relative 'skill_resolver'
 
 module SkillBench
   module Services
@@ -51,8 +52,7 @@ module SkillBench
       end
 
       def resolve_skill
-        skills = SkillBench::Models::Skill.discover
-        skills.find { |skill| skill.name == skill_name } || raise("Skill not found: #{skill_name}")
+        Services::SkillResolver.call(skill_name)
       end
 
       def resolve_provider
