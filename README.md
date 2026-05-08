@@ -138,9 +138,6 @@ Thresholds are defined in `criteria.json`:
   "runtime": "rails",
   "pass": {
     "score_threshold": 0.8
-  },
-  "fail": {
-    "score_threshold": 0.5
   }
 }
 ```

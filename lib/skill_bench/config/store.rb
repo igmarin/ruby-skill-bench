@@ -84,7 +84,7 @@ module SkillBench
       # @return [Symbol, nil] assigned provider
       def assign_current_llm_provider(value)
         stripped = value.to_s.strip
-        @current_llm_provider = stripped.to_sym unless stripped.empty?
+        @current_llm_provider = stripped.empty? ? nil : stripped.to_sym
         @current_llm_provider
       end
 

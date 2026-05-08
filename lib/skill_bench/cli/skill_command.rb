@@ -22,7 +22,6 @@ module SkillBench
 
       # Dispatches to the appropriate skill action.
       #
-      # :reek:NilCheck { enabled: false }
       def call
         action = @argv.shift
         case action
@@ -39,7 +38,6 @@ module SkillBench
 
       private
 
-      # :reek:NestedIterators { enabled: false }
       def handle_new(argv)
         options = { mode: 'simple', template: 'service_object' }
         parser = OptionParser.new do |opts|

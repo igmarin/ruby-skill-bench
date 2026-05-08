@@ -19,7 +19,7 @@ Ruby Skill Bench provides a reproducible and isolated environment for testing AI
 - Spawns the agent and collects results.
 - Falls back to mock provider when config is unavailable.
 
-### `SkillBench::Cli` Commands
+### `SkillBench::CLI` Commands
 
 CLI command handlers for the `skill-bench` executable:
 - `InitCommand` — Creates `skill-bench.json` configuration

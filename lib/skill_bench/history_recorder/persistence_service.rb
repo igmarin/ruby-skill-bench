@@ -50,14 +50,14 @@ module SkillBench
       #
       # @return [String, nil] Path to writable file, or nil if none found.
       def self.determine_history_file
-        env_history_file = ENV.fetch('EVALUATOR_HISTORY_FILE', nil)
-        return nil if env_history_file.to_s.strip.empty?
+        env_history_file = ENV.fetch('SKILL_BENCH_HISTORY_FILE', nil)
+        env_history_file = env_history_file.to_s.strip
 
-        env_path = File.expand_path(env_history_file)
-        allowed_prefixes = allowed_history_prefixes
-        return nil unless allowed_prefixes.any? { |prefix| env_path.start_with?(prefix) }
-
-        return env_path if prepare_and_writable?(env_path)
+        unless env_history_file.empty?
+          env_path = File.expand_path(env_history_file)
+          allowed_prefixes = allowed_history_prefixes
+          return env_path if allowed_prefixes.any? { |prefix| env_path.start_with?(prefix) } && prepare_and_writable?(env_path)
+        end
 
         cwd_path = File.join(Dir.pwd, 'benchmarks.json')
         return cwd_path if writable?(cwd_path)
@@ -106,16 +106,21 @@ module SkillBench
         return [] unless File.exist?(path)
 
         JSON.parse(File.read(path), symbolize_names: true)
+      rescue JSON::ParserError => e
+        log_error(e, 'corrupted benchmarks.json')
+        []
       rescue StandardError => e
-        log_error(e) unless e.is_a?(JSON::ParserError)
+        log_error(e)
         []
       end
 
       # Logs errors with backtrace.
       #
       # @param exception [StandardError]
-      def self.log_error(exception)
-        msg = "#{exception.message}\n#{exception.backtrace.first(5).join("\n")}"
+      # @param context [String, nil] Optional context prefix for the log message.
+      def self.log_error(exception, context = nil)
+        prefix = context ? "#{context}: " : ''
+        msg = "#{prefix}#{exception.message}\n#{exception.backtrace.first(5).join("\n")}"
         if defined?(Rails) && Rails.respond_to?(:logger) && Rails.logger
           Rails.logger.error(msg)
         else
@@ -141,7 +146,7 @@ module SkillBench
         FileUtils.mkpath(dir)
 
         temp_path = "#{path}.tmp.#{Process.pid}"
-        File.open(temp_path, File::RDWR | File::CREAT, 0o644) do |f|
+        File.open(temp_path, File::WRONLY | File::CREAT | File::TRUNC, 0o644) do |f|
           f.flock(File::LOCK_EX)
           f.write(JSON.pretty_generate(data))
           f.fsync

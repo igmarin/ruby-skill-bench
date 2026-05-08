@@ -95,22 +95,35 @@ module SkillBench
     # @raise [RuntimeError] when a symlink points outside the source directory.
     def copy_source_files(sandbox_dir)
       source_real = File.realpath(@source_dir)
-      Dir.entries(@source_dir).each do |entry|
+      copy_tree(@source_dir, sandbox_dir, source_real)
+    end
+
+    def copy_tree(src_dir, dst_dir, source_real)
+      Dir.entries(src_dir).each do |entry|
         next if %w[. ..].include?(entry)
 
-        src = File.join(@source_dir, entry)
-        dst = File.join(sandbox_dir, entry)
+        src = File.join(src_dir, entry)
+        dst = File.join(dst_dir, entry)
 
         if File.symlink?(src)
           real = File.realpath(src)
           raise "Symlink #{entry} points outside source directory" unless real.start_with?("#{source_real}/")
 
-          FileUtils.cp(real, dst)
+          copy_item(real, dst, source_real)
         elsif File.directory?(src)
-          FileUtils.cp_r(src, dst)
+          copy_item(src, dst, source_real)
         else
           FileUtils.cp(src, dst)
         end
+      end
+    end
+
+    def copy_item(src, dst, source_real)
+      FileUtils.mkdir_p(dst)
+      if File.directory?(src)
+        copy_tree(src, dst, source_real)
+      else
+        FileUtils.cp(src, dst)
       end
     end
 
@@ -123,6 +136,8 @@ module SkillBench
 
       _stdout, _stderr, status = Open3.capture3('docker', 'info')
       status.success?
+    rescue Errno::ENOENT
+      false
     end
 
     # Starts a Docker container for isolated command execution.
@@ -133,9 +148,8 @@ module SkillBench
       image_name = 'evaluator-sandbox'
       docker_dir = File.expand_path('docker', __dir__)
 
-      # Build image if missing
-      image_exists = system('docker', 'image', 'inspect', image_name, out: File::NULL, err: File::NULL)
-      raise "Failed to build Docker image #{image_name}" if !image_exists && !system('docker', 'build', '-t', image_name, docker_dir, '--quiet')
+      # Build image (Docker layer cache handles no-op builds)
+      raise "Failed to build Docker image #{image_name}" unless system('docker', 'build', '-t', image_name, docker_dir, '--quiet')
 
       # Start a detached container mounting the sandbox dir to /sandbox
       stdout, stderr, status = Open3.capture3(

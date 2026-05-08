@@ -12,7 +12,6 @@ require_relative 'config/facade_writers'
 module SkillBench
   # Centralized configuration for the SkillBench system.
   # Supports hierarchical loading: Defaults < Home JSON < Local JSON < ENV Variables.
-  # :reek:Attribute
   class Config
     # File name used for local and home evaluator configuration.
     CONFIG_FILENAME = 'skill-bench.json'

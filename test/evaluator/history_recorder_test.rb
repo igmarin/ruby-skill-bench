@@ -20,7 +20,7 @@ module SkillBench
       mock_file.expects(:write).with(regexp_matches(%r{"source_path": "skills/test"}))
       mock_file.expects(:fsync)
 
-      File.expects(:open).with(regexp_matches(/\.tmp\.\d+/), File::RDWR | File::CREAT, 0o644).yields(mock_file).returns(true)
+      File.expects(:open).with(regexp_matches(/\.tmp\.\d+/), File::WRONLY | File::CREAT | File::TRUNC, 0o644).yields(mock_file).returns(true)
       File.expects(:rename).with(regexp_matches(/\.tmp\.\d+/), fixed_path).returns(true)
 
       SkillBench::HistoryRecorder.record(results, source_path: 'skills/test', model: 'gpt-4')

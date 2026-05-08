@@ -132,7 +132,6 @@ module SkillBench
           messages.map { |msg| translate_single_message(msg) }
         end
 
-        # :reek:FeatureEnvy
         # Translates a single message to Anthropic format.
         def translate_single_message(msg)
           klass = self.class

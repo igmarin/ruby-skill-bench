@@ -33,7 +33,8 @@ module SkillBench
 
         options[:eval_name] = eval_name
         result = Commands::Run.run(**options)
-        ResultPrinter.call(result)
+        format = options[:ci] ? :json : (options[:format] || :human)
+        ResultPrinter.call(result, format: format)
       rescue HelpRequested
         0
       rescue StandardError => e
@@ -43,12 +44,12 @@ module SkillBench
 
       private
 
-      # :reek:FeatureEnvy { enabled: false }
-      # :reek:NestedIterators { enabled: false }
       def build_parser(options)
         OptionParser.new do |opts|
           opts.banner = 'Usage: skill-bench run <eval> [options]'
           opts.on('--skill NAME', 'Skill to use') { |v| options[:skill_name] = v }
+          opts.on('--ci', 'Output JSON for CI/CD') { options[:ci] = true }
+          opts.on('--format FORMAT', 'Output format (human, json, junit)') { |v| options[:format] = v.to_sym }
           opts.on('-h', '--help', 'Prints this help') do
             puts opts
             raise SkillBench::HelpRequested

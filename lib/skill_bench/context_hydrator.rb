@@ -26,7 +26,6 @@ module SkillBench
     # @param base_path [Pathname, String] The base path to resolve the source directory against.
     # @return [void]
     # @raise [TypeError] when the provided source or base path cannot be converted into a pathname.
-    # :reek:ControlParameter
     def initialize(source_path: nil, skill_path: nil, base_path: nil)
       @source_path = source_path || skill_path
       @base_path = base_path || Pathname.new(Dir.pwd)

@@ -28,6 +28,7 @@ directories:
 detectors:
   Attribute:
     exclude:
+      - "SkillBench::Config"
       - "SkillBench::Config::Store"
   InstanceVariableAssumption:
     exclude:
@@ -48,10 +49,12 @@ detectors:
       - "SkillBench::EvaluateCommand#print_parse_error"
       - "SkillBench::OutputFormatter#self.format"
       - "SkillBench::Commands::Run#validate_api_key"
+      - "SkillBench::ContextHydrator#initialize"
   DuplicateMethodCall:
     exclude:
       - "SkillBench::Client#call"
       - "SkillBench::ContextHydrator#call"
+      - "SkillBench::CLI#call"
       - "SkillBench::ReactAgent#call"
       - "SkillBench::Runner#call"
       - "SkillBench::AgentRunner#print_header"
@@ -124,8 +127,13 @@ detectors:
       - "SkillBench::CLI#handle_eval"
       - "SkillBench::CLI#print_result"
       - "SkillBench::Cli::InitCommand#build_parser"
+      - "SkillBench::Cli::RunCommand#build_parser"
+      - "SkillBench::Cli::EvalCommand#handle_new"
+      - "SkillBench::Cli::SkillCommand#handle_new"
+      - "SkillBench::Clients::Providers::Anthropic#translate_single_message"
       - "SkillBench::Services::OptionParserService#parser"
       - "SkillBench::Judge#call"
+      - "SkillBench::Sandbox#copy_tree"
   BooleanParameter:
     exclude:
       - "SkillBench::Commands::Init#self.run"
@@ -147,6 +155,9 @@ detectors:
       - "SkillBench::CLI#handle_skill"
       - "SkillBench::CLI#handle_eval"
       - "SkillBench::Models::Config#to_provider"
+      - "SkillBench::Cli::EvalCommand#call"
+      - "SkillBench::Cli::SkillCommand#call"
+      - "SkillBench::ContextHydrator#initialize"
   NestedIterators:
     exclude:
       - "SkillBench::EvaluateCommand#parse_options"
@@ -154,6 +165,9 @@ detectors:
       - "SkillBench::CLI#handle_run"
       - "SkillBench::CLI#handle_skill_new"
       - "SkillBench::CLI#handle_eval_new"
+      - "SkillBench::Cli::EvalCommand#handle_new"
+      - "SkillBench::Cli::SkillCommand#handle_new"
+      - "SkillBench::Cli::RunCommand#build_parser"
   RepeatedConditional:
     exclude:
       - "SkillBench::OutputFormatter"

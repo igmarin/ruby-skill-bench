@@ -66,19 +66,19 @@ module SkillBench
         You need to evaluate two AI codebase modifications against a set of criteria.
 
         #{delim}TASK#{delim}
-        #{escape_prompt_content(@task_content)}
+        #{escape_prompt_content(@task_content, delim)}
         #{delim}END_TASK#{delim}
 
         #{delim}CRITERIA#{delim}
-        #{escape_prompt_content(@criteria_content)}
+        #{escape_prompt_content(@criteria_content, delim)}
         #{delim}END_CRITERIA#{delim}
 
         #{delim}BASELINE#{delim}
-        #{escape_prompt_content(@baseline_diff)}
+        #{escape_prompt_content(@baseline_diff, delim)}
         #{delim}END_BASELINE#{delim}
 
         #{delim}CONTEXT#{delim}
-        #{escape_prompt_content(@context_diff)}
+        #{escape_prompt_content(@context_diff, delim)}
         #{delim}END_CONTEXT#{delim}
 
         Please analyze both code diffs. Did they fulfill the criteria?
@@ -93,8 +93,8 @@ module SkillBench
       PROMPT
     end
 
-    def escape_prompt_content(content)
-      content.to_s.gsub(%r{</}, '<\\/')
+    def escape_prompt_content(content, delim)
+      content.to_s.gsub(delim, '[DELIM]').gsub(%r{</}, '<\\/')
     end
   end
 end
