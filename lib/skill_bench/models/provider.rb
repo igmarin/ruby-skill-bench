@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'active_support/core_ext/hash/keys'
+require_relative '../provider_schemas'
 
 module SkillBench
   module Models
@@ -8,7 +8,7 @@ module SkillBench
     class Provider
       attr_reader :name, :runtime, :llm, :config
 
-      ALLOWED_PROVIDERS = %w[openai anthropic gemini ollama azure groq deepseek opencode mock].freeze
+      ALLOWED_PROVIDERS = (ProviderSchemas.names.map(&:to_s) + %w[mock]).freeze
 
       # Initialize a new Provider
       # @param name [String] Provider name (e.g., "openai")
@@ -19,7 +19,7 @@ module SkillBench
         @name = name
         @runtime = runtime
         @llm = llm
-        @config = config.deep_symbolize_keys
+        @config = config.is_a?(Hash) ? config.transform_keys(&:to_sym) : {}
       end
 
       # Returns merged config with environment variable fallbacks

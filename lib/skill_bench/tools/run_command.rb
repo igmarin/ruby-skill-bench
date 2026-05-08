@@ -62,7 +62,8 @@ module SkillBench
         return "Error: Command '#{base_cmd}' is blocked for security reasons." if DANGEROUS_COMMANDS.include?(base_cmd)
 
         allowed = SkillBench::Config.allowed_commands
-        return "Error: Command '#{base_cmd}' is not permitted. Allowed: #{allowed.join(', ')}." if allowed && !allowed.include?(base_cmd)
+        return 'Error: No allowed commands configured. Set allowed_commands in skill-bench.json or use --mode mock.' if allowed.nil?
+        return "Error: Command '#{base_cmd}' is not permitted." unless allowed.include?(base_cmd)
 
         max_time = SkillBench::Config.max_execution_time
         Timeout.timeout(max_time) do

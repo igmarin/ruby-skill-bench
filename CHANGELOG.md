@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Cli::HelpPrinter`, `Cli::ResultPrinter` — extracted CLI output formatters
 - `Config#to_provider` method for building Provider model from config
 - `ResponseParser` now handles Array response bodies gracefully
+- `SkillBench::HelpRequested` — shared sentinel exception for CLI help handlers
+- `Sandbox#copy_source_files` — explicit file copy with symlink validation and dotfile support
+- `Sandbox#docker_available?` — checks for Docker before attempting container start
+- Top-level exception handler in `bin/skill-bench` for graceful error reporting
+- `Judge#build_prompt` — extracted prompt builder with UUID-based delimiters to prevent prompt injection
+- `Judge#escape_prompt_content` — escapes XML-like tags in user content before interpolation
 
 ### Changed
 - **BREAKING:** `skill-bench init` now requires a provider flag (`--openai`, `--gemini`, etc.)
@@ -24,6 +30,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `RunnerService` reads provider from config file instead of accepting `provider_name` parameter
 - CLI refactored from monolithic class (~230 lines) to thin dispatcher (~45 lines) with extracted command modules
 - `print_result` checks `result[:pass]` instead of `result[:success]` for correct scoring output
+- **BREAKING:** Environment variable prefix changed from `AGENT_EVAL_` to `SKILL_BENCH_`
+- `RunnerService` status values normalized from strings to symbols (`:success`, `:error`, `:passed`)
+- `ScoringService#error_score` fixed: `.round` was called on Array instead of Numeric
+- `ResultPrinter` now delegates to `OutputFormatter` for consistent human-readable output
+- `Provider::ALLOWED_PROVIDERS` now derived from `ProviderSchemas.names` (single source of truth)
+- `Config.store#assign_current_llm_provider` simplified from obfuscated array/grep pattern to simple conditional
+- `ResponseErrorHandler.log_error` now delegates to `ErrorLogger` (DRY)
+- `Sandbox` only starts Docker container when `docker` is available and Dockerfile exists
 
 ### Fixed
 - `CLI` HelpPrinter constant fully qualified to prevent NameError
@@ -50,10 +64,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test teardown in `InitTest` and `InitProviderTest` now restores original working directory
 - `SkillTest` no longer uses global `Dir.chdir` — uses absolute temp paths instead
 - Added missing `require 'json'` to `RunnerServiceTest`
+- `OutputFormatter` no longer double-escapes `score` in JUnit XML failure messages
+- `InitCommand` and `RunCommand` `return 0` inside OptionParser blocks replaced with `raise HelpRequested` (prevents LocalJumpError)
+- `RunCommand` validates `--skill` is present before invoking `Commands::Run`
+- `ContextHydrator` escapes file content with `CGI.escapeHTML` before XML insertion
+- `Sandbox.capture_diff` uses separator-aware path validation (`tmp_prefix + File::SEPARATOR`)
+
+### Security
+- **CRITICAL:** `allowed_commands` nil default no longer allows unrestricted command execution — now returns clear error
+- Sandbox copies dotfiles (hidden files) instead of skipping them via `Dir.glob('*')`
+- Sandbox validates symlinks don't escape source directory before copying
+- `allowed_commands` error message no longer discloses the full allowlist to the agent
+- Judge prompt uses UUID-based delimiters to prevent XML tag breakout injection
+- Judge escapes `</` sequences in user-provided content before interpolation
+- Docker sandbox gracefully skips when Dockerfile is missing (prevents host execution without isolation)
+- `Provider.merged_config` error message no longer discloses exact ENV variable name
+- `Migration::ProviderMigrator` disables YAML aliases (`aliases: false`) to prevent amplification attacks
+
+### Removed
+- `ScoringService` dead code: `DEFAULT_FAIL_THRESHOLD` and `fail_threshold` (never used in scoring logic)
+- `Config.load` redundant `recursive_symbolize_keys` (JSON.parse already symbolizes keys)
+- `RunnerService` useless `@resolve_provider ||=` memo (instances are single-use)
+- `Provider` ActiveSupport dependency for `deep_symbolize_keys` (replaced with manual symbolization)
 
 ### Quality
 - 373 tests, 0 failures
-- 89.7% line coverage
+- 89.3% line coverage
 - Rubocop: 0 offenses
 - Reek: 0 warnings
 

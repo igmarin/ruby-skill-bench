@@ -83,7 +83,8 @@ module SkillBench
       # @param value [String, Symbol] provider name
       # @return [Symbol, nil] assigned provider
       def assign_current_llm_provider(value)
-        [value.to_s.strip].grep_v('').each { |provider_name| @current_llm_provider = provider_name.to_sym }
+        stripped = value.to_s.strip
+        @current_llm_provider = stripped.to_sym unless stripped.empty?
         @current_llm_provider
       end
 

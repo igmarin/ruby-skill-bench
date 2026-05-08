@@ -4,4 +4,12 @@
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 require 'skill_bench'
 
-exit SkillBench::CLI.call(ARGV)
+begin
+  exit SkillBench::CLI.call(ARGV)
+rescue Interrupt
+  warn "\nInterrupted."
+  exit 130
+rescue StandardError => e
+  warn "Error: #{e.message}"
+  exit 1
+end

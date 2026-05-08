@@ -63,16 +63,15 @@ module SkillBench
         end
       end
 
-      def test_call_falls_back_to_mock_when_config_not_found
+      def test_call_raises_when_config_not_found
         Models::Config.instance_variable_set(:@loaded, nil)
 
-        result = RunnerService.call(
-          eval_name: 'test-eval',
-          skill_name: 'test-skill'
-        )
-
-        assert result[:pass]
-        assert_equal 'mock', result[:provider_name]
+        assert_raises(Errno::ENOENT) do
+          RunnerService.call(
+            eval_name: 'test-eval',
+            skill_name: 'test-skill'
+          )
+        end
       end
 
       def test_call_resolves_eval_with_full_path

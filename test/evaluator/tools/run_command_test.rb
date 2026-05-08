@@ -7,8 +7,9 @@ module SkillBench
     # Tests for SkillBench::Tools::RunCommand
     class RunCommandTest < Minitest::Test
       def setup
-        # Reset config to allow all commands
+        # Reset config to allow echo command
         SkillBench::Config.reset
+        SkillBench::Config.allowed_commands = %w[echo]
       end
 
       def test_call_executes_command

@@ -39,11 +39,11 @@ module SkillBench
     def run
       Dir.mktmpdir('evaluator_sandbox_') do |sandbox_dir|
         @path = sandbox_dir
-        FileUtils.cp_r(Dir.glob(File.join(@source_dir, '*')), sandbox_dir)
+        copy_source_files(sandbox_dir)
 
         setup_git
 
-        start_container
+        start_container if docker_available?
         begin
           yield self
         ensure
@@ -88,12 +88,54 @@ module SkillBench
       end
     end
 
+    # Copies source files into the sandbox, including dotfiles.
+    # Validates symlinks to prevent path traversal.
+    #
+    # @param sandbox_dir [String] The destination sandbox directory.
+    # @raise [RuntimeError] when a symlink points outside the source directory.
+    def copy_source_files(sandbox_dir)
+      source_real = File.realpath(@source_dir)
+      Dir.entries(@source_dir).each do |entry|
+        next if %w[. ..].include?(entry)
+
+        src = File.join(@source_dir, entry)
+        dst = File.join(sandbox_dir, entry)
+
+        if File.symlink?(src)
+          real = File.realpath(src)
+          raise "Symlink #{entry} points outside source directory" unless real.start_with?("#{source_real}/")
+
+          FileUtils.cp(real, dst)
+        elsif File.directory?(src)
+          FileUtils.cp_r(src, dst)
+        else
+          FileUtils.cp(src, dst)
+        end
+      end
+    end
+
+    # Checks if Docker is available and the sandbox Dockerfile exists.
+    #
+    # @return [Boolean] true if Docker is available, false otherwise.
+    def docker_available?
+      docker_dir = File.expand_path('docker', __dir__)
+      return false unless File.directory?(docker_dir)
+
+      _stdout, _stderr, status = Open3.capture3('docker', 'info')
+      status.success?
+    end
+
+    # Starts a Docker container for isolated command execution.
+    # Builds the image only if it does not already exist.
+    #
+    # @raise [RuntimeError] when the Docker image cannot be built or the container fails to start.
     def start_container
       image_name = 'evaluator-sandbox'
       docker_dir = File.expand_path('docker', __dir__)
 
       # Build image if missing
-      raise "Failed to build Docker image #{image_name}" unless system('docker', 'build', '-t', image_name, docker_dir, '--quiet')
+      image_exists = system('docker', 'image', 'inspect', image_name, out: File::NULL, err: File::NULL)
+      raise "Failed to build Docker image #{image_name}" if !image_exists && !system('docker', 'build', '-t', image_name, docker_dir, '--quiet')
 
       # Start a detached container mounting the sandbox dir to /sandbox
       stdout, stderr, status = Open3.capture3(

@@ -47,7 +47,7 @@ module SkillBench
           opts.on('--runtime TYPE', 'rails, ruby, etc.') { |v| options[:runtime] = v }
           opts.on('-h', '--help', 'Prints this help') do
             puts opts
-            return 0
+            raise SkillBench::HelpRequested
           end
         end
         parser.parse!(argv)
@@ -57,6 +57,8 @@ module SkillBench
 
         Commands::EvalNew.run(name: name, **options)
         puts "Created eval: #{name}"
+        0
+      rescue SkillBench::HelpRequested
         0
       rescue StandardError => e
         warn "Error: #{e.message}"

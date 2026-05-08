@@ -116,12 +116,16 @@ detectors:
       - "SkillBench::Services::ScoringService#test_pass_rate"
       - "SkillBench::EvaluateCommand#safe_expand_path"
       - "SkillBench::CLI#call"
-      - "SkillBench::Services::OptionParserService#parser"
       - "SkillBench::CLI#handle_run"
       - "SkillBench::CLI#handle_skill_new"
       - "SkillBench::CLI#handle_eval_new"
       - "SkillBench::CLI#print_result"
+      - "SkillBench::CLI#handle_skill"
+      - "SkillBench::CLI#handle_eval"
+      - "SkillBench::CLI#print_result"
       - "SkillBench::Cli::InitCommand#build_parser"
+      - "SkillBench::Services::OptionParserService#parser"
+      - "SkillBench::Judge#call"
   BooleanParameter:
     exclude:
       - "SkillBench::Commands::Init#self.run"
@@ -129,6 +133,7 @@ detectors:
     enabled: false
   NilCheck:
     exclude:
+      - "SkillBench::Tools::RunCommand#self.call"
       - "SkillBench::ReactAgent#call"
       - "SkillBench::Clients::BaseClient#handle_response"
       - "SkillBench::SourcePathResolver#self.call"

@@ -66,17 +66,7 @@ module SkillBench
       # @param error [StandardError] The exception to log
       # @return [void]
       def self.log_error(error)
-        message = "Error: #{error.message}"
-        backtrace = error.backtrace&.first(5)&.join("\n") || '(no backtrace)'
-
-        logger = defined?(Rails) && Rails.respond_to?(:logger) && Rails.logger ? Rails.logger : nil
-        if logger
-          logger.error(message)
-          logger.error(backtrace)
-        else
-          warn(message)
-          warn(backtrace)
-        end
+        SkillBench::ErrorLogger.log_error(error)
       end
     end
   end

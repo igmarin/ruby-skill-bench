@@ -8,16 +8,31 @@ module SkillBench
       #
       # @return [Integer] Exit code (always 0)
       def self.call
+        providers = SkillBench::ProviderSchemas.names.map { |name| "--#{name}" }.join(', ')
+
         puts <<~USAGE
           Usage: skill-bench <subcommand> [options]
 
           Subcommands:
-            init              Generate configuration file
-            run <eval>        Run an evaluation
-            skill new <name>  Create a new skill
-            eval new <name>   Create a new eval
+            init --<provider> [--force]
+              Generate configuration file
+              Providers: #{providers}
+              --force    Overwrite existing config file
 
-          Options:
+            run <eval> --skill <name>
+              Run an evaluation
+              --skill    Skill to use (required)
+
+            skill new <name> [--mode MODE] [--template TYPE]
+              Create a new skill
+              --mode     simple, advanced, or rails (default: simple)
+              --template service_object, concern, active_record_model (default: service_object)
+
+            eval new <name> [--runtime TYPE]
+              Create a new eval
+              --runtime  rails, ruby, etc. (default: ruby)
+
+          Global Options:
             -h, --help        Show this help message
         USAGE
         0

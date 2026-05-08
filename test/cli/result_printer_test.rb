@@ -14,7 +14,7 @@ module SkillBench
           provider_name: 'openai'
         }
 
-        assert_output(/PASS.*score: 1.0.*eval: test-eval.*skill: test-skill.*provider: openai/m) do
+        assert_output(/Eval: test-eval.*Skill: test-skill.*Provider: openai.*Status: PASSED/m) do
           exit_code = ResultPrinter.call(result)
 
           assert_equal 0, exit_code
@@ -30,7 +30,7 @@ module SkillBench
           provider_name: 'gemini'
         }
 
-        assert_sends_output(/FAIL.*score: 0.5.*eval: test-eval.*skill: test-skill.*provider: gemini/m) do
+        assert_output(/Eval: test-eval.*Skill: test-skill.*Provider: gemini.*Status: FAILED/m) do
           exit_code = ResultPrinter.call(result)
 
           assert_equal 1, exit_code

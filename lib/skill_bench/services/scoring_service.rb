@@ -11,7 +11,6 @@ module SkillBench
       WEIGHT_TIMING = 0.3
       WEIGHT_ERRORS = 0.2
       DEFAULT_PASS_THRESHOLD = 0.8
-      DEFAULT_FAIL_THRESHOLD = 0.5
 
       # Scores the agent result against eval criteria.
       #
@@ -52,8 +51,7 @@ module SkillBench
             test_pass_rate: test_pass_rate,
             timing_score: timing_score,
             error_score: error_score,
-            pass_threshold: thresholds[:pass_threshold],
-            fail_threshold: thresholds[:fail_threshold]
+            pass_threshold: thresholds[:pass_threshold]
           }
         }
       end
@@ -74,7 +72,7 @@ module SkillBench
         tests = result[:test_results]
         return 1.0 if tests.empty?
 
-        passed = tests.count { |t| ['passed', :passed].include?(t[:status]) }
+        passed = tests.count { |t| t[:status] == :passed }
         passed.to_f / tests.size
       end
 
@@ -90,21 +88,20 @@ module SkillBench
       end
 
       def error_score
-        return 1.0 if ['success', :success].include?(result[:status])
-        return 0.0 if ['error', :error].include?(result[:status])
+        return 1.0 if result[:status] == :success
+        return 0.0 if result[:status] == :error
 
         error_count = result.fetch(:error_count, 0)
         total_count = result.fetch(:total_count, 1)
         return 1.0 if total_count.zero?
 
-        [0.0, 1.0 - (error_count.to_f / total_count)].round(2)
+        [0.0, 1.0 - (error_count.to_f / total_count)].max.round(2)
       end
 
       def load_thresholds
         criteria = eval.criteria
         {
-          pass_threshold: criteria.dig(:pass, :score_threshold) || DEFAULT_PASS_THRESHOLD,
-          fail_threshold: criteria.dig(:fail, :score_threshold) || DEFAULT_FAIL_THRESHOLD
+          pass_threshold: criteria.dig(:pass, :score_threshold) || DEFAULT_PASS_THRESHOLD
         }
       end
     end

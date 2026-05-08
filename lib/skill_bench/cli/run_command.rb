@@ -7,11 +7,6 @@ module SkillBench
     # Handles the `skill-bench run` subcommand.
     # Parses options and delegates to Commands::Run.
     class RunCommand
-      # Raised when -h/--help is passed to abort parsing and return exit code 0.
-      class HelpRequested < StandardError; end
-      private_constant :HelpRequested
-
-      # Parses argv and executes the run command.
       #
       # @param argv [Array<String>] Raw CLI arguments
       # @return [Integer] Exit code
@@ -56,7 +51,7 @@ module SkillBench
           opts.on('--skill NAME', 'Skill to use') { |v| options[:skill_name] = v }
           opts.on('-h', '--help', 'Prints this help') do
             puts opts
-            raise HelpRequested
+            raise SkillBench::HelpRequested
           end
         end
       end

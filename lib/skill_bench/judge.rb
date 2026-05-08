@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'securerandom'
 require_relative 'client'
 
 module SkillBench
@@ -37,35 +38,9 @@ module SkillBench
     def call
       system_prompt = 'You are an objective judge evaluating AI coding models. Your goal is to score responses based strictly on the provided criteria.'
 
-      prompt = <<~PROMPT
-        You need to evaluate two AI codebase modifications against a set of criteria.
+      delim = "___SKILLBENCH_DELIM_#{SecureRandom.hex(8)}___"
 
-        <task>
-        #{@task_content}
-        </task>
-
-        <criteria>
-        #{@criteria_content}
-        </criteria>
-
-        <baseline_code_diff>
-        #{@baseline_diff}
-        </baseline_code_diff>
-
-        <context_code_diff>
-        #{@context_diff}
-        </context_code_diff>
-
-        Please analyze both code diffs. Did they fulfill the criteria?
-        Did the context_code_diff follow any specific instructions better?
-        Provide a final score out of 100 for each, and explain why.
-        Output your response as JSON with format:
-        {
-          "baseline_score": number,
-          "context_score": number,
-          "reasoning": "..."
-        }
-      PROMPT
+      prompt = build_prompt(delim)
 
       judge_result = Client.call(
         system_prompt: system_prompt,
@@ -82,6 +57,44 @@ module SkillBench
       return { success: false, response: { error: { message: 'Empty response from judge' } } } unless content
 
       { success: true, response: { content: content } }
+    end
+
+    private
+
+    def build_prompt(delim)
+      <<~PROMPT
+        You need to evaluate two AI codebase modifications against a set of criteria.
+
+        #{delim}TASK#{delim}
+        #{escape_prompt_content(@task_content)}
+        #{delim}END_TASK#{delim}
+
+        #{delim}CRITERIA#{delim}
+        #{escape_prompt_content(@criteria_content)}
+        #{delim}END_CRITERIA#{delim}
+
+        #{delim}BASELINE#{delim}
+        #{escape_prompt_content(@baseline_diff)}
+        #{delim}END_BASELINE#{delim}
+
+        #{delim}CONTEXT#{delim}
+        #{escape_prompt_content(@context_diff)}
+        #{delim}END_CONTEXT#{delim}
+
+        Please analyze both code diffs. Did they fulfill the criteria?
+        Did the context diff follow any specific instructions better?
+        Provide a final score out of 100 for each, and explain why.
+        Output your response as JSON with format:
+        {
+          "baseline_score": number,
+          "context_score": number,
+          "reasoning": "..."
+        }
+      PROMPT
+    end
+
+    def escape_prompt_content(content)
+      content.to_s.gsub(%r{</}, '<\\/')
     end
   end
 end

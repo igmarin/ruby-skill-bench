@@ -22,7 +22,7 @@ module SkillBench
       def test_call_returns_pass_when_score_above_threshold
         result = ScoringService.call(
           eval: @eval,
-          result: { status: 'success' },
+          result: { status: :success },
           skill_name: 'test-skill',
           provider_name: 'mock'
         )
@@ -38,7 +38,7 @@ module SkillBench
         $stderr = StringIO.new
         result = ScoringService.call(
           eval: @eval,
-          result: { status: 'error', result: 'failed' },
+          result: { status: :error, result: 'failed' },
           skill_name: 'test-skill',
           provider_name: 'mock'
         )
@@ -53,7 +53,7 @@ module SkillBench
       def test_call_includes_eval_metadata
         result = ScoringService.call(
           eval: @eval,
-          result: { status: 'success' },
+          result: { status: :success },
           skill_name: 'my-skill',
           provider_name: 'openai'
         )

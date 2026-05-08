@@ -13,7 +13,7 @@ class JudgeTest < Minitest::Test
 
     SkillBench::Client.expects(:call).with do |params|
       params[:system_prompt].include?('objective judge') &&
-        params[:messages].first[:content].include?('<baseline_code_diff>')
+        params[:messages].first[:content].include?('BASELINE')
     end.returns(expected_response)
 
     result = SkillBench::Judge.call(task, criteria, baseline_diff, context_diff)

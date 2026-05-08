@@ -48,7 +48,7 @@ module SkillBench
           opts.on('--template TYPE', 'service_object, concern, active_record_model') { |v| options[:template] = v }
           opts.on('-h', '--help', 'Prints this help') do
             puts opts
-            return 0
+            raise SkillBench::HelpRequested
           end
         end
         parser.parse!(argv)
@@ -58,6 +58,8 @@ module SkillBench
 
         Commands::SkillNew.run(name: name, **options)
         puts "Created skill: #{name}"
+        0
+      rescue SkillBench::HelpRequested
         0
       rescue StandardError => e
         warn "Error: #{e.message}"

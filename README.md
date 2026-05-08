@@ -45,6 +45,24 @@ CLI / API → Runner → Sandbox + ReAct Agent → LLM Client Layer → Provider
 
 > **Note:** Environment variables are loaded automatically. You can also configure provider settings in `skill-bench.json` (created by `skill-bench init`).
 
+### Command Allowlist
+
+By default, no shell commands are permitted. You must configure `allowed_commands` in `skill-bench.json`:
+
+```json
+{
+  "provider": "openai",
+  "max_execution_time": 30,
+  "allowed_commands": ["rspec", "bundle", "ruby", "git"],
+  "config": {
+    "api_key": null,
+    "model": "gpt-4o"
+  }
+}
+```
+
+> **Security:** The agent can only execute commands on this list. Dangerous commands (bash, curl, sudo, etc.) are always blocked regardless of configuration.
+
 ### Configuration Hierarchy
 
 Configuration is loaded in this order (later sources override earlier ones):

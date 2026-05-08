@@ -8,6 +8,9 @@ require_relative 'cli/help_printer'
 require_relative 'cli/result_printer'
 
 module SkillBench
+  # Raised when -h/--help is passed to abort OptionParser and return exit code 0.
+  class HelpRequested < StandardError; end
+
   # Thin CLI dispatcher that routes subcommands to their handlers.
   class CLI
     # Entry point called from bin/skill-bench.
