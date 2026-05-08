@@ -32,7 +32,8 @@ module SkillBench
         return error_missing_skill unless options[:skill_name]
 
         options[:eval_name] = eval_name
-        result = Commands::Run.run(**options)
+        exec_options = options.reject { |key| %i[ci format].include?(key) }
+        result = Commands::Run.run(**exec_options)
         format = options[:ci] ? :json : (options[:format] || :human)
         ResultPrinter.call(result, format: format)
       rescue HelpRequested

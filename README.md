@@ -20,7 +20,7 @@
 
 The system decoupling allows the reasoning engine to remain agnostic of the execution environment.
 
-```
+```text
 CLI / API → Runner → Sandbox + ReAct Agent → LLM Client Layer → Provider
                                                          ↓
                                                     Scoring Engine

@@ -125,7 +125,6 @@ detectors:
       - "SkillBench::CLI#print_result"
       - "SkillBench::CLI#handle_skill"
       - "SkillBench::CLI#handle_eval"
-      - "SkillBench::CLI#print_result"
       - "SkillBench::Cli::InitCommand#build_parser"
       - "SkillBench::Cli::RunCommand#build_parser"
       - "SkillBench::Cli::EvalCommand#handle_new"

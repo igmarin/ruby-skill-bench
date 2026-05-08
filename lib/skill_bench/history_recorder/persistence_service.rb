@@ -50,14 +50,8 @@ module SkillBench
       #
       # @return [String, nil] Path to writable file, or nil if none found.
       def self.determine_history_file
-        env_history_file = ENV.fetch('SKILL_BENCH_HISTORY_FILE', nil)
-        env_history_file = env_history_file.to_s.strip
-
-        unless env_history_file.empty?
-          env_path = File.expand_path(env_history_file)
-          allowed_prefixes = allowed_history_prefixes
-          return env_path if allowed_prefixes.any? { |prefix| env_path.start_with?(prefix) } && prepare_and_writable?(env_path)
-        end
+        env_path = resolve_env_history_file
+        return env_path if env_path
 
         cwd_path = File.join(Dir.pwd, 'benchmarks.json')
         return cwd_path if writable?(cwd_path)
@@ -73,6 +67,24 @@ module SkillBench
         warn('Warning: Could not find writable location for benchmarks.json')
         nil
       end
+
+      # Resolves the history file path from the SKILL_BENCH_HISTORY_FILE env var.
+      #
+      # @return [String, nil] Validated path if contained and writable, nil otherwise.
+      def self.resolve_env_history_file
+        env_history_file = ENV.fetch('SKILL_BENCH_HISTORY_FILE', nil).to_s.strip
+        return nil if env_history_file.empty?
+
+        env_path = File.expand_path(env_history_file)
+        allowed_prefixes = allowed_history_prefixes.map { |prefix| File.expand_path(prefix) + File::SEPARATOR }
+        env_path_with_sep = File.expand_path(env_path) + File::SEPARATOR
+        is_contained = allowed_prefixes.any? { |prefix| env_path_with_sep.start_with?(prefix) || env_path == prefix.chomp(File::SEPARATOR) }
+        return env_path if is_contained && prepare_and_writable?(env_path)
+
+        warn "Warning: SKILL_BENCH_HISTORY_FILE '#{env_history_file}' rejected (outside allowed directories or not writable)."
+        nil
+      end
+      private_class_method :resolve_env_history_file
 
       # Checks if a path is writable, creating parent dirs if needed.
       #
