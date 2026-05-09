@@ -49,6 +49,7 @@ The core thesis of this tool is: **skills with their full resources produce bett
 ```
 
 Optional per-dimension description override:
+
 ```json
 { "name": "skill_adherence", "max_score": 25, "description": "Did the agent follow the .call pattern and response contract from the skill?" }
 ```
@@ -62,6 +63,7 @@ If `description` is omitted, the built-in default for that dimension is used.
 The judge is called **twice per eval** — once for baseline output (without skill context), once for context output (with skill context). This is **blind judging**: the judge never sees both outputs in the same call, eliminating bias from direct comparison.
 
 **Baseline call receives:**
+
 1. **Task** — `task.md` content
 2. **Criteria** — the full `criteria.json` with dimension names, descriptions, and max_scores
 3. **Agent output** — git diff + structured summary (files changed, commands run, agent reasoning excerpt)
@@ -190,90 +192,90 @@ These are **non-negotiable** for every implementation task:
 
 ### Phase 1: Foundation
 
-- [ ] 1.0 Create feature branch `feature/evaluation-engine-v2`
-- [ ] 1.1 Create `Dimension` value object with `name`, `description`, `max_score` and `DEFAULT_DIMENSIONS` constant
-  - [ ] 1.1a Write test for `Dimension` (initialization, equality, defaults)
-  - [ ] 1.1b Implement `Dimension`
-  - [ ] 1.1c Run tests, rubocop -A, reek
-  - [ ] 1.1d Add YARD docs
-- [ ] 1.2 Create `Criteria` loader/validator for new `criteria.json` format
-  - [ ] 1.2a Write test for `Criteria` (load JSON, validate sum=100, merge defaults with overrides)
-  - [ ] 1.2b Implement `Criteria`
-  - [ ] 1.2c Run tests, rubocop -A, reek
-  - [ ] 1.2d Add YARD docs
-- [ ] 1.3 Create `JudgeResponse` parser for per-dimension JSON
-  - [ ] 1.3a Write test for `JudgeResponse` (parse valid JSON, reject invalid, handle edge cases)
-  - [ ] 1.3b Implement `JudgeResponse`
-  - [ ] 1.3c Run tests, rubocop -A, reek
-  - [ ] 1.3d Add YARD docs
-- [ ] 1.4 Create `JudgePrompt` that builds structured judge prompts
-  - [ ] 1.4a Write test for `JudgePrompt` (includes task, criteria, skill context, agent output)
-  - [ ] 1.4b Implement `JudgePrompt`
-  - [ ] 1.4c Run tests, rubocop -A, reek
-  - [ ] 1.4d Add YARD docs
-- [ ] 1.5 Create `AgentSummary` to capture sandbox execution metadata
-  - [ ] 1.5a Write test for `AgentSummary` (files changed, commands run, reasoning extraction)
-  - [ ] 1.5b Implement `AgentSummary`
-  - [ ] 1.5c Run tests, rubocop -A, reek
-  - [ ] 1.5d Add YARD docs
-- [ ] 1.6 Extend `ContextHydrator` to load all text-readable files (not just .md)
-  - [ ] 1.6a Write test for extended file loading (.rb, .json, .yml, etc., 50KB limit)
-  - [ ] 1.6b Implement changes to `ContextHydrator`
-  - [ ] 1.6c Run tests, rubocop -A, reek
-  - [ ] 1.6d Add YARD docs
-- [ ] 1.7 Rewrite `Judge` to use `JudgePrompt` and return `JudgeResponse`
-  - [ ] 1.7a Write test for new `Judge` (builds prompt, calls LLM, parses response)
-  - [ ] 1.7b Implement new `Judge`
-  - [ ] 1.7c Run tests, rubocop -A, reek
-  - [ ] 1.7d Add YARD docs
-- [ ] 1.8 Create `DeltaReport` for delta computation and verdict logic
-  - [ ] 1.8a Write test for `DeltaReport` (compute deltas, pass_threshold, minimum_delta)
-  - [ ] 1.8b Implement `DeltaReport`
-  - [ ] 1.8c Run tests, rubocop -A, reek
-  - [ ] 1.8d Add YARD docs
-- [ ] 1.9 Create `EvaluationRunner` orchestration service
-  - [ ] 1.9a Write test for `EvaluationRunner` (baseline run → context run → blind judge both → deltas)
-  - [ ] 1.9b Implement `EvaluationRunner`
-  - [ ] 1.9c Run tests, rubocop -A, reek
-  - [ ] 1.9d Add YARD docs
-- [ ] 1.10 Rewrite `RunnerService` to call `EvaluationRunner`
-  - [ ] 1.10a Update existing tests for `RunnerService`
-  - [ ] 1.10b Implement changes to `RunnerService`
-  - [ ] 1.10c Run tests, rubocop -A, reek
-  - [ ] 1.10d Add YARD docs
-- [ ] 1.11 Update `OutputFormatter` with new table format
-  - [ ] 1.11a Write test for new formatter (dimension table, deltas, verdict)
-  - [ ] 1.11b Implement new `OutputFormatter` format
-  - [ ] 1.11c Run tests, rubocop -A, reek
-  - [ ] 1.11d Add YARD docs
-- [ ] 1.12 Update `Models::Eval` to load new `criteria.json` format
-  - [ ] 1.12a Write test for new eval loading
-  - [ ] 1.12b Implement changes to `Eval` model
-  - [ ] 1.12c Run tests, rubocop -A, reek
-  - [ ] 1.12d Add YARD docs
-- [ ] 1.13 Delete `ScoringService` and update all references
-  - [ ] 1.13a Remove `ScoringService` and its tests
-  - [ ] 1.13b Update `RunnerService` and any other references
-  - [ ] 1.13c Run full test suite, rubocop -A, reek
-- [ ] 1.14 Update example evals to new `criteria.json` format
-  - [ ] 1.14a Convert `examples/evals/` to new format
-  - [ ] 1.14b Convert `evals/new/` template to new format
-  - [ ] 1.14c Run tests
-- [ ] 1.15 Integration test: full eval run end-to-end
-  - [ ] 1.15a Write integration test
-  - [ ] 1.15b Verify pass
-- [ ] 1.16 Update documentation (README, docs/architecture.md, docs/testing-guide.md)
-  - [ ] 1.16a Update README with new output format and criteria.json format
-  - [ ] 1.16b Update architecture doc with new class diagram
-  - [ ] 1.16c Update testing guide with new eval format
-- [ ] **Checkpoint: User review and OK before Phase 2**
+- [x] 1.0 Create feature branch `feature/evaluation-engine-v2`
+- [x] 1.1 Create `Dimension` value object with `name`, `description`, `max_score` and `DEFAULT_DIMENSIONS` constant
+  - [x] 1.1a Write test for `Dimension` (initialization, equality, defaults)
+  - [x] 1.1b Implement `Dimension`
+  - [x] 1.1c Run tests, rubocop -A, reek
+  - [x] 1.1d Add YARD docs
+- [x] 1.2 Create `Criteria` loader/validator for new `criteria.json` format
+  - [x] 1.2a Write test for `Criteria` (load JSON, validate sum=100, merge defaults with overrides)
+  - [x] 1.2b Implement `Criteria`
+  - [x] 1.2c Run tests, rubocop -A, reek
+  - [x] 1.2d Add YARD docs
+- [x] 1.3 Create `JudgeResponse` parser for per-dimension JSON
+  - [x] 1.3a Write test for `JudgeResponse` (parse valid JSON, reject invalid, handle edge cases)
+  - [x] 1.3b Implement `JudgeResponse`
+  - [x] 1.3c Run tests, rubocop -A, reek
+  - [x] 1.3d Add YARD docs
+- [x] 1.4 Create `JudgePrompt` that builds structured judge prompts
+  - [x] 1.4a Write test for `JudgePrompt` (includes task, criteria, skill context, agent output)
+  - [x] 1.4b Implement `JudgePrompt`
+  - [x] 1.4c Run tests, rubocop -A, reek
+  - [x] 1.4d Add YARD docs
+- [x] 1.5 Create `AgentSummary` to capture sandbox execution metadata
+  - [x] 1.5a Write test for `AgentSummary` (files changed, commands run, reasoning extraction)
+  - [x] 1.5b Implement `AgentSummary`
+  - [x] 1.5c Run tests, rubocop -A, reek
+  - [x] 1.5d Add YARD docs
+- [x] 1.6 Extend `ContextHydrator` to load all text-readable files (not just .md)
+  - [x] 1.6a Write test for extended file loading (.rb, .json, .yml, etc., 50KB limit)
+  - [x] 1.6b Implement changes to `ContextHydrator`
+  - [x] 1.6c Run tests, rubocop -A, reek
+  - [x] 1.6d Add YARD docs
+- [x] 1.7 Rewrite `Judge` to use `JudgePrompt` and return `JudgeResponse`
+  - [x] 1.7a Write test for new `Judge` (builds prompt, calls LLM, parses response)
+  - [x] 1.7b Implement new `Judge`
+  - [x] 1.7c Run tests, rubocop -A, reek
+  - [x] 1.7d Add YARD docs
+- [x] 1.8 Create `DeltaReport` for delta computation and verdict logic
+  - [x] 1.8a Write test for `DeltaReport` (compute deltas, pass_threshold, minimum_delta)
+  - [x] 1.8b Implement `DeltaReport`
+  - [x] 1.8c Run tests, rubocop -A, reek
+  - [x] 1.8d Add YARD docs
+- [x] 1.9 Create `EvaluationRunner` orchestration service
+  - [x] 1.9a Write test for `EvaluationRunner` (baseline run → context run → blind judge both → deltas)
+  - [x] 1.9b Implement `EvaluationRunner`
+  - [x] 1.9c Run tests, rubocop -A, reek
+  - [x] 1.9d Add YARD docs
+- [x] 1.10 Rewrite `RunnerService` to call `EvaluationRunner`
+  - [x] 1.10a Update existing tests for `RunnerService`
+  - [x] 1.10b Implement changes to `RunnerService`
+  - [x] 1.10c Run tests, rubocop -A, reek
+  - [x] 1.10d Add YARD docs
+- [x] 1.11 Update `OutputFormatter` with new table format
+  - [x] 1.11a Write test for new formatter (dimension table, deltas, verdict)
+  - [x] 1.11b Implement new `OutputFormatter` format
+  - [x] 1.11c Run tests, rubocop -A, reek
+  - [x] 1.11d Add YARD docs
+- [x] 1.12 Update `Models::Eval` to load new `criteria.json` format
+  - [x] 1.12a Write test for new eval loading
+  - [x] 1.12b Implement changes to `Eval` model
+  - [x] 1.12c Run tests, rubocop -A, reek
+  - [x] 1.12d Add YARD docs
+- [x] 1.13 Delete `ScoringService` and update all references
+  - [x] 1.13a Remove `ScoringService` and its tests
+  - [x] 1.13b Update `RunnerService` and any other references
+  - [x] 1.13c Run full test suite, rubocop -A, reek
+- [x] 1.14 Update example evals to new `criteria.json` format
+  - [x] 1.14a Convert `examples/evals/` to new format
+  - [x] 1.14b Convert `evals/new/` template to new format
+  - [x] 1.14c Run tests
+- [x] 1.15 Integration test: full eval run end-to-end
+  - [x] 1.15a Write integration test
+  - [x] 1.15b Verify pass
+- [x] 1.16 Update documentation (README, docs/architecture.md, docs/testing-guide.md)
+  - [x] 1.16a Update README with new output format and criteria.json format
+  - [x] 1.16b Update architecture doc with new class diagram
+  - [x] 1.16c Update testing guide with new eval format
+- [x] **Checkpoint: User review and OK before Phase 2**
 
 ### Phase 2: Extensibility (future)
 
-- [ ] 2.0 Custom dimensions per eval (mandatory core + additions)
-- [ ] 2.1 Skill chaining (related skills boost score)
-- [ ] 2.2 Historical benchmarking (track score improvements over time)
-- [ ] 2.3 Eval generator (auto-generate evals from skill instructions)
+- [x] 2.0 Custom dimensions per eval (mandatory core + additions)
+- [x] 2.1 Skill chaining (related skills boost score)
+- [x] 2.2 Historical benchmarking (track score improvements over time)
+- [x] 2.3 Eval generator (auto-generate evals from skill instructions)
 
 ---
 
