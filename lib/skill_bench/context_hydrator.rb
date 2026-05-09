@@ -4,15 +4,17 @@ require 'pathname'
 require 'cgi'
 
 module SkillBench
-  # Responsible for loading source context files (markdown files) from a given path
+  # Responsible for loading source context files from a given path
   # and wrapping them in XML tags for injection into the LLM system prompt.
   class ContextHydrator
     HYDRATION_FAILED = 'Failed to hydrate context from source path'
+    TEXT_EXTENSIONS = %w[.md .rb .json .yml .yaml .txt].freeze
+    MAX_FILE_SIZE = 50_000
 
     # Loads and formats source context files.
     #
     # @param params [Hash] The configuration for context hydration.
-    # @option params [String] :source_path The path to the source directory containing markdown files.
+    # @option params [String] :source_path The path to the source directory containing readable files.
     # @option params [String] :skill_path Deprecated alias for `:source_path`.
     # @option params [Pathname, String] :base_path (optional) The base path to resolve the source directory against.
     # @return [Hash] A result hash with :success, and :response containing the XML formatted context.
@@ -21,7 +23,7 @@ module SkillBench
       new(**params).call
     end
 
-    # @param source_path [String] The path to the source directory containing markdown files.
+    # @param source_path [String] The path to the source directory containing readable files.
     # @param skill_path [String] Deprecated alias for source_path.
     # @param base_path [Pathname, String] The base path to resolve the source directory against.
     # @return [void]
@@ -41,8 +43,8 @@ module SkillBench
 
       return missing_path_result unless full_path.exist? && full_path.directory?
 
-      md_files = Dir.glob(full_path.join('*.md'))
-      xml_context = build_xml(md_files)
+      context_files = collect_context_files(full_path)
+      xml_context = build_xml(context_files)
 
       { success: true, response: { context: xml_context } }
     rescue StandardError => e
@@ -56,16 +58,21 @@ module SkillBench
       { success: false, response: { error: { message: "Source path #{@source_path} does not exist or is not a directory" } } }
     end
 
-    # Builds the XML structure wrapping the contents of the markdown files.
+    def collect_context_files(full_path)
+      pattern = full_path.join("*{#{TEXT_EXTENSIONS.join(',')}}").to_s
+      Dir.glob(pattern).select { |f| File.size(f) <= MAX_FILE_SIZE }.sort
+    end
+
+    # Builds the XML structure wrapping the contents of the context files.
     #
-    # @param md_files [Array<String>] List of absolute paths to markdown files.
+    # @param context_files [Array<String>] List of absolute paths to context files.
     # @return [String] The combined XML representation of the file contents.
-    def build_xml(md_files)
-      return '' if md_files.empty?
+    def build_xml(context_files)
+      return '' if context_files.empty?
 
       xml = ['<agent_context>']
 
-      md_files.each do |file_path|
+      context_files.each do |file_path|
         relative_path = Pathname.new(file_path).relative_path_from(@base_path).to_s
         content = File.read(file_path)
 

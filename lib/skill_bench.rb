@@ -8,6 +8,13 @@
 
 # Core modules
 require_relative 'skill_bench/version'
+require_relative 'skill_bench/dimension'
+require_relative 'skill_bench/criteria'
+require_relative 'skill_bench/judge_response'
+require_relative 'skill_bench/judge_prompt'
+require_relative 'skill_bench/agent_summary'
+require_relative 'skill_bench/delta_report'
+require_relative 'skill_bench/evaluation_runner'
 require_relative 'skill_bench/cli'
 require_relative 'skill_bench/evaluate_command'
 require_relative 'skill_bench/agent_runner'
@@ -45,7 +52,6 @@ require_relative 'skill_bench/commands/eval_new'
 
 # Services
 require_relative 'skill_bench/services/runner_service'
-require_relative 'skill_bench/services/scoring_service'
 require_relative 'skill_bench/services/result_printer_service'
 require_relative 'skill_bench/services/option_parser_service'
 require_relative 'skill_bench/services/judge_score_parser_service'

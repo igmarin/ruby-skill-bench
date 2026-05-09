@@ -52,14 +52,22 @@ module SkillBench
         MARKDOWN
       end
 
-      # Generate default criteria hash
-      # @param runtime [String] Runtime type
-      # @return [Hash] Criteria configuration
+      # Generate default criteria hash.
+      #
+      # @param runtime [String] Runtime type.
+      # @return [Hash] Criteria configuration in the new format.
       def self.default_criteria(runtime)
         {
-          runtime: runtime,
-          pass: { 'score_threshold' => 0.8 },
-          fail: { 'score_threshold' => 0.5 }
+          context: "Evaluate #{runtime} task",
+          dimensions: [
+            { name: 'correctness', max_score: 30 },
+            { name: 'skill_adherence', max_score: 25 },
+            { name: 'code_quality', max_score: 20 },
+            { name: 'test_coverage', max_score: 15 },
+            { name: 'documentation', max_score: 10 }
+          ],
+          pass_threshold: 70,
+          minimum_delta: 10
         }
       end
 

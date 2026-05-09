@@ -4,24 +4,36 @@ Ruby Skill Bench provides a reproducible and isolated environment for testing AI
 
 ## High-Level Flow
 
-1. **`RunnerService`**: The entry point. It resolves the eval, skill, and provider, then orchestrates evaluation execution.
-2. **`Sandbox`**: Creates a temporary directory, copies the task files into it, and initializes a Git repository. This ensures that every run starts from a clean state and that all modifications can be captured via Git diffs.
-3. **`ContextHydrator`**: Reads skill/workflow documentation from the repository and converts it into a standardized XML format injected into the agent's system prompt.
-4. **`ReactAgent`**: An autonomous agent that follows the **Reasoning and Acting** loop. It analyzes the task, decides which tools to use, executes them in the sandbox, and observes the results until the task is complete.
-5. **`ScoringService`**: Computes deterministic composite scores based on test pass rate, timing compliance, and error handling.
-6. **`Client`**: A provider-agnostic abstraction layer. It dispatches API calls to different LLM backends (OpenAI, Anthropic, Gemini, etc.) and handles standardized error reporting.
+1. **`RunnerService`**: The entry point. Resolves eval, skill, and provider, then runs baseline and context agents.
+2. **`Sandbox`**: Creates a temporary directory, copies task files, and initializes a Git repository for clean, reproducible runs.
+3. **`ContextHydrator`**: Loads skill documentation (.md, .rb, .json, .yml, .yaml, .txt up to 50KB each) and wraps it in XML for the agent's system prompt.
+4. **`ReactAgent`**: Autonomous agent following a **Thought → Tool → Observation** loop.
+5. **`EvaluationRunner`**: Orchestrates blind judging — builds `JudgePrompt` for baseline and context outputs, calls `Judge` twice, then computes deltas via `DeltaReport`.
+6. **`DeltaReport`**: Computes per-dimension deltas and determines verdict based on `pass_threshold` and `minimum_delta`.
+7. **`Client`**: Provider-agnostic abstraction for LLM backends.
 
 ## Key Components
 
 ### `SkillBench::Services::RunnerService`
 
 - Resolves eval, skill, and provider configuration.
-- Spawns the agent and collects results.
+- Runs baseline agent (no skill context) and context agent (with skill context).
+- Delegates judging and delta computation to `EvaluationRunner`.
 - Falls back to mock provider when config is unavailable.
+
+### `SkillBench::EvaluationRunner`
+
+- Builds `JudgePrompt` for baseline and context outputs.
+- Calls `Judge` twice (blind scoring).
+- Uses `DeltaReport` to compute per-dimension deltas and final verdict.
+
+### `SkillBench::DeltaReport`
+
+- Computes baseline vs context deltas per dimension.
+- Verdict requires: `context_total >= pass_threshold` AND `total_delta >= minimum_delta`.
 
 ### `SkillBench::CLI` Commands
 
-CLI command handlers for the `skill-bench` executable:
 - `InitCommand` — Creates `skill-bench.json` configuration
 - `RunCommand` — Executes evaluations
 - `SkillCommand` — Scaffolds new skills with templates
@@ -50,6 +62,7 @@ CLI command handlers for the `skill-bench` executable:
 ### `SkillBench::OutputFormatter`
 
 - Formats results as human-readable text, JSON, or JUnit XML
+- Human format displays a dimension table with baseline, context, and delta columns
 - Escapes XML output to prevent injection
 - Provides exit codes for CI/CD integration
 

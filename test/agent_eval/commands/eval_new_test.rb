@@ -43,15 +43,17 @@ module SkillBench
       def test_default_criteria_generic
         criteria = EvalNew.default_criteria('generic')
 
-        assert_equal 'generic', criteria[:runtime]
-        assert_in_delta(0.8, criteria[:pass]['score_threshold'])
-        assert_in_delta(0.5, criteria[:fail]['score_threshold'])
+        assert_equal 'Evaluate generic task', criteria[:context]
+        assert_equal 5, criteria[:dimensions].size
+        assert_equal(100, criteria[:dimensions].sum { |d| d[:max_score] })
+        assert_equal 70, criteria[:pass_threshold]
+        assert_equal 10, criteria[:minimum_delta]
       end
 
       def test_default_criteria_rails
         criteria = EvalNew.default_criteria('rails')
 
-        assert_equal 'rails', criteria[:runtime]
+        assert_equal 'Evaluate rails task', criteria[:context]
       end
 
       def test_criteria_json_is_valid_json
@@ -62,7 +64,8 @@ module SkillBench
         content = File.read(File.join(eval_path, 'criteria.json'))
         parsed = JSON.parse(content)
 
-        assert_equal 'generic', parsed['runtime']
+        assert_equal 'Evaluate generic task', parsed['context']
+        assert_equal 5, parsed['dimensions'].size
       end
     end
   end

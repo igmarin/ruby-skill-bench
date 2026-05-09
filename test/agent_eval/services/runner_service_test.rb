@@ -12,7 +12,7 @@ module SkillBench
         @eval_dir = File.join(@tmp_dir, 'evals', 'test-eval')
         FileUtils.mkpath(@eval_dir)
         File.write(File.join(@eval_dir, 'task.md'), 'Test task')
-        File.write(File.join(@eval_dir, 'criteria.json'), '{"pass": {"score_threshold": 0.8}}')
+        File.write(File.join(@eval_dir, 'criteria.json'), valid_criteria_json)
 
         @skill_dir = File.join(@tmp_dir, 'skills', 'test-skill')
         FileUtils.mkpath(@skill_dir)
@@ -29,16 +29,26 @@ module SkillBench
       def test_call_returns_result_for_mock_provider
         write_mock_config
 
+        SkillBench::EvaluationRunner.expects(:call).returns({
+                                                              success: true,
+                                                              response: {
+                                                                report: Struct.new(:verdict, :baseline_total, :context_total, :deltas,
+                                                                                   keyword_init: true).new(
+                                                                                     verdict: true,
+                                                                                     baseline_total: 30,
+                                                                                     context_total: 80,
+                                                                                     deltas: { 'correctness' => 16 }
+                                                                                   )
+                                                              }
+                                                            })
+
         result = RunnerService.call(
           eval_name: 'test-eval',
           skill_name: 'test-skill'
         )
 
-        assert result[:pass]
-        assert_in_delta(1.0, result[:score])
-        assert_equal 'test-eval', result[:eval_name]
-        assert_equal 'test-skill', result[:skill_name]
-        assert_equal 'mock', result[:provider_name]
+        assert result[:success]
+        assert result[:response][:report].verdict
       end
 
       def test_call_raises_when_eval_not_found
@@ -77,12 +87,22 @@ module SkillBench
       def test_call_resolves_eval_with_full_path
         write_mock_config
 
+        SkillBench::EvaluationRunner.expects(:call).returns({
+                                                              success: true,
+                                                              response: {
+                                                                report: Struct.new(:verdict, :baseline_total, :context_total, :deltas,
+                                                                                   keyword_init: true).new(
+                                                                                     verdict: true, baseline_total: 30, context_total: 80, deltas: {}
+                                                                                   )
+                                                              }
+                                                            })
+
         result = RunnerService.call(
           eval_name: 'evals/test-eval',
           skill_name: 'test-skill'
         )
 
-        assert result[:pass]
+        assert result[:success]
       end
 
       private
@@ -94,6 +114,21 @@ module SkillBench
                                                                         max_execution_time: 30,
                                                                         config: {}
                                                                       }))
+      end
+
+      def valid_criteria_json
+        {
+          context: 'Evaluate test',
+          dimensions: [
+            { name: 'correctness', max_score: 30 },
+            { name: 'skill_adherence', max_score: 25 },
+            { name: 'code_quality', max_score: 20 },
+            { name: 'test_coverage', max_score: 15 },
+            { name: 'documentation', max_score: 10 }
+          ],
+          pass_threshold: 70,
+          minimum_delta: 10
+        }.to_json
       end
     end
   end

@@ -9,7 +9,7 @@
 
 - **Side-by-Side Evaluation**: Quantify the "ROI of Context" by comparing baseline vs. skill-enhanced agent runs.
 - **Isolated Git Sandboxes**: Every run operates in a temporary repo. Clean diffs, zero side-effects, 100% reproducibility.
-- **Deterministic Scoring**: Composite scoring from test pass rate (50%), timing compliance (30%), and error handling (20%). Configurable thresholds via `criteria.json`.
+- **Blind Judging with Dimensions**: LLM judge scores baseline and context independently across 5 canonical dimensions (Correctness, Skill Adherence, Code Quality, Test Coverage, Documentation). Eval authors configure weights and thresholds via `criteria.json`.
 - **Sophisticated ReAct Loop**: Employs a robust `Thought → Tool → Observation` loop to handle complex, multi-step engineering tasks.
 - **Multi-Provider Ecosystem**: Native support for **OpenAI**, **Anthropic**, **Google Gemini**, **Azure OpenAI**, **Ollama**, **Groq**, **DeepSeek**, and **OpenCode**.
 - **Standardized Intelligence**: Consistent reporting format regardless of the underlying LLM provider.
@@ -21,9 +21,13 @@
 The system decoupling allows the reasoning engine to remain agnostic of the execution environment.
 
 ```text
-CLI / API → Runner → Sandbox + ReAct Agent → LLM Client Layer → Provider
-                                                         ↓
-                                                    Scoring Engine
+CLI / API → RunnerService → Sandbox + ReAct Agent → LLM Client Layer → Provider
+                                                              ↓
+                                         EvaluationRunner (baseline + context)
+                                                              ↓
+                                                    Judge (blind scoring)
+                                                              ↓
+                                                    DeltaReport
 ```
 
 ---
@@ -123,26 +127,40 @@ Provider is read from `skill-bench.json` — no `--provider` flag needed.
 
 ## Scoring Engine
 
-The `ScoringService` computes a deterministic composite score:
+The engine runs every eval **twice** — once without skill context (baseline) and once with skill context — then uses an LLM judge to score both outputs independently across configurable dimensions.
 
-| Component | Weight | Description |
-|-----------|--------|-------------|
-| Test pass rate | 50% | Percentage of tests that passed |
-| Timing compliance | 30% | Whether execution stayed within time budget |
-| Error handling | 20% | Ratio of errors to total operations |
+### Canonical Dimensions
 
-Thresholds are defined in `criteria.json`:
+| Dimension | Default Description |
+|-----------|---------------------|
+| Correctness | Does the output fulfill the task requirements? |
+| Skill Adherence | Did the agent follow patterns defined in the skill? |
+| Code Quality | Is the code clean, well-structured, and free of smells? |
+| Test Coverage | Are there meaningful tests following best practices? |
+| Documentation | Is there adequate YARD documentation and clear intent? |
+
+### `criteria.json` Format
 
 ```json
 {
-  "runtime": "rails",
-  "pass": {
-    "score_threshold": 0.8
-  }
+  "context": "Evaluate whether the skill helps build a proper API REST collection",
+  "dimensions": [
+    { "name": "correctness", "max_score": 30 },
+    { "name": "skill_adherence", "max_score": 25 },
+    { "name": "code_quality", "max_score": 20 },
+    { "name": "test_coverage", "max_score": 15 },
+    { "name": "documentation", "max_score": 10 }
+  ],
+  "pass_threshold": 70,
+  "minimum_delta": 10
 }
 ```
 
-A score >= `pass.score_threshold` (default 0.8) marks the eval as passing.
+**Rules:**
+- `dimensions` max_scores must sum to exactly 100.
+- `pass_threshold` is the minimum context score to pass (default 70).
+- `minimum_delta` is the minimum total improvement over baseline (default 10).
+- Dimension descriptions can be overridden per eval by adding a `description` field.
 
 ---
 
@@ -171,7 +189,7 @@ bundle exec rake test
 bundle exec rake test COVERAGE=true
 
 # Run specific test file
-bundle exec ruby -Itest test/agent_eval/services/scoring_service_test.rb
+bundle exec ruby -Itest test/integration_test.rb
 ```
 
 **Test Structure:**

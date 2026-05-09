@@ -48,17 +48,17 @@ module SkillBench
 
       # Load evaluation criteria from criteria.json
       # @param path [Pathname] Path to eval directory
-      # @return [Hash] Parsed criteria or empty hash if file doesn't exist
-      # @raise [RuntimeError] if JSON is malformed
+      # @return [SkillBench::Criteria] Parsed criteria or empty criteria if file doesn't exist
+      # @raise [RuntimeError] if JSON is malformed or criteria validation fails
       def self.load_criteria(path)
         criteria_json = path.join('criteria.json')
-        return {} unless criteria_json.exist?
+        return Criteria.empty unless criteria_json.exist?
 
-        begin
-          JSON.parse(File.read(criteria_json), symbolize_names: true)
-        rescue JSON::ParserError => e
-          raise "Invalid JSON in #{criteria_json}: #{e.message}"
-        end
+        result = Criteria.call(path: criteria_json.to_s)
+        response = result[:response]
+        return response[:criteria] if result[:success]
+
+        raise "Failed to load criteria: #{response[:error][:message]}"
       end
 
       private_class_method :load_task, :load_criteria

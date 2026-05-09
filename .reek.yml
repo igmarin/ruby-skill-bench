@@ -1,3 +1,6 @@
+exclude_paths:
+  - "examples/evals/**/source"
+
 directories:
   "test":
     IrresponsibleModule:
@@ -53,6 +56,9 @@ detectors:
   DuplicateMethodCall:
     exclude:
       - "SkillBench::AgentRunner#print_header"
+      - "SkillBench::DeltaReport#compute_totals"
+      - "SkillBench::OutputFormatter#self.format_delta_report"
+      - "SkillBench::OutputFormatter#self.format_legacy_human"
       - "SkillBench::CLI#call"
       - "SkillBench::Client#call"
       - "SkillBench::Clients::BaseClient#execute_request"
@@ -74,13 +80,12 @@ detectors:
       - "SkillBench::ReactAgent#call"
       - "SkillBench::Runner#call"
       - "SkillBench::Services::RunnerService#spawn_agent"
-      - "SkillBench::Services::ScoringService#call"
-      - "SkillBench::Services::ScoringService#error_score"
       - "SkillBench::Tools::Base#verify_component_safety!"
       - "SkillBench::Tools::Dispatcher#log_error"
       - "SkillBench::Tools::WriteFile#self.call"
   UncommunicativeVariableName:
     accept:
+      - d
       - e
       - f
       - id
@@ -90,6 +95,7 @@ detectors:
     max_instance_variables: 6
     exclude:
       - "SkillBench::Clients::BaseClient"
+      - "SkillBench::DeltaReport"
   TooManyStatements:
     max_statements: 25
     exclude:
@@ -107,6 +113,11 @@ detectors:
   FeatureEnvy:
     exclude:
       - "SkillBench::CLI#call"
+      - "SkillBench::Criteria#assign_attributes"
+      - "SkillBench::Dimension#=="
+      - "SkillBench::EvaluationRunner#compute_deltas"
+      - "SkillBench::JudgePrompt#criteria_section"
+      - "SkillBench::JudgeResponse#extract_dimensions"
       - "SkillBench::CLI#handle_eval"
       - "SkillBench::CLI#handle_eval_new"
       - "SkillBench::CLI#handle_run"
@@ -133,8 +144,6 @@ detectors:
       - "SkillBench::Sandbox#copy_tree"
       - "SkillBench::Services::OptionParserService#parser"
       - "SkillBench::Services::RunnerService#spawn_agent"
-      - "SkillBench::Services::ScoringService#load_thresholds"
-      - "SkillBench::Services::ScoringService#test_pass_rate"
   BooleanParameter:
     exclude:
       - "SkillBench::Commands::Init#self.run"
@@ -156,6 +165,9 @@ detectors:
       - "SkillBench::HistoryRecorder#normalize_score"
       - "SkillBench::HistoryRecorder#self.summarize"
       - "SkillBench::HistoryRecorder::HistoryPathResolverTest#with_env"
+      - "SkillBench::JudgePrompt#call"
+      - "SkillBench::JudgeResponse#extract_dimensions"
+      - "SkillBench::JudgeResponse#validate_structure"
       - "SkillBench::Models::Config#to_provider"
       - "SkillBench::ReactAgent#call"
       - "SkillBench::SourcePathResolver#self.call"
@@ -169,6 +181,7 @@ detectors:
       - "SkillBench::Cli::RunCommand#build_parser"
       - "SkillBench::Cli::SkillCommand#handle_new"
       - "SkillBench::EvaluateCommand#parse_options"
+      - "SkillBench::OutputFormatter#self.format_delta_report"
       - "SkillBench::Services::OptionParserService#parser"
   RepeatedConditional:
     exclude:
@@ -188,4 +201,5 @@ detectors:
       - "SkillBench::HistoryRecorder::PersistenceService#self.log_error"
       - "SkillBench::HistoryRecorder::PersistenceService#self.record"
       - "SkillBench::Models::Config#self.load"
+      - "SkillBench::OutputFormatter#self.delta_report?"
       - "SkillBench::Tools::Dispatcher#log_error"

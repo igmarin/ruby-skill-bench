@@ -6,21 +6,21 @@ require_relative '../models/skill'
 require_relative '../models/config'
 require_relative '../models/provider'
 require_relative '../clients/all'
-require_relative 'scoring_service'
 require_relative 'skill_resolver'
 
 module SkillBench
   module Services
-    # Orchestrates the execution of an eval
+    # Orchestrates the execution of an eval with baseline and context runs.
     class RunnerService
-      # Mock provider struct for testing without real LLM calls.
+      # Stand-in provider when no LLM config is available.
       MOCK_PROVIDER = Struct.new(:name, :runtime, :llm, :merged_config)
       private_constant :MOCK_PROVIDER
+
       # Runs an eval with the given parameters.
       #
       # @param eval_name [String] Name or path of the eval to run
       # @param skill_name [String] Name of the skill to use
-      # @return [Hash] Result with pass/fail and score
+      # @return [Hash] Result from EvaluationRunner
       def self.call(eval_name:, skill_name:)
         new(eval_name: eval_name, skill_name: skill_name).call
       end
@@ -32,16 +32,27 @@ module SkillBench
         @skill_name = skill_name
       end
 
-      # Executes the eval: resolves entities, spawns agent, scores result.
+      # Executes the eval: resolves entities, runs baseline and context, evaluates.
       #
-      # @return [Hash] Scored result with pass/fail status
+      # @return [Hash] Evaluation result with deltas and verdict
       def call
         evaluation = resolve_eval
         skill = resolve_skill
         provider = resolve_provider
 
-        result = spawn_agent(evaluation, skill, provider)
-        score_result(evaluation, result)
+        baseline_output = spawn_agent(evaluation, nil, provider)
+        context_output = spawn_agent(evaluation, skill, provider)
+
+        criteria = evaluation.criteria
+        skill_context = load_skill_context(skill)
+
+        EvaluationRunner.call(
+          task: evaluation.task,
+          criteria: criteria,
+          skill_context: skill_context,
+          baseline_output: format_output(baseline_output),
+          context_output: format_output(context_output)
+        )
       end
 
       private
@@ -71,19 +82,17 @@ module SkillBench
 
         client_class = SkillBench::Clients::ProviderRegistry.for(provider.runtime.to_sym)
         config = provider.merged_config
-
-        # Standardize options for the client
         options = config.dup
         options[:model] ||= provider.llm
 
-        # Execute the prompt
+        system_prompt = skill ? load_skill_context(skill) : ''
+
         response = client_class.call(
-          system_prompt: load_skill_context(skill),
+          system_prompt: system_prompt,
           messages: [{ role: 'user', content: evaluation.task }],
           **options
         )
 
-        # Standardize output for SkillBench
         {
           result: response[:result],
           status: response[:success] ? :success : :error,
@@ -98,17 +107,8 @@ module SkillBench
         File.exist?(skill_md) ? File.read(skill_md) : ''
       end
 
-      def score_result(evaluation, result)
-        ScoringService.call(
-          eval: evaluation,
-          result: result,
-          skill_name: skill_name,
-          provider_name: resolve_provider_name
-        )
-      end
-
-      def resolve_provider_name
-        resolve_provider.name.to_s
+      def format_output(agent_result)
+        agent_result.to_json
       end
     end
   end

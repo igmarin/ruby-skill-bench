@@ -20,13 +20,24 @@ Provider is read from `skill-bench.json` — no `--provider` flag needed.
 
 **Human-readable (default):**
 ```
-============================================================
-Eval: my-eval
-Skill: my-skill
-Provider: openai
-Status: PASSED
-Score: 0.95
-============================================================
+═══════════════════════════════════════════════════════
+  Eval: my-eval
+  Skill: my-skill
+  Provider: openai
+═══════════════════════════════════════════════════════
+
+  DIMENSION                BASELINE   CONTEXT    DELTA
+  ──────────────────────── ───────── ───────── ───────
+  Correctness (30)                12        28    +16
+  Skill Adherence (25)             5        22    +17
+  Code Quality (20)               10        16     +6
+  Test Coverage (15)               3        13    +10
+  Documentation (10)               2         8     +6
+  ──────────────────────── ───────── ───────── ───────
+  TOTAL                          32/100    87/100   +55
+
+  VERDICT: PASS (threshold: 70, minimum delta: 10)
+═══════════════════════════════════════════════════════
 ```
 
 **JSON:**
@@ -72,24 +83,29 @@ This file contains the instructions for the AI agent. It should describe a speci
 
 ### 2. The Criteria (`criteria.json`)
 
-This file defines the grading thresholds:
+This file defines the evaluation dimensions, weights, and thresholds:
 
 ```json
 {
-  "runtime": "rails",
-  "pass": {
-    "score_threshold": 0.8
-  },
-  "fail": {
-    "score_threshold": 0.5
-  }
+  "context": "Evaluate whether the skill helps build a proper API REST collection",
+  "dimensions": [
+    { "name": "correctness", "max_score": 30 },
+    { "name": "skill_adherence", "max_score": 25 },
+    { "name": "code_quality", "max_score": 20 },
+    { "name": "test_coverage", "max_score": 15 },
+    { "name": "documentation", "max_score": 10 }
+  ],
+  "pass_threshold": 70,
+  "minimum_delta": 10
 }
 ```
 
 **Fields:**
-- `runtime`: Target runtime environment ("rails" or "generic")
-- `pass.score_threshold`: Score needed to pass (default 0.8)
-- `fail.score_threshold`: Score below which the eval is a clear failure (default 0.5)
+- `context`: Human-readable description of what the eval measures.
+- `dimensions`: Array of dimension objects. Each must have `name` and `max_score`. `max_score` values must sum to exactly 100.
+- `pass_threshold`: Minimum total context score to pass (default 70).
+- `minimum_delta`: Minimum improvement over baseline required to pass (default 10).
+- Optional per-dimension `description` overrides the built-in default.
 
 ## Evaluating Workflows vs. Skills
 
@@ -105,7 +121,7 @@ When running a workflow evaluation, ensure the eval path points to a workflow ev
 
 ## Running the Test Suite
 
-The project uses Minitest with 373+ tests covering:
+The project uses Minitest with 428+ tests covering:
 - Core evaluation engine (`test/evaluator/`)
 - CLI commands and models (`test/agent_eval/`)
 - Provider clients (`test/clients/`)
@@ -119,7 +135,7 @@ bundle exec rake test
 bundle exec rake test COVERAGE=true
 
 # Run specific test file
-bundle exec ruby -Itest test/agent_eval/services/scoring_service_test.rb
+bundle exec ruby -Itest test/integration_test.rb
 
 # Run lint checks
 bundle exec rake rubocop

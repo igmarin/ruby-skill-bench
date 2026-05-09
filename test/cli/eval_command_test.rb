@@ -32,7 +32,7 @@ module SkillBench
         content = File.read('evals/my-eval/criteria.json')
         config = JSON.parse(content)
 
-        assert_equal 'rails', config['runtime']
+        assert_equal 'Evaluate rails task', config['context']
       end
 
       def test_call_new_without_name_returns_error

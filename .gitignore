@@ -14,3 +14,5 @@ gems-report.csv
 .github/copilot-instructions.md
 .github/hooks/rtk-rewrite.json
 *.gem
+examples/
+examples/

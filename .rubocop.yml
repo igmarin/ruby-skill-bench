@@ -9,6 +9,7 @@ AllCops:
   NewCops: enable
   Exclude:
     - 'evals/**/*'
+    - 'examples/**/*'
     - 'vendor/**/*'
     - 'bin/**/*'
     - 'tmp/**/*'
