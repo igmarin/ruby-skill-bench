@@ -108,6 +108,44 @@ module SkillBench
       assert_equal 1, OutputFormatter.exit_code(result)
     end
 
+    def test_format_human_with_error_result_shows_error_message
+      result = {
+        success: false,
+        response: {
+          error: { message: 'baseline agent failed: connection refused' }
+        },
+        eval_name: 'test-eval',
+        skill_name: 'test-skill',
+        provider_name: 'openai'
+      }
+      output = OutputFormatter.format(result, format: :human)
+
+      assert_includes output, 'Eval: test-eval'
+      assert_includes output, 'Skill: test-skill'
+      assert_includes output, 'Provider: openai'
+      assert_includes output, 'Status: FAILED'
+      assert_includes output, 'Error: baseline agent failed: connection refused'
+    end
+
+    def test_format_human_with_error_result_missing_metadata
+      result = {
+        success: false,
+        response: {
+          error: { message: 'context agent failed: timeout' }
+        }
+      }
+      output = OutputFormatter.format(result, format: :human)
+
+      assert_includes output, 'Status: FAILED'
+      assert_includes output, 'Error: context agent failed: timeout'
+    end
+
+    def test_exit_code_returns_1_for_error_result
+      result = { success: false, response: { error: { message: 'failed' } } }
+
+      assert_equal 1, OutputFormatter.exit_code(result)
+    end
+
     private
 
     def build_delta_report(verdict:)

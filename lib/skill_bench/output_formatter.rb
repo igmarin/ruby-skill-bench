@@ -63,13 +63,15 @@ module SkillBench
       status = result[:pass] ? 'PASSED' : 'FAILED'
       lines = [
         '=' * 60,
-        "Eval: #{result[:eval_name]}",
-        "Skill: #{result[:skill_name]}",
-        "Provider: #{result[:provider_name]}",
+        "Eval: #{result[:eval_name] || ''}",
+        "Skill: #{result[:skill_name] || ''}",
+        "Provider: #{result[:provider_name] || ''}",
         "Status: #{status}",
-        "Score: #{result[:score]&.round(2) || 'N/A'}",
-        '=' * 60
+        "Score: #{result[:score]&.round(2) || 'N/A'}"
       ]
+      error_msg = result.dig(:response, :error, :message)
+      lines << "Error: #{error_msg}" if error_msg
+      lines << ('=' * 60)
       lines.join("\n")
     end
     private_class_method :format_legacy_human

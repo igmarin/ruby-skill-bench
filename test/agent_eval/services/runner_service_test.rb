@@ -84,6 +84,22 @@ module SkillBench
         end
       end
 
+      def test_call_returns_error_result_with_metadata_on_agent_failure
+        write_openai_config
+
+        SkillBench::Clients::ProviderRegistry.stubs(:for).returns(FakeFailingClient)
+
+        result = RunnerService.call(
+          eval_name: 'test-eval',
+          skill_names: ['test-skill']
+        )
+
+        refute result[:success]
+        assert_equal 'test-eval', result[:eval_name]
+        assert_equal 'test-skill', result[:skill_name]
+        assert_includes result[:response][:error][:message], 'Baseline'
+      end
+
       def test_call_resolves_eval_with_full_path
         write_mock_config
 
@@ -116,6 +132,15 @@ module SkillBench
                                                                       }))
       end
 
+      def write_openai_config
+        Models::Config.instance_variable_set(:@loaded, nil)
+        File.write(SkillBench::Config::CONFIG_FILENAME, JSON.generate({
+                                                                        provider: 'openai',
+                                                                        max_execution_time: 30,
+                                                                        config: { api_key: 'fake-key' }
+                                                                      }))
+      end
+
       def valid_criteria_json
         {
           context: 'Evaluate test',
@@ -129,6 +154,17 @@ module SkillBench
           pass_threshold: 70,
           minimum_delta: 10
         }.to_json
+      end
+    end
+
+    class FakeFailingClient
+      def self.call(**_kwargs)
+        {
+          success: false,
+          response: { error: { message: 'connection refused' } },
+          result: nil,
+          usage: {}
+        }
       end
     end
   end
