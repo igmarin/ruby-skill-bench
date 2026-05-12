@@ -4,7 +4,6 @@ require 'test_helper'
 
 module SkillBench
   module Clients
-    # rubocop:disable Metrics/ClassLength
     class AnthropicTest < Minitest::Test
       def setup
         Config.reset
@@ -220,6 +219,5 @@ module SkillBench
         assert_equal '', message['content']
       end
     end
-    # rubocop:enable Metrics/ClassLength
   end
 end

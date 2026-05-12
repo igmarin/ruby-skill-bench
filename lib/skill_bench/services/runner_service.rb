@@ -43,12 +43,10 @@ module SkillBench
         skills = resolve_skills
         provider = resolve_provider
 
-        config = begin
-          provider.merged_config
-        rescue StandardError
-          nil
-        end
+        config_result = resolve_provider_config(provider)
+        return config_error_result(config_result[:error], evaluation, provider) unless config_result[:success]
 
+        config = config_result[:config]
         baseline_output = spawn_agent(evaluation, nil, provider, config)
         return agent_error_result(baseline_output, 'baseline', evaluation, provider) if baseline_output[:status] == :error
 
@@ -93,6 +91,12 @@ module SkillBench
 
       def resolve_skills
         skill_names.map { |name| Services::SkillResolver.call(name) }
+      end
+
+      def resolve_provider_config(provider)
+        { success: true, config: provider.merged_config }
+      rescue ArgumentError => e
+        { success: false, error: e }
       end
 
       def resolve_provider
@@ -175,6 +179,20 @@ module SkillBench
           response: {
             error: {
               message: "#{phase.capitalize} agent failed: #{result[:raw_response]&.dig(:error, :message) || 'unknown error'}"
+            }
+          },
+          eval_name: evaluation.name,
+          skill_name: skill_names.join(', '),
+          provider_name: provider.name
+        }
+      end
+
+      def config_error_result(error, evaluation, provider)
+        {
+          success: false,
+          response: {
+            error: {
+              message: "Configuration error: #{error.message}"
             }
           },
           eval_name: evaluation.name,

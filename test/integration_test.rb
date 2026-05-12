@@ -10,6 +10,12 @@ module SkillBench
       @tmp_dir = Dir.mktmpdir('integration_test')
       Dir.chdir(@tmp_dir)
 
+      @original_env = ENV.to_h
+      ENV.delete('SKILL_BENCH_DEEPSEEK_API_KEY')
+      ENV.delete('DEEPSEEK_API_KEY')
+      ENV.delete('SKILL_BENCH_OPENAI_API_KEY')
+      ENV.delete('OPENAI_API_KEY')
+
       FileUtils.mkdir_p('evals/integration-eval')
       File.write('evals/integration-eval/task.md', 'Create a simple Ruby service object')
       File.write('evals/integration-eval/criteria.json', valid_criteria_json)
@@ -27,6 +33,8 @@ module SkillBench
     def teardown
       Dir.chdir(@original_dir)
       FileUtils.rm_rf(@tmp_dir)
+      ENV.clear
+      ENV.update(@original_env)
     end
 
     def test_full_eval_pipeline

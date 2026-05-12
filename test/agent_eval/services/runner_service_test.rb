@@ -8,6 +8,10 @@ module SkillBench
     class RunnerServiceTest < Minitest::Test
       def setup
         @original_dir = Dir.pwd
+        @original_env = ENV.to_h
+        ENV.delete('SKILL_BENCH_OPENAI_API_KEY')
+        ENV.delete('OPENAI_API_KEY')
+
         @tmp_dir = Dir.mktmpdir('runner_service_test')
         @eval_dir = File.join(@tmp_dir, 'evals', 'test-eval')
         FileUtils.mkpath(@eval_dir)
@@ -24,6 +28,8 @@ module SkillBench
       def teardown
         Dir.chdir(@original_dir)
         FileUtils.rm_rf(@tmp_dir)
+        ENV.clear
+        ENV.update(@original_env)
       end
 
       def test_call_returns_result_for_mock_provider
@@ -111,6 +117,20 @@ module SkillBench
         end
       end
 
+      def test_call_returns_config_error_when_api_key_missing
+        write_openai_config_without_key
+
+        result = RunnerService.call(
+          eval_name: 'test-eval',
+          skill_names: ['test-skill']
+        )
+
+        refute result[:success]
+        assert_equal 'test-eval', result[:eval_name]
+        assert_equal 'test-skill', result[:skill_name]
+        assert_includes result[:response][:error][:message], 'API key not found'
+      end
+
       def test_call_returns_error_result_with_metadata_on_agent_failure
         write_openai_config
 
@@ -185,6 +205,15 @@ module SkillBench
                                                                         provider: 'openai',
                                                                         max_execution_time: 30,
                                                                         config: { api_key: 'fake-key' }
+                                                                      }))
+      end
+
+      def write_openai_config_without_key
+        Models::Config.instance_variable_set(:@loaded, nil)
+        File.write(SkillBench::Config::CONFIG_FILENAME, JSON.generate({
+                                                                        provider: 'openai',
+                                                                        max_execution_time: 30,
+                                                                        config: { api_key: nil }
                                                                       }))
       end
 

@@ -27,7 +27,7 @@ Metrics/ClassLength:
   Max: 170
   Exclude:
     - 'lib/skill_bench/cli.rb'
-    - 'test/criteria_test.rb'
+    - 'test/**/*'
 
 Metrics/BlockLength:
   Max: 40
