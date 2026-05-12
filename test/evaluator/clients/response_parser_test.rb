@@ -49,6 +49,30 @@ module SkillBench
         refute ResponseParser.valid_message?(message)
       end
 
+      def test_invalid_message_content_nil_with_empty_tool_calls
+        message = { content: nil, tool_calls: [] }
+
+        refute ResponseParser.valid_message?(message)
+      end
+
+      def test_invalid_message_content_nil_with_no_tool_calls_key
+        message = { content: nil }
+
+        refute ResponseParser.valid_message?(message)
+      end
+
+      def test_valid_message_with_empty_string_content
+        message = { content: '' }
+
+        assert ResponseParser.valid_message?(message)
+      end
+
+      def test_valid_message_with_empty_string_content_and_tool_calls
+        message = { content: '', tool_calls: [{ id: '1' }] }
+
+        assert ResponseParser.valid_message?(message)
+      end
+
       def test_extract_content_from_hash
         message = { content: 'hello' }
 

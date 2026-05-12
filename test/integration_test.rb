@@ -34,7 +34,55 @@ module SkillBench
         params[:task] == 'Create a simple Ruby service object' &&
           params[:skill_context].include?('Service Object Pattern') &&
           params[:baseline_output].is_a?(String) &&
-          params[:context_output].is_a?(String)
+          params[:context_output].is_a?(String) &&
+          params.key?(:judge_params)
+      end.returns({
+                    success: true,
+                    response: {
+                      report: Struct.new(:verdict, :baseline_total, :context_total, :deltas, :criteria, keyword_init: true).new(
+                        verdict: true,
+                        baseline_total: 30,
+                        context_total: 80,
+                        deltas: { 'correctness' => 16, 'skill_adherence' => 17 },
+                        criteria: build_criteria
+                      )
+                    }
+                  })
+
+      result = Services::RunnerService.call(
+        eval_name: 'integration-eval',
+        skill_names: ['integration-skill']
+      )
+
+      assert result[:success]
+      report = result[:response][:report]
+
+      assert report.verdict
+      assert_equal 80, report.context_total
+    end
+
+    def test_full_pipeline_passes_judge_params_for_non_standard_provider
+      File.write('skill-bench.json', JSON.generate({
+                                                     provider: 'deepseek',
+                                                     max_execution_time: 30,
+                                                     config: { api_key: 'sk-test-key', model: 'deepseek-chat' }
+                                                   }))
+
+      # The agent uses deepseek client which will try to make a real HTTP call.
+      # Stub the DeepSeek client class method to return a mock success response.
+      SkillBench::Clients::Providers::DeepSeek.stubs(:call).returns(
+        { success: true, result: 'agent output', usage: {}, response: { message: { content: 'agent output' } }, status: 'success' }
+      )
+
+      EvaluationRunner.expects(:call).with do |params|
+        params[:task] == 'Create a simple Ruby service object' &&
+          params[:skill_context].include?('Service Object Pattern') &&
+          params[:baseline_output].is_a?(String) &&
+          params[:context_output].is_a?(String) &&
+          params.key?(:judge_params) &&
+          params[:judge_params][:api_key] == 'sk-test-key' &&
+          params[:judge_params][:model] == 'deepseek-chat' &&
+          params[:judge_params][:provider] == :deepseek
       end.returns({
                     success: true,
                     response: {

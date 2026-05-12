@@ -41,6 +41,10 @@ module SkillBench
       opencode: {
         api_key: nil,
         model: 'opencode-model'
+      }.freeze,
+      openrouter: {
+        api_key: nil,
+        model: 'anthropic/claude-3.5-sonnet'
       }.freeze
     }.freeze
 

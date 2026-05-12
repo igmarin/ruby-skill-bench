@@ -17,6 +17,9 @@ AllCops:
 Metrics/MethodLength:
   Max: 60
 
+Metrics/ParameterLists:
+  Max: 6
+
 Metrics/AbcSize:
   Max: 50
 

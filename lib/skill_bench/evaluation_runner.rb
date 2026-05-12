@@ -13,9 +13,10 @@ module SkillBench
     # @param skill_context [String] The skill context XML.
     # @param baseline_output [String] The baseline agent output.
     # @param context_output [String] The context agent output.
+    # @param judge_params [Hash] Provider config passed to the Judge as client_params (api_key, model, provider).
     # @return [Hash] Service response with report or error.
-    def self.call(task:, criteria:, skill_context:, baseline_output:, context_output:)
-      new(task:, criteria:, skill_context:, baseline_output:, context_output:).call
+    def self.call(task:, criteria:, skill_context:, baseline_output:, context_output:, judge_params: {})
+      new(task:, criteria:, skill_context:, baseline_output:, context_output:, judge_params:).call
     end
 
     # @param task [String] The task description.
@@ -23,12 +24,14 @@ module SkillBench
     # @param skill_context [String] The skill context XML.
     # @param baseline_output [String] The baseline agent output.
     # @param context_output [String] The context agent output.
-    def initialize(task:, criteria:, skill_context:, baseline_output:, context_output:)
+    # @param judge_params [Hash] Provider config passed to the Judge as client_params.
+    def initialize(task:, criteria:, skill_context:, baseline_output:, context_output:, judge_params: {})
       @task = task
       @criteria = criteria
       @skill_context = skill_context
       @baseline_output = baseline_output
       @context_output = context_output
+      @judge_params = judge_params
     end
 
     # Orchestrates judging and delta computation.
@@ -49,7 +52,7 @@ module SkillBench
 
     private
 
-    attr_reader :task, :criteria, :skill_context, :baseline_output, :context_output
+    attr_reader :task, :criteria, :skill_context, :baseline_output, :context_output, :judge_params
 
     def judge_run(output, context)
       prompt_result = JudgePrompt.call(
@@ -60,7 +63,7 @@ module SkillBench
       )
       return prompt_result unless prompt_result[:success]
 
-      Judge.call(prompt: prompt_result[:response][:prompt])
+      Judge.call(prompt: prompt_result[:response][:prompt], client_params: judge_params)
     end
 
     def compute_deltas(baseline_judge, context_judge)

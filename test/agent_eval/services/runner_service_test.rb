@@ -100,6 +100,26 @@ module SkillBench
         assert_includes result[:response][:error][:message], 'Baseline'
       end
 
+      def test_call_enriches_evaluation_runner_error_with_metadata
+        write_mock_config
+
+        SkillBench::EvaluationRunner.expects(:call).returns({
+                                                              success: false,
+                                                              response: { error: { message: 'Judge error' } }
+                                                            })
+
+        result = RunnerService.call(
+          eval_name: 'test-eval',
+          skill_names: ['test-skill']
+        )
+
+        refute result[:success]
+        assert_equal 'test-eval', result[:eval_name]
+        assert_equal 'test-skill', result[:skill_name]
+        assert_equal 'mock', result[:provider_name]
+        assert_includes result[:response][:error][:message], 'Judge error'
+      end
+
       def test_call_resolves_eval_with_full_path
         write_mock_config
 

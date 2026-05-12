@@ -30,7 +30,7 @@ module SkillBench
         content = extract_content(message)
         tool_calls = extract_tool_calls(message)
 
-        !content.nil? || (tool_calls && !tool_calls.empty?)
+        !content.nil? || !Array(tool_calls).empty?
       end
 
       # Extracts the content from a message.

@@ -88,5 +88,42 @@ module SkillBench
       refute result[:success]
       assert_equal 'Provider specific error', result[:response][:error][:message]
     end
+
+    def test_call_with_explicit_provider_overrides_config
+      SkillBench::Clients::ProviderRegistry.register(:deepseek, SkillBench::Clients::Providers::DeepSeek)
+
+      SkillBench::Clients::Providers::DeepSeek.stubs(:call).returns({ success: true, response: { message: { content: 'DeepSeek response' } } })
+
+      result = Client.call(provider: :deepseek, system_prompt: 'System', messages: [{ role: 'user', content: 'Hi' }])
+
+      assert result[:success]
+      assert_equal 'DeepSeek response', result[:response][:message][:content]
+    end
+
+    def test_call_with_explicit_provider_ignores_config
+      Config.current_llm_provider = :openai
+      Config.setup do |config|
+        config.set_provider_api_key(:openai, 'test_openai_key')
+      end
+      SkillBench::Clients::ProviderRegistry.register(:deepseek, SkillBench::Clients::Providers::DeepSeek)
+      SkillBench::Clients::Providers::OpenAI.stubs(:call).returns({ success: true, response: { message: { content: 'openai' } } })
+      SkillBench::Clients::Providers::DeepSeek.stubs(:call).returns({ success: true, response: { message: { content: 'deepseek' } } })
+
+      result = Client.call(provider: :deepseek, system_prompt: 'System', messages: [{ role: 'user', content: 'Hi' }])
+
+      assert_equal 'deepseek', result[:response][:message][:content]
+    end
+
+    def test_call_without_provider_preserves_backward_compat
+      Config.current_llm_provider = :openai
+      Config.setup do |config|
+        config.set_provider_api_key(:openai, 'test_openai_key')
+      end
+      SkillBench::Clients::Providers::OpenAI.stubs(:call).returns({ success: true, response: { message: { content: 'OpenAI response' } } })
+
+      result = Client.call(system_prompt: 'System', messages: [{ role: 'user', content: 'Hi' }])
+
+      assert_equal 'OpenAI response', result[:response][:message][:content]
+    end
   end
 end

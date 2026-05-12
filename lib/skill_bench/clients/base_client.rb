@@ -156,8 +156,10 @@ module SkillBench
       private
 
       def execute_request
-        connection = RequestBuilder.build_connection(base_url)
-        RequestBuilder.execute(connection, request_path, headers: request_headers, body: request_body)
+        RetryHandler.call do
+          connection = RequestBuilder.build_connection(base_url)
+          RequestBuilder.execute(connection, request_path, headers: request_headers, body: request_body)
+        end
       end
 
       def handle_response(response)

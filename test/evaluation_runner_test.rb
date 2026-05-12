@@ -18,8 +18,8 @@ module SkillBench
         response: { judge_response: build_judge_response(25, 20, 15, 12, 8) }
       }
 
-      Judge.expects(:call).with(prompt: 'Baseline prompt').returns(judge_baseline)
-      Judge.expects(:call).with(prompt: 'Context prompt').returns(judge_context)
+      Judge.expects(:call).with(prompt: 'Baseline prompt', client_params: {}).returns(judge_baseline)
+      Judge.expects(:call).with(prompt: 'Context prompt', client_params: {}).returns(judge_context)
 
       JudgePrompt.expects(:call).with(
         task: 'Test task',
@@ -40,7 +40,8 @@ module SkillBench
         criteria: criteria,
         skill_context: 'Skill context',
         baseline_output: baseline_output,
-        context_output: context_output
+        context_output: context_output,
+        judge_params: {}
       )
 
       assert result[:success]
@@ -50,6 +51,28 @@ module SkillBench
       assert_equal 80, report.context_total
       assert_equal 30, report.baseline_total
       assert_equal 50, report.deltas.values.sum
+    end
+
+    def test_passes_judge_params_to_judge
+      criteria = build_criteria
+      judge_params = { api_key: 'test-key', model: 'deepseek-chat', provider: :deepseek }
+
+      JudgePrompt.expects(:call).twice.returns({ success: true, response: { prompt: 'Prompt' } })
+      Judge.expects(:call).with(prompt: 'Prompt', client_params: judge_params).twice.returns({
+                                                                                               success: true,
+                                                                                               response: { judge_response: build_judge_response(10, 8, 6, 4, 2) }
+                                                                                             })
+
+      result = EvaluationRunner.call(
+        task: 'Test task',
+        criteria: criteria,
+        skill_context: '',
+        baseline_output: 'output',
+        context_output: 'output',
+        judge_params: judge_params
+      )
+
+      assert result[:success]
     end
 
     def test_returns_error_when_judge_fails
@@ -63,7 +86,8 @@ module SkillBench
         criteria: criteria,
         skill_context: '',
         baseline_output: 'output',
-        context_output: 'output'
+        context_output: 'output',
+        judge_params: {}
       )
 
       refute result[:success]

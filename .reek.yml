@@ -53,6 +53,7 @@ detectors:
       - "SkillBench::EvaluateCommand#print_parse_error"
       - "SkillBench::OutputFormatter#self.format"
       - "SkillBench::Tools::Base"
+      - "SkillBench::Client#self.call"
   DuplicateMethodCall:
     exclude:
       - "SkillBench::AgentRunner#print_header"
@@ -110,6 +111,7 @@ detectors:
   DataClump:
     exclude:
       - "SkillBench::Tools"
+      - "SkillBench::Services::RunnerService"
   FeatureEnvy:
     exclude:
       - "SkillBench::CLI#call"
@@ -203,7 +205,9 @@ detectors:
       - "SkillBench::Skills::New#initialize"
       - "SkillBench::Skills::TestService#initialize"
   LongParameterList:
-    max_params: 5
+    max_params: 6
+    exclude:
+      - "SkillBench::EvaluationRunner#initialize"
   ManualDispatch:
     exclude:
       - "SkillBench::Clients::ResponseErrorHandler#self.log_error"
@@ -214,3 +218,4 @@ detectors:
       - "SkillBench::OutputFormatter#self.delta_report?"
       - "SkillBench::Tools::Dispatcher#log_error"
       - "SkillBench::BenchmarkRecorder#extract_entry"       # Duck-type guard for report objects from both production and test fixtures
+      - "SkillBench::Clients::RetryHandler#extract_status"   # Duck-type dispatch across Faraday error classes with different APIs

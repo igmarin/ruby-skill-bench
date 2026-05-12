@@ -51,16 +51,18 @@ module SkillBench
 
         criteria = evaluation.criteria
         skill_context = load_combined_skill_context(skills)
+        judge_params = build_judge_params(provider)
 
         result = EvaluationRunner.call(
           task: evaluation.task,
           criteria: criteria,
           skill_context: skill_context,
           baseline_output: format_output(baseline_output),
-          context_output: format_output(context_output)
+          context_output: format_output(context_output),
+          judge_params: judge_params
         )
 
-        return result unless result[:success]
+        return enrich_error_result(result, evaluation, provider) unless result[:success]
 
         trend = record_and_compute_trend(result)
         return result unless trend
@@ -127,6 +129,19 @@ module SkillBench
         File.exist?(skill_md) ? File.read(skill_md) : ''
       end
 
+      def build_judge_params(provider)
+        return {} if provider.name == 'mock'
+
+        config = provider.merged_config
+        {
+          api_key: config[:api_key],
+          model: config[:model] || provider.llm,
+          provider: provider.runtime.to_sym
+        }
+      rescue StandardError
+        {}
+      end
+
       def format_output(agent_result)
         agent_result[:result].to_s
       end
@@ -143,6 +158,14 @@ module SkillBench
           skill_name: skill_names.join(', '),
           provider_name: provider.name
         }
+      end
+
+      def enrich_error_result(result, evaluation, provider)
+        result.merge(
+          eval_name: evaluation.name,
+          skill_name: skill_names.join(', '),
+          provider_name: provider.name
+        )
       end
 
       def record_and_compute_trend(result)

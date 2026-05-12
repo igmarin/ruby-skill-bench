@@ -14,6 +14,22 @@ module SkillBench
         @messages = [{ role: 'user', content: 'Initial' }]
       end
 
+      def test_call_passes_provider_from_client_params
+        config = @config.merge(client_params: { provider: :deepseek, api_key: 'test' })
+
+        Client.expects(:call).with(
+          system_prompt: 'System',
+          messages: [{ role: 'user', content: 'Initial' }],
+          tools: Tools.definitions,
+          provider: :deepseek,
+          api_key: 'test'
+        ).returns(
+          { success: true, response: { message: { 'content' => 'ok', 'tool_calls' => [] } } }
+        )
+
+        Step.call(@messages, config)
+      end
+
       def test_call_returns_continue_false_on_client_failure
         Client.expects(:call).returns({ success: false, response: { error: { message: 'API Error' } } })
 
