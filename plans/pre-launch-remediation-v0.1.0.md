@@ -19,7 +19,7 @@ Pre-launch security, UX, and code quality fixes for ruby-skill-bench before the 
 ### 0.2 Test Suite Gate
 - [x] Run `bundle exec rake test` — confirm 491 pass, 0 failures
 - [x] This is the **characterization test suite** — it must remain green after every change
-- [x] **CURRENT STATUS:** 506 pass, 0 failures, 0 errors
+- [x] **CURRENT STATUS:** 512 pass, 0 failures, 0 errors
 
 ---
 

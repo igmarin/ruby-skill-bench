@@ -342,11 +342,13 @@ skill-bench eval new my-first-eval --runtime=rails
 # ... edit SKILL.md, task.md, and criteria.json ...
 ```
 
-### Step 2: Run and Record the Baseline
+### Step 2: Run the Eval (Baseline + Context)
 
 ```bash
 skill-bench run my-first-eval --skill=my-service
 ```
+
+This executes the full evaluation pipeline: a **baseline run** (agent receives the task without the skill) and a **context run** (agent receives the task with the skill). The two outputs are scored independently by the judge and compared.
 
 Read the output carefully. Look at **two things:**
 

@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Top-level exception handler in `bin/skill-bench` for graceful error reporting
 - `Judge#build_prompt` — extracted prompt builder with UUID-based delimiters to prevent prompt injection
 - `Judge#escape_prompt_content` — escapes XML-like tags in user content before interpolation
+- `EvalNew::ALLOWED_RUNTIMES` constant (`%w[ruby rails]`) with runtime validation guard
+- `SkillResolver` sibling-directory prefix bypass test coverage
 
 ### Changed
 - **BREAKING:** `skill-bench init` now requires a provider flag (`--openai`, `--gemini`, etc.)
@@ -38,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Config.store#assign_current_llm_provider` simplified from obfuscated array/grep pattern to simple conditional
 - `ResponseErrorHandler.log_error` now delegates to `ErrorLogger` (DRY)
 - `Sandbox` only starts Docker container when `docker` is available and Dockerfile exists
+- `RunnerService` duplicated `provider.merged_config` rescue blocks extracted to `safe_merged_config` helper
 
 ### Fixed
 - `CLI` HelpPrinter constant fully qualified to prevent NameError
@@ -69,6 +72,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `RunCommand` validates `--skill` is present before invoking `Commands::Run`
 - `ContextHydrator` escapes file content with `CGI.escapeHTML` before XML insertion
 - `Sandbox.capture_diff` uses separator-aware path validation (`tmp_prefix + File::SEPARATOR`)
+- `RunnerService` silent config errors now propagate clear error messages instead of falling back to mock provider
+- `HelpPrinter` now documents `--format`, `eval generate`, and multi-skill chaining
+- `EvalNew` default runtime changed from `'generic'` to `'ruby'`
+- `OutputFormatter#format_junit` now reads from `result[:response][:report].verdict` (DeltaReport format) with legacy fallback
+- `test_helper.rb` glob require replaced with canonical `require_relative '../lib/skill_bench'`
+- `SimpleCov.start 'rails'` changed to `SimpleCov.start` (non-Rails gem)
+- `OpenRouterTest` `$stderr` reassignment wrapped in `begin...ensure` to prevent leakage
+- `ContextHydratorTest` hardcoded temp filename replaced with unique suffix (`Process.pid + Time.now.to_f`)
+- `OpenCode` provider docs now reference correct `SKILL_BENCH_OPENCODE_BASE_URL` env var
+- `README` config precedence wording aligned with hierarchy section
+- `README` "Step 2" heading clarified: "Run the Eval (Baseline + Context)"
 
 ### Security
 - **CRITICAL:** `allowed_commands` nil default no longer allows unrestricted command execution — now returns clear error
@@ -80,16 +94,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docker sandbox gracefully skips when Dockerfile is missing (prevents host execution without isolation)
 - `Provider.merged_config` error message no longer discloses exact ENV variable name
 - `Migration::ProviderMigrator` disables YAML aliases (`aliases: false`) to prevent amplification attacks
+- `EvaluateCommand#safe_expand_path` now resolves symlinks with `File.realpath` before boundary validation; rejects `ENOENT`/`EACCES`
+- `SkillResolver#resolve_by_path` uses path-separator-aware prefix match (`cwd + File::SEPARATOR`) to prevent sibling-directory bypass
+- `ContextHydrator#collect_context_files` explicitly rejects `File.symlink?(f)` before inclusion
+- `OutputFormatter#format_junit` now defensively XML-escapes `score` in failure message attributes
+- `ResponseParser#strip_markdown_fences` guards against `nil`/`non-String` input
+- `BaseClient` now explicitly requires `retry_handler` (removes load-order dependency)
+- Legacy evaluation pipeline (`EvaluateCommand`, `Runner`, `TaskEvaluator`, and associated services) marked `@deprecated` and removed from `skill_bench.rb` require chain
 
 ### Removed
 - `ScoringService` dead code: `DEFAULT_FAIL_THRESHOLD` and `fail_threshold` (never used in scoring logic)
 - `Config.load` redundant `recursive_symbolize_keys` (JSON.parse already symbolizes keys)
 - `RunnerService` useless `@resolve_provider ||=` memo (instances are single-use)
 - `Provider` ActiveSupport dependency for `deep_symbolize_keys` (replaced with manual symbolization)
+- `lib/skill_bench/mcp/` directory — MCP server stub (never required, dead code)
 
 ### Quality
-- 373 tests, 0 failures
-- 89.3% line coverage
+- 513 tests, 0 failures
+- 91.47% line coverage
 - Rubocop: 0 offenses
 - Reek: 0 warnings
 

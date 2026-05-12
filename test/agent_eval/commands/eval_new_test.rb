@@ -37,6 +37,16 @@ module SkillBench
         assert_path_exists 'evals/my-eval/rails_helper.rb'
       end
 
+      def test_run_rejects_invalid_runtime
+        error = assert_raises(ArgumentError) do
+          EvalNew.run(name: 'my-eval', runtime: 'python')
+        end
+
+        assert_match(/Unsupported runtime 'python'/, error.message)
+        assert_match(/Allowed: ruby, rails/, error.message)
+        refute_path_exists 'evals/my-eval'
+      end
+
       def test_task_template
         template = EvalNew.task_template('test-eval')
 

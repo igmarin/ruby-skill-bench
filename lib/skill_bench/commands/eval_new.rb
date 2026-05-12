@@ -7,11 +7,17 @@ module SkillBench
   module Commands
     # Handles the `skill-bench eval new` command
     class EvalNew
+      # Allowed runtime values for eval scaffolding.
+      ALLOWED_RUNTIMES = %w[ruby rails].freeze
+
       # Run the eval new command
       # @param name [String] Eval name
       # @param runtime [String] "ruby" or "rails" (default: ruby)
       # @return [void]
+      # @raise [ArgumentError] if runtime is not in ALLOWED_RUNTIMES.
       def self.run(name:, runtime: 'ruby')
+        raise ArgumentError, "Unsupported runtime '#{runtime}'. Allowed: #{ALLOWED_RUNTIMES.join(', ')}" unless ALLOWED_RUNTIMES.include?(runtime)
+
         eval_path = File.join('evals', name)
         FileUtils.mkdir_p(eval_path)
 
