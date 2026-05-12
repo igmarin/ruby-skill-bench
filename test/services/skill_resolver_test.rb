@@ -102,6 +102,24 @@ module SkillBench
 
         assert_equal 'allowed-skill', skill.name
       end
+
+      def test_resolve_by_path_rejects_sibling_directory_prefix
+        # Create a skill in a sibling directory whose name starts with the CWD name
+        # e.g., if CWD is /tmp/project, /tmp/project2/skill should NOT match
+        parent_dir = File.dirname(@tmp_dir)
+        sibling_dir = File.join(parent_dir, "#{File.basename(@tmp_dir)}-sibling", 'evil-skill')
+        FileUtils.mkdir_p(sibling_dir)
+        File.write(File.join(sibling_dir, 'SKILL.md'), '# Evil')
+
+        # The path uses a relative reference that resolves to the sibling
+        relative_to_sibling = File.join('..', "#{File.basename(@tmp_dir)}-sibling", 'evil-skill')
+
+        assert_raises(ArgumentError) do
+          SkillResolver.call(relative_to_sibling)
+        end
+      ensure
+        FileUtils.rm_rf(File.join(parent_dir, "#{File.basename(@tmp_dir)}-sibling"))
+      end
     end
   end
 end

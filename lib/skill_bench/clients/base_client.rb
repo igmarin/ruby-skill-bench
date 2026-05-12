@@ -5,6 +5,7 @@ require_relative 'provider_config'
 require_relative 'response_parser'
 require_relative 'response_error_handler'
 require_relative 'request_builder'
+require_relative 'retry_handler'
 
 module SkillBench
   module Clients

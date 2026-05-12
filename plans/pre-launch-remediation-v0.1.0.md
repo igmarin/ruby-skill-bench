@@ -266,32 +266,6 @@ Pre-launch security, UX, and code quality fixes for ruby-skill-bench before the 
 
 ---
 
-### 3.3 Fix `test_helper.rb` Loading All Files Alphabetically
-**File:** `test/test_helper.rb`
-**TDD:**
-- [ ] (a) Replace glob require with `require_relative '../lib/skill_bench'`
-- [ ] (b) Run full suite — verify 506 pass
-
-**Code standards:** DRY
-
----
-
-### 3.4 Fix SimpleCov Rails Profile
-**File:** `test/test_helper.rb`
-- [ ] (a) Change `SimpleCov.start 'rails'` to `SimpleCov.start`
-- [ ] (b) Run full suite — verify 506 pass and coverage report is generated correctly
-
----
-
-### 3.5 Remove MCP Server Stub
-**File:** `lib/skill_bench/mcp/server.rb`
-- [ ] (a) Remove `lib/skill_bench/mcp/` directory and its require from `skill_bench.rb`
-- [ ] (b) Run full suite — verify 506 pass
-
-**Code standards:** YAGNI
-
----
-
 ## Phase 4: Documentation & Final Verification
 
 ### 4.1 Update Inline YARD Documentation ✅

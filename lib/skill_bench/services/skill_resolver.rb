@@ -46,8 +46,9 @@ module SkillBench
         normalized_path = identifier.end_with?('SKILL.md') ? File.dirname(identifier) : identifier
         absolute_path = File.expand_path(normalized_path)
         cwd = File.expand_path(Dir.pwd)
+        cwd_with_sep = cwd + File::SEPARATOR
 
-        raise(ArgumentError, "Skill path escapes project boundary: #{identifier}") unless absolute_path.start_with?(cwd)
+        raise(ArgumentError, "Skill path escapes project boundary: #{identifier}") unless absolute_path == cwd || absolute_path.start_with?(cwd_with_sep)
 
         skill_md = File.join(normalized_path, 'SKILL.md')
 

@@ -99,6 +99,16 @@ module SkillBench
         { success: false, error: e }
       end
 
+      # Safely calls merged_config, returning nil on any error.
+      #
+      # @param provider [Object] The provider to query.
+      # @return [Hash, nil] The merged config or nil.
+      def safe_merged_config(provider)
+        provider.merged_config
+      rescue StandardError
+        nil
+      end
+
       def resolve_provider
         config = SkillBench::Models::Config.load
         provider = config.to_provider
@@ -112,11 +122,7 @@ module SkillBench
         return { result: 'mock result', status: :success } if provider.name == 'mock'
 
         client_class = SkillBench::Clients::ProviderRegistry.for(provider.runtime.to_sym)
-        config ||= begin
-          provider.merged_config
-        rescue StandardError
-          nil
-        end
+        config ||= safe_merged_config(provider)
         options = config.dup
         options[:model] ||= provider.llm
 
@@ -153,11 +159,7 @@ module SkillBench
       def build_judge_params(provider, config)
         return {} if provider.name == 'mock'
 
-        config ||= begin
-          provider.merged_config
-        rescue StandardError
-          nil
-        end
+        config ||= safe_merged_config(provider)
         return {} unless config
 
         {

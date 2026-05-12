@@ -11,8 +11,8 @@ module SkillBench
       # IMPORTANT: OpenCode does not host a public LLM API. This provider is a
       # thin wrapper around an OpenAI-compatible endpoint that YOU provide (e.g.
       # LiteLLM proxy, vLLM, or a company gateway). You MUST set `base_url` in
-      # `skill-bench.json` or via the `OPENCODE_BASE_URL` environment variable,
-      # otherwise the provider will fail with "Base URL not set for Opencode".
+      # `skill-bench.json` or via the `SKILL_BENCH_OPENCODE_BASE_URL` environment
+      # variable, otherwise the provider will fail with "Base URL not set for Opencode".
       class OpenCode < BaseClient
         SkillBench::Clients::ProviderRegistry.register(:opencode, self)
 

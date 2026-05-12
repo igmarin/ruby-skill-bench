@@ -106,10 +106,15 @@ module SkillBench
       expanded = File.expand_path(path)
       base = File.expand_path(Dir.pwd)
 
-      relative = Pathname.new(expanded).relative_path_from(Pathname.new(base)).to_s
+      real_expanded = File.exist?(expanded) ? File.realpath(expanded) : expanded
+      real_base = File.realpath(base)
+
+      relative = Pathname.new(real_expanded).relative_path_from(Pathname.new(real_base)).to_s
       raise ArgumentError, "Path '#{path}' resolves outside the current working directory" if relative.start_with?('..')
 
       expanded
+    rescue Errno::ENOENT, Errno::EACCES => e
+      raise ArgumentError, "Path '#{path}' is not accessible: #{e.message}"
     end
   end
 end

@@ -70,7 +70,7 @@ module SkillBench
     end
 
     def test_rejects_symlinks
-      secret_file = File.join(Dir.tmpdir, 'skill_bench_test_secret.txt')
+      secret_file = File.join(Dir.tmpdir, "skill_bench_test_secret_#{Process.pid}_#{Time.now.to_f}.txt")
       File.write(secret_file, 'SYMLINK_SECRET_CONTENT')
 
       Dir.mktmpdir do |dir|

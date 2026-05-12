@@ -213,11 +213,12 @@ module SkillBench
         XML
       else
         score = report.respond_to?(:context_total) ? report.context_total : result[:score]
+        escaped_score = CGI.escapeHTML(score.to_s)
         <<~XML
           <?xml version="1.0"?>
           <testsuite name="SkillBench" tests="1" failures="1">
             <testcase name="#{eval_name}" classname="SkillBench">
-              <failure message="Score: #{score}">Eval failed</failure>
+              <failure message="Score: #{escaped_score}">Eval failed</failure>
             </testcase>
           </testsuite>
         XML

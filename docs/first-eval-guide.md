@@ -82,7 +82,7 @@ All service objects use the `.call` class method and return a standardized hash:
 1. Every `.rb` file begins with `# frozen_string_literal: true`
 2. Every public method has YARD docs (`@param`, `@return`, `@raise`)
 3. `rescue StandardError` blocks must log backtrace
-```
+```ruby
 
 ---
 

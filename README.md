@@ -272,7 +272,7 @@ SkillBench creates and manages three files in your project. Understanding them h
 ```
 
 **Key rules:**
-- The file is loaded from **local directory first**, then `~/.skill-bench.json` (user-wide), then environment variables. Later sources override earlier ones.
+- Configuration is loaded in this order: **code defaults** → `~/.skill-bench.json` (user-wide) → `./skill-bench.json` (local) → **environment variables**. Later sources override earlier ones.
 - If `api_key` is `null`, SkillBench looks for the matching environment variable (e.g. `SKILL_BENCH_OPENAI_API_KEY`).
 - `allowed_commands` is a **safeguard**, not a convenience. By default the agent cannot run *any* shell command. Add only what your evals need.
 

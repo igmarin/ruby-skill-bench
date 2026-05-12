@@ -25,6 +25,8 @@ module SkillBench
       # @param text [String] The text to clean
       # @return [String] Cleaned text
       def self.strip_markdown_fences(text)
+        return text unless text.is_a?(String)
+
         if text.start_with?('```')
           lines = text.each_line.to_a
           lines.shift if lines.first&.strip&.start_with?('```')

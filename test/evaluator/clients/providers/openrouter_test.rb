@@ -25,13 +25,16 @@ module SkillBench
 
           old_stderr = $stderr
           $stderr = StringIO.new
-          result = OpenRouter.call(
-            api_key: 'test_openrouter_key',
-            model: 'anthropic/claude-3.5-sonnet',
-            system_prompt: 'System',
-            messages: [{ role: 'user', content: 'Hi' }]
-          )
-          $stderr = old_stderr
+          begin
+            result = OpenRouter.call(
+              api_key: 'test_openrouter_key',
+              model: 'anthropic/claude-3.5-sonnet',
+              system_prompt: 'System',
+              messages: [{ role: 'user', content: 'Hi' }]
+            )
+          ensure
+            $stderr = old_stderr
+          end
 
           assert result[:success]
           assert_equal 'Hello from OpenRouter', result[:response][:message]['content']
@@ -62,13 +65,16 @@ module SkillBench
 
           old_stderr = $stderr
           $stderr = StringIO.new
-          result = OpenRouter.call(
-            api_key: 'test_openrouter_key',
-            model: 'anthropic/claude-3.5-sonnet',
-            system_prompt: 'System',
-            messages: [{ role: 'user', content: 'Hi' }]
-          )
-          $stderr = old_stderr
+          begin
+            result = OpenRouter.call(
+              api_key: 'test_openrouter_key',
+              model: 'anthropic/claude-3.5-sonnet',
+              system_prompt: 'System',
+              messages: [{ role: 'user', content: 'Hi' }]
+            )
+          ensure
+            $stderr = old_stderr
+          end
 
           refute result[:success]
           assert_match(/API Request failed: 401 - Unauthorized/, result[:response][:error][:message])
