@@ -572,11 +572,41 @@ These 5 dimensions are **mandatory** in every `criteria.json`. You can add custo
 - **TREND:** Comparison against the previous run of the same eval + skill (from `.skill-bench-history.json`). Shows whether scores are improving over time.
 - **VERDICT:** `PASS` only if `CONTEXT >= pass_threshold` AND `DELTA >= minimum_delta`.
 
-**Why both conditions?**
+**Verdict Decision Matrix**
 
-- `pass_threshold` alone would pass even if the skill didn't help (e.g., baseline=80, context=80, delta=0).
-- `minimum_delta` alone would pass even if the absolute score is terrible (e.g., baseline=10, context=20, delta=10).
-- Both together ensure the skill is **both effective and meaningful**.
+Your eval result depends on **both** conditions. Here is every scenario:
+
+| Context Score | Delta | Verdict | Why |
+|---------------|-------|---------|-----|
+| 87 | +55 | **PASS** | Context >= 70 **and** delta >= 10. The skill helped a lot. |
+| 87 | -2 | **FAIL** | Context >= 70 **but** delta < 10. The skill made things **worse**. |
+| 65 | +15 | **FAIL** | Context < 70 **even though** delta >= 10. Absolute score too low. |
+| 65 | +5 | **FAIL** | Context < 70 **and** delta < 10. Both conditions failed. |
+
+**Negative delta means the skill hurt performance.** If baseline=89 and context=87, your skill confused the agent or added noise. This is the most common "unexpected FAIL" — the skill reads well to humans but backfires with the LLM.
+
+**FAIL example — skill made things worse:**
+
+```text
+  DIMENSION                BASELINE   CONTEXT    DELTA
+  ──────────────────────── ───────── ───────── ───────
+  Correctness (30)                28        25      -3
+  Skill Adherence (25)            23        22      -1
+  Code Quality (20)               18        18      +0
+  Test Coverage (15)              12        13      +1
+  Documentation (10)               8         9      +1
+  ──────────────────────── ───────── ───────── ───────
+  TOTAL                           89/100    87/100    -2
+
+  VERDICT: FAIL (threshold: 70, minimum delta: 10)
+```
+
+**Why this FAILs:** Context score (87) is above the threshold (70), but the delta is **negative** (-2). The agent scored 89 *without* the skill and only 87 *with* it. The skill actively hurt performance. Common causes:
+- Skill is too long or contradictory — the agent ignores the task to follow the skill
+- Skill prescribes patterns that conflict with the task requirements
+- Skill adds boilerplate that the judge penalizes (over-engineering)
+
+**Fix:** Remove rules that don't directly improve the dimension with the lowest delta. Shorter skills usually beat longer ones.
 
 ---
 

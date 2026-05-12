@@ -270,6 +270,25 @@ Both skill contexts are concatenated. The judge evaluates whether the combined c
 - `minimum_delta` alone would pass even if the absolute score is terrible (e.g. baseline=10, context=20, delta=10).
 - Both together ensure the skill is **both effective and meaningful**.
 
+**The four possible outcomes:**
+
+| Context Score | Delta | Verdict | What it means |
+|---------------|-------|---------|---------------|
+| 87 | +55 | **PASS** | Skill helped a lot. Context >= 70 **and** delta >= 10. |
+| 87 | -2 | **FAIL** | Skill made things **worse**. Context >= 70 **but** delta < 10. |
+| 65 | +15 | **FAIL** | Skill helped, but not enough. Delta >= 10 **but** context < 70. |
+| 65 | +5 | **FAIL** | Skill didn't help enough. Both conditions failed. |
+
+**Most common surprise: negative delta**
+
+If baseline=89 and context=87, your skill confused the agent. The agent scored higher *without* reading your skill. This usually means:
+
+1. **Skill is too long** — the agent fixates on following the skill and ignores the actual task
+2. **Skill contradicts the task** — e.g., skill says "use Service Objects" but task says "write a script"
+3. **Over-engineering** — skill adds boilerplate (factories, decorators) that the judge penalizes as unnecessary
+
+**Fix:** Remove rules that don't directly improve the weakest dimension. Measure: look at the dimension with the smallest (or most negative) delta. Delete or rewrite rules targeting that dimension.
+
 **JSON output:**
 
 ```bash
