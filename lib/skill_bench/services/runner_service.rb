@@ -218,10 +218,15 @@ module SkillBench
         trend = tracker.trend_for(enriched)
         record_result = tracker.record(enriched)
 
-        unless record_result[:success]
-          message = record_result.dig(:response, :error, :message) ||
-                    record_result.dig(:error, :message) ||
-                    'Unknown error'
+        record_success = record_result.is_a?(Hash) && record_result[:success]
+        unless record_success
+          message = if record_result.is_a?(Hash)
+                      record_result.dig(:response, :error, :message) ||
+                        record_result.dig(:error, :message) ||
+                        'Unknown error'
+                    else
+                      'Unexpected record response'
+                    end
           SkillBench::ErrorLogger.log_error(
             StandardError.new(message),
             "Trend tracking record failed for eval #{eval_name}"
@@ -236,7 +241,6 @@ module SkillBench
             }
           }
         end
-
         { success: true, trend: trend }
       rescue StandardError => e
         SkillBench::ErrorLogger.log_error(e, 'Trend tracking failed')
