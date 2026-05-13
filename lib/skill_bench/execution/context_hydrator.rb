@@ -43,8 +43,10 @@ module SkillBench
       def call
         return missing_path_result unless @source_path
 
-        full_path = @base_path.join(@source_path)
+        full_path = @base_path.join(@source_path).expand_path
+        base_expanded = @base_path.expand_path
 
+        return missing_path_result unless full_path.to_path.start_with?(base_expanded.to_path)
         return missing_path_result unless full_path.exist? && full_path.directory?
 
         context_files = collect_context_files(full_path)

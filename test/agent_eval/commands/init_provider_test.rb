@@ -53,7 +53,7 @@ module SkillBench
 
         assert_equal 'anthropic', config[:provider]
         assert_nil config[:config][:api_key]
-        assert_equal 'claude-sonnet-4-20250514', config[:config][:model]
+        assert_equal 'claude-opus-4-7', config[:config][:model]
       end
 
       def test_run_with_ollama_provider_generates_single_provider_config

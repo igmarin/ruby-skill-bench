@@ -67,7 +67,10 @@ module SkillBench
 
         criteria_path = File.join('evals', sanitized, 'criteria.json')
         validation = SkillBench::Models::CriteriaValidator.call(path: criteria_path)
-        return validation unless validation[:success]
+        unless validation[:success]
+          FileUtils.rm_rf(File.join('evals', sanitized))
+          return validation
+        end
 
         { success: true, response: { eval_path: "evals/#{sanitized}" } }
       rescue StandardError => e

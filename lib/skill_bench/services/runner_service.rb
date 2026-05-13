@@ -12,6 +12,7 @@ require_relative '../trend_tracker'
 module SkillBench
   module Services
     # Orchestrates the execution of an eval with baseline and context runs.
+    # rubocop:disable Metrics/ClassLength
     class RunnerService
       # Stand-in provider when no LLM config is available.
       MOCK_PROVIDER = Struct.new(:name, :runtime, :llm, :merged_config)
@@ -68,15 +69,15 @@ module SkillBench
 
         return enrich_error_result(result, evaluation, provider) unless result[:success]
 
-        trend = record_and_compute_trend(result)
-        return enrich_error_result(result, evaluation, provider) unless trend
+        trend_result = record_and_compute_trend(result)
+        return enrich_error_result(trend_result, evaluation, provider) unless trend_result[:success]
 
         {
           success: true,
           eval_name: eval_name,
           skill_name: skill_names.join(', '),
           provider_name: provider.name,
-          response: result[:response].merge(trend: trend)
+          response: result[:response].merge(trend: trend_result[:trend])
         }
       end
 
@@ -218,18 +219,30 @@ module SkillBench
         record_result = tracker.record(enriched)
 
         unless record_result[:success]
+          message = record_result.dig(:response, :error, :message) ||
+                    record_result.dig(:error, :message) ||
+                    'Unknown error'
           SkillBench::ErrorLogger.log_error(
-            StandardError.new(record_result.dig(:error, :message) || 'Unknown error'),
+            StandardError.new(message),
             "Trend tracking record failed for eval #{eval_name}"
           )
-          return nil
+          return {
+            success: false,
+            response: {
+              error: {
+                message: "Trend tracking record failed: #{message}",
+                record_result: record_result
+              }
+            }
+          }
         end
 
-        trend
+        { success: true, trend: trend }
       rescue StandardError => e
         SkillBench::ErrorLogger.log_error(e, 'Trend tracking failed')
-        nil
+        { success: false, response: { error: { message: e.message } } }
       end
+      # rubocop:enable Metrics/ClassLength
     end
   end
 end

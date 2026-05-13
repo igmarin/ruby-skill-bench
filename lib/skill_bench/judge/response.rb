@@ -107,7 +107,8 @@ module SkillBench
         return invalid_score_result(name, score) if numeric_score.nil?
 
         max_score = dim['max_score'] || dim[:max_score]
-        return out_of_bounds_result(name, numeric_score, max_score) if max_score && (numeric_score.negative? || numeric_score > max_score)
+        max_score_result = validate_max_score(name, numeric_score, max_score)
+        return max_score_result unless max_score_result[:success]
 
         {
           success: true,
@@ -119,6 +120,14 @@ module SkillBench
             }
           }
         }
+      end
+
+      def validate_max_score(name, numeric_score, max_score)
+        return { success: true, response: {} } unless max_score
+        return invalid_max_score_result(name, max_score) unless max_score.is_a?(Numeric)
+        return out_of_bounds_result(name, numeric_score, max_score) if numeric_score.negative? || numeric_score > max_score
+
+        { success: true, response: {} }
       end
 
       def parse_numeric(value)
@@ -139,6 +148,10 @@ module SkillBench
 
       def out_of_bounds_result(name, score, max_score)
         { success: false, response: { error: { message: "Judge dimension '#{name}' score #{score} out of bounds (0..#{max_score})" } } }
+      end
+
+      def invalid_max_score_result(name, max_score)
+        { success: false, response: { error: { message: "Judge dimension '#{name}' has invalid max_score: #{max_score.inspect} (must be numeric)" } } }
       end
     end
   end

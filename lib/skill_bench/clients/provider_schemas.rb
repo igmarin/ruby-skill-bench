@@ -12,7 +12,7 @@ module SkillBench
         }.freeze,
         anthropic: {
           api_key: nil,
-          model: 'claude-sonnet-4-20250514'
+          model: 'claude-opus-4-7'
         }.freeze,
         gemini: {
           api_key: nil,

@@ -25,7 +25,7 @@ module SkillBench
 
       # @param params [Hash] The configuration parameters for the run.
       def initialize(params)
-        @mode = params.fetch(:mode)
+        @mode = validate_mode(params.fetch(:mode))
         @full_eval_path = params.fetch(:full_eval_path)
         @task_content = params.fetch(:task_content)
         @client_params = params.fetch(:client_params, {})
@@ -64,25 +64,44 @@ module SkillBench
       # Builds the appropriate system prompt based on the execution mode.
       #
       # @return [String] The system prompt for the agent.
+      # @raise [RuntimeError] when context hydration fails in :context mode.
       def build_system_prompt
-        if @mode == :baseline
-          <<~PROMPT
-            You are an expert Ruby on Rails developer.#{' '}
-            Your job is to read the task, modify the codebase using the tools provided to meet the requirements, and then explain what you did.
-          PROMPT
-        else
-          hydrator_result = Execution::ContextHydrator.call(source_path: @source_path, base_path: @base_path)
-          context_xml = hydrator_result[:success] ? hydrator_result[:response][:context] : ''
-
-          <<~PROMPT
-            You are an expert Ruby on Rails developer.
-            You have access to specific skill files wrapped in <agent_context> tags.
-            Use these skills exactly as instructed to solve the user's task.
-            Modify the codebase using the tools provided to meet the requirements, and then explain what you did.
-
-            #{context_xml}
-          PROMPT
+        case @mode
+        when :baseline
+          baseline_system_prompt
+        when :context
+          context_system_prompt
         end
+      end
+
+      def baseline_system_prompt
+        <<~PROMPT
+          You are an expert Ruby on Rails developer.#{' '}
+          Your job is to read the task, modify the codebase using the tools provided to meet the requirements, and then explain what you did.
+        PROMPT
+      end
+
+      def context_system_prompt
+        hydrator_result = Execution::ContextHydrator.call(source_path: @source_path, base_path: @base_path)
+        raise "Context hydration failed: #{hydrator_result.dig(:response, :error, :message)}" unless hydrator_result[:success]
+
+        context_xml = hydrator_result[:response][:context]
+
+        <<~PROMPT
+          You are an expert Ruby on Rails developer.
+          You have access to specific skill files wrapped in <agent_context> tags.
+          Use these skills exactly as instructed to solve the user's task.
+          Modify the codebase using the tools provided to meet the requirements, and then explain what you did.
+
+          #{context_xml}
+        PROMPT
+      end
+
+      def validate_mode(mode)
+        allowed = %i[baseline context]
+        return mode if allowed.include?(mode)
+
+        raise ArgumentError, "Invalid mode: #{mode.inspect}. Allowed: #{allowed.join(', ')}"
       end
     end
   end

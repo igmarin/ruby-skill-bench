@@ -34,7 +34,7 @@ module SkillBench
 
           return { continue: false, result: { success: true, response: { content: content } } } if Array(tool_calls).empty?
 
-          if content
+          if content.to_s.strip.length.positive?
             warn "\n=== Agent Thought ==="
             warn content
           end
