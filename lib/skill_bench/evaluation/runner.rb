@@ -39,7 +39,7 @@ module SkillBench
       #
       # @return [Hash] Service response with report or error.
       def call
-        baseline_judge = judge_run(baseline_output, '')
+        baseline_judge = judge_run(baseline_output, nil)
         return baseline_judge unless baseline_judge[:success]
 
         context_judge = judge_run(context_output, skill_context)

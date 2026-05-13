@@ -188,6 +188,86 @@ module SkillBench
         assert result[:success]
       end
 
+      def test_returns_error_when_skill_context_is_empty
+        write_mock_config
+
+        FileUtils.rm_rf(File.join(@skill_dir, 'SKILL.md'))
+        File.write(File.join(@skill_dir, 'SKILL.md'), '')
+
+        result = RunnerService.call(
+          eval_name: 'test-eval',
+          skill_names: ['test-skill']
+        )
+
+        refute result[:success]
+        assert_includes result[:response][:error][:message], 'Skill context is empty'
+        assert_equal 'test-eval', result[:eval_name]
+        assert_equal 'test-skill', result[:skill_name]
+      end
+
+      def test_uses_context_hydrator_for_skill_bundle_xml_mode
+        write_mock_config
+
+        File.write(File.join(@eval_dir, 'metadata.json'), {
+          'context_mode' => 'skill_bundle_xml'
+        }.to_json)
+
+        source_dir = File.join(@eval_dir, 'source')
+        FileUtils.mkdir_p(source_dir)
+        File.write(File.join(source_dir, 'app.rb'), '# frozen_string_literal: true')
+
+        SkillBench::Execution::ContextHydrator.expects(:call).with do |args|
+          args[:source_path] == 'evals/test-eval/source' && args[:base_path].is_a?(Pathname)
+        end.returns({
+                      success: true,
+                      response: { context: '<agent_context><file path="app.rb">content</file></agent_context>' }
+                    })
+
+        SkillBench::Evaluation::Runner.expects(:call).returns({
+                                                                success: true,
+                                                                response: {
+                                                                  report: Struct.new(:verdict, :baseline_total, :context_total, :deltas,
+                                                                                     keyword_init: true).new(
+                                                                                       verdict: true, baseline_total: 30, context_total: 80, deltas: {}
+                                                                                     )
+                                                                }
+                                                              })
+
+        result = RunnerService.call(
+          eval_name: 'test-eval',
+          skill_names: ['test-skill']
+        )
+
+        assert result[:success]
+      end
+
+      def test_falls_back_to_skill_md_when_source_dir_missing
+        write_mock_config
+
+        File.write(File.join(@eval_dir, 'metadata.json'), {
+          'context_mode' => 'skill_bundle_xml'
+        }.to_json)
+
+        SkillBench::Execution::ContextHydrator.expects(:call).never
+
+        SkillBench::Evaluation::Runner.expects(:call).returns({
+                                                                success: true,
+                                                                response: {
+                                                                  report: Struct.new(:verdict, :baseline_total, :context_total, :deltas,
+                                                                                     keyword_init: true).new(
+                                                                                       verdict: true, baseline_total: 30, context_total: 80, deltas: {}
+                                                                                     )
+                                                                }
+                                                              })
+
+        result = RunnerService.call(
+          eval_name: 'test-eval',
+          skill_names: ['test-skill']
+        )
+
+        assert result[:success]
+      end
+
       private
 
       def write_mock_config

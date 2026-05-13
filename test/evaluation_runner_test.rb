@@ -24,7 +24,7 @@ module SkillBench
       Judge::Prompt.expects(:call).with(
         task: 'Test task',
         criteria: criteria,
-        skill_context: '',
+        skill_context: nil,
         agent_output: baseline_output
       ).returns({ success: true, response: { prompt: 'Baseline prompt' } })
 

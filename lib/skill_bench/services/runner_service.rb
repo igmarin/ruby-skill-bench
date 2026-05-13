@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'pathname'
 require_relative '../models/eval'
 require_relative '../models/skill'
 require_relative '../models/config'
@@ -8,6 +9,8 @@ require_relative '../models/provider'
 require_relative '../clients/all'
 require_relative 'skill_resolver'
 require_relative '../trend_tracker'
+require_relative '../execution/context_hydrator'
+require_relative '../execution/source_path_resolver'
 
 module SkillBench
   module Services
@@ -48,14 +51,20 @@ module SkillBench
         return config_error_result(config_result[:error], evaluation, provider) unless config_result[:success]
 
         config = config_result[:config]
-        baseline_output = spawn_agent(evaluation, nil, provider, config)
+        baseline_prompt = build_baseline_system_prompt
+
+        baseline_output = spawn_agent(evaluation, baseline_prompt, provider, config)
         return agent_error_result(baseline_output, 'baseline', evaluation, provider) if baseline_output[:status] == :error
 
-        context_output = spawn_agent(evaluation, skills, provider, config)
+        skill_context = load_combined_skill_context(skills)
+        return empty_context_error_result(evaluation, provider) if skill_context.strip.empty?
+
+        context_prompt = build_context_system_prompt(evaluation, skills)
+        context_output = spawn_agent(evaluation, context_prompt, provider, config)
         return agent_error_result(context_output, 'context', evaluation, provider) if context_output[:status] == :error
 
         criteria = evaluation.criteria
-        skill_context = load_combined_skill_context(skills)
+
         judge_params = build_judge_params(provider, config)
 
         result = Evaluation::Runner.call(
@@ -119,15 +128,20 @@ module SkillBench
         MOCK_PROVIDER.new('mock', 'mock', 'mock', {})
       end
 
-      def spawn_agent(evaluation, skills, provider, config)
+      # Spawns the LLM agent with the given system prompt.
+      #
+      # @param evaluation [SkillBench::Models::Eval] The eval being run.
+      # @param system_prompt [String] The system prompt for the agent.
+      # @param provider [Object] The resolved provider.
+      # @param config [Hash, nil] Provider config.
+      # @return [Hash] Agent response with result, status, runtime, usage, raw_response.
+      def spawn_agent(evaluation, system_prompt, provider, config)
         return { result: 'mock result', status: :success } if provider.name == 'mock'
 
         client_class = SkillBench::Clients::ProviderRegistry.for(provider.runtime.to_sym)
         config ||= safe_merged_config(provider)
         options = config.dup
         options[:model] ||= provider.llm
-
-        system_prompt = skills ? load_combined_skill_context(skills) : ''
 
         response = client_class.call(
           system_prompt: system_prompt,
@@ -142,6 +156,85 @@ module SkillBench
           runtime: provider.runtime,
           usage: response[:usage],
           raw_response: response[:response]
+        }
+      end
+
+      # Builds the baseline system prompt (no skill context).
+      #
+      # @return [String] The baseline system prompt.
+      def build_baseline_system_prompt
+        <<~PROMPT
+          You are an expert Ruby on Rails developer. Your job is to read the task,
+          modify the codebase using the tools provided to meet the requirements,
+          and then explain what you did.
+        PROMPT
+      end
+
+      # Builds the context-aware system prompt based on eval metadata.
+      #
+      # For `skill_bundle_xml` context mode, combines SKILL.md with source code
+      # via ContextHydrator. Falls back to SKILL.md-only if source is unavailable.
+      #
+      # @param evaluation [SkillBench::Models::Eval] The eval being run.
+      # @param skills [Array<SkillBench::Models::Skill>] Resolved skills.
+      # @return [String] The context system prompt.
+      def build_context_system_prompt(evaluation, skills)
+        skill_md_content = load_combined_skill_context(skills)
+        return skill_md_content unless evaluation.metadata['context_mode'] == 'skill_bundle_xml'
+
+        source_path = resolve_source_path(evaluation)
+        return skill_md_content unless source_path
+
+        xml_result = Execution::ContextHydrator.call(source_path: source_path, base_path: Pathname.new(Dir.pwd))
+        hydrator_response = xml_result[:response]
+        xml_context = hydrator_response[:context]
+        return skill_md_content unless xml_result[:success] && !xml_context.empty?
+
+        <<~PROMPT
+          You are an expert Ruby on Rails developer.
+          You have access to a skill file and source code wrapped in <agent_context> tags.
+          Use the skill instructions and the provided source code to solve the task.
+
+          ## Skill Instructions
+          #{skill_md_content}
+
+          ## Source Code
+          #{xml_context}
+        PROMPT
+      end
+
+      # Resolves the source path for context hydration.
+      #
+      # Tries the eval's `source/` subdirectory first, then falls back to
+      # SourcePathResolver inference.
+      #
+      # @param evaluation [SkillBench::Models::Eval] The eval being run.
+      # @return [String, nil] The resolved source path, or nil if not found.
+      def resolve_source_path(evaluation)
+        eval_path = evaluation.path
+        eval_source = File.join(eval_path, 'source')
+        return eval_source if Dir.exist?(eval_source)
+
+        inferred = Execution::SourcePathResolver.call(eval_folder_path: eval_path.to_s)
+        inferred if inferred && Dir.exist?(inferred)
+      end
+
+      # Returns an error result when skill context is empty.
+      #
+      # @param evaluation [SkillBench::Models::Eval] The eval being run.
+      # @param provider [Object] The resolved provider.
+      # @return [Hash] Error result with metadata.
+      def empty_context_error_result(evaluation, provider)
+        {
+          success: false,
+          response: {
+            error: {
+              message: 'Skill context is empty. Ensure SKILL.md exists and has content.'
+            }
+          },
+          eval_name: evaluation.name,
+          skill_name: skill_names.join(', '),
+          provider_name: provider.name
         }
       end
 

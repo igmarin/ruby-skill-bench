@@ -86,10 +86,12 @@ detectors:
       - "SkillBench::Runner#call"
       - "SkillBench::Services::RunnerService#spawn_agent"
       - "SkillBench::Services::RunnerService#call"
+      - "SkillBench::Services::RunnerService#record_and_compute_trend"  # Two rescue blocks each use record_result.is_a?(Hash) — standard pattern
       - "SkillBench::Tools::Base#verify_component_safety!"
       - "SkillBench::Tools::Dispatcher#log_error"
       - "SkillBench::Tools::WriteFile#self.call"
       - "SkillBench::Models::CriteriaValidator#validate_dimensions" # dim[:max_score] accessed in all? and sum — different semantic purposes
+      - "SkillBench::TrendTracker::Persistence#write"               # Two rescue blocks each use e.message — standard pattern
   UncommunicativeVariableName:
     accept:
       - d
@@ -119,6 +121,7 @@ detectors:
     exclude:
       - "SkillBench::Tools"
       - "SkillBench::Services::RunnerService"
+      - "SkillBench::Judge::Response"                      # Dimension name+hash pair naturally travel together in hash iteration
   FeatureEnvy:
     exclude:
       - "SkillBench::CLI#call"
@@ -155,6 +158,8 @@ detectors:
       - "SkillBench::Execution::Sandbox#copy_tree"
       - "SkillBench::Services::OptionParserService#parser"
       - "SkillBench::Services::RunnerService#spawn_agent"           # Builds LLM request from provider config — config manipulation is the domain
+      - "SkillBench::Services::RunnerService#build_context_system_prompt"
+      - "SkillBench::Services::RunnerService#resolve_source_path"
       - "SkillBench::Services::RunnerService#load_combined_skill_context"  # Combines multiple skill contexts — skill manipulation is the domain
       - "SkillBench::Evaluation::Generator#generate_eval"            # Delegates to provider registry and client — provider interaction is the domain
       - "SkillBench::Evaluation::Generator#write_eval_files"         # Writes generated JSON criteria hash — data serialization is the domain
@@ -163,6 +168,8 @@ detectors:
       - "SkillBench::Services::RunnerService#resolve_provider_config"  # Thin delegation wrapper — calling provider is the purpose
       - "SkillBench::Services::RunnerService#safe_merged_config"       # Thin delegation wrapper — calling provider is the purpose
       - "SkillBench::Services::RunnerService#build_judge_params"        # Builds hash from provider attrs — config extraction is the domain
+      - "SkillBench::Services::RunnerService#record_and_compute_trend"  # Orchestration method — coordinates trend tracking and error handling
+      - "SkillBench::Agent::Runner#validate_mode"                       # Validates against allowed list — domain is the allowed array
   BooleanParameter:
     exclude:
       - "SkillBench::Commands::Init#self.run"
@@ -185,6 +192,7 @@ detectors:
       - "SkillBench::HistoryRecorder#self.summarize"
       - "SkillBench::HistoryRecorder::HistoryPathResolverTest#with_env"
       - "SkillBench::Judge::Prompt#call"
+      - "SkillBench::Judge::Prompt#valid_skill_context?"            # nil is valid for baseline runs — deliberate nil check
       - "SkillBench::Judge::Response#extract_dimensions"
       - "SkillBench::Judge::Response#validate_dimension"
       - "SkillBench::Judge::Response#validate_structure"
@@ -194,6 +202,7 @@ detectors:
       - "SkillBench::Tools::RunCommand#self.call"
       - "SkillBench::Evaluation::Generator#generate_eval"   # Guards against missing provider config — nil is a valid state here
       - "SkillBench::Evaluation::Generator#sanitize_eval_name" # Guards against nil/blank input — defensive boundary
+      - "SkillBench::Services::RunnerService#resolve_source_path"          # Guard against nil return from SourcePathResolver — valid defensive check
       - "SkillBench::Services::RunnerService#load_combined_skill_context"  # Guards against nil skills array — defensive boundary
       - "SkillBench::Clients::Providers::OpenCode#missing_config_keys"     # Base URL is optional; nil check validates required config
       - "SkillBench::Models::Provider#merged_config"                       # API key is mandatory; nil check provides clear error message
@@ -227,6 +236,7 @@ detectors:
     max_params: 6
     exclude:
       - "SkillBench::Evaluation::Runner#initialize"
+      - "SkillBench::Models::Eval#initialize"
   ManualDispatch:
     exclude:
       - "SkillBench::Clients::ResponseErrorHandler#self.log_error"

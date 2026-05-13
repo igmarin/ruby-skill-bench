@@ -48,6 +48,47 @@ module SkillBench
         end
       end
 
+      def test_loads_metadata_when_metadata_json_exists
+        eval_dir = File.join(@tmp_dir, 'test-eval')
+        FileUtils.mkdir_p(eval_dir)
+        File.write(File.join(eval_dir, 'task.md'), 'Test task')
+        File.write(File.join(eval_dir, 'criteria.json'), valid_criteria_json)
+        File.write(File.join(eval_dir, 'metadata.json'), {
+          'id' => 'test-eval',
+          'context_mode' => 'skill_bundle_xml',
+          'requires_companion_resources' => true
+        }.to_json)
+
+        eval = Eval.load(eval_dir)
+
+        assert_equal 'skill_bundle_xml', eval.metadata['context_mode']
+        assert eval.metadata['requires_companion_resources']
+        assert_equal 'test-eval', eval.metadata['id']
+      end
+
+      def test_returns_empty_hash_when_metadata_json_missing
+        eval_dir = File.join(@tmp_dir, 'test-eval')
+        FileUtils.mkdir_p(eval_dir)
+        File.write(File.join(eval_dir, 'task.md'), 'Test task')
+        File.write(File.join(eval_dir, 'criteria.json'), valid_criteria_json)
+
+        eval = Eval.load(eval_dir)
+
+        assert_equal({}, eval.metadata)
+      end
+
+      def test_raises_on_malformed_metadata_json
+        eval_dir = File.join(@tmp_dir, 'test-eval')
+        FileUtils.mkdir_p(eval_dir)
+        File.write(File.join(eval_dir, 'task.md'), 'Test task')
+        File.write(File.join(eval_dir, 'criteria.json'), valid_criteria_json)
+        File.write(File.join(eval_dir, 'metadata.json'), '{invalid json}')
+
+        assert_raises(JSON::ParserError) do
+          Eval.load(eval_dir)
+        end
+      end
+
       private
 
       def valid_criteria_json

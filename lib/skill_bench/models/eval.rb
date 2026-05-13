@@ -8,19 +8,21 @@ module SkillBench
   module Models
     # Represents an evaluation scenario
     class Eval
-      attr_reader :name, :path, :task, :criteria, :source_code
+      attr_reader :name, :path, :task, :criteria, :source_code, :metadata
 
       # @param name [String] Eval name
       # @param path [String] Path to eval directory
       # @param task [String] Task description from task.md
       # @param criteria [Hash] Criteria from criteria.json
       # @param source_code [String] Source code to evaluate
-      def initialize(name:, path:, task: '', criteria: {}, source_code: '')
+      # @param metadata [Hash] Metadata from metadata.json
+      def initialize(name:, path:, task: '', criteria: {}, source_code: '', metadata: {})
         @name = name
         @path = path
         @task = task
         @criteria = criteria
         @source_code = source_code
+        @metadata = metadata
       end
 
       # Load an eval from a directory
@@ -34,9 +36,9 @@ module SkillBench
         name = path.basename.to_s
         task = load_task(path)
         criteria = load_criteria(path)
-        source_code = ''
+        metadata = load_metadata(path)
 
-        new(name: name, path: dir_path, task: task, criteria: criteria, source_code: source_code)
+        new(name: name, path: dir_path, task: task, criteria: criteria, metadata: metadata)
       end
 
       # Load task description from task.md
@@ -62,7 +64,18 @@ module SkillBench
         raise "Failed to load criteria: #{response[:error][:message]}"
       end
 
-      private_class_method :load_task, :load_criteria
+      # Load metadata from metadata.json
+      # @param path [Pathname] Path to eval directory
+      # @return [Hash] Parsed metadata or empty hash if file doesn't exist
+      # @raise [JSON::ParserError] if JSON is malformed
+      def self.load_metadata(path)
+        metadata_file = path.join('metadata.json')
+        return {} unless metadata_file.exist?
+
+        JSON.parse(File.read(metadata_file))
+      end
+
+      private_class_method :load_task, :load_criteria, :load_metadata
     end
   end
 end

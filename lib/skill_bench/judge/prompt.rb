@@ -11,7 +11,7 @@ module SkillBench
       #
       # @param task [String] The task description from task.md.
       # @param criteria [SkillBench::Criteria] The eval criteria with dimensions.
-      # @param skill_context [String] XML-wrapped skill context.
+      # @param skill_context [String, nil] XML-wrapped skill context (nil for baseline runs).
       # @param agent_output [String] Git diff and agent summary.
       # @return [Hash] Service response with prompt or error.
       def self.call(task:, criteria:, skill_context:, agent_output:)
@@ -20,7 +20,7 @@ module SkillBench
 
       # @param task [String] The task description.
       # @param criteria [SkillBench::Criteria] The eval criteria.
-      # @param skill_context [String] The skill context XML.
+      # @param skill_context [String, nil] The skill context XML (nil for baseline runs).
       # @param agent_output [String] The agent output.
       def initialize(task:, criteria:, skill_context:, agent_output:)
         @task = task
@@ -36,7 +36,7 @@ module SkillBench
         return missing_task_result if task.nil? || task.strip.empty?
         return missing_criteria_result if criteria.nil?
         return missing_agent_output_result if agent_output.nil? || agent_output.to_s.strip.empty?
-        return missing_skill_context_result if skill_context.nil? || skill_context.to_s.strip.empty?
+        return missing_skill_context_result unless valid_skill_context?
 
         prompt = assemble_prompt
         { success: true, response: { prompt: prompt } }
@@ -63,6 +63,12 @@ module SkillBench
 
       def missing_skill_context_result
         { success: false, response: { error: { message: 'Skill context is required' } } }
+      end
+
+      def valid_skill_context?
+        return true if skill_context.nil?
+
+        skill_context.is_a?(String) && !skill_context.strip.empty?
       end
 
       def assemble_prompt
