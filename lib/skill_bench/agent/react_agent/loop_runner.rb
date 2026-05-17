@@ -22,7 +22,8 @@ module SkillBench
             step_count += 1
 
             step_result = Step.call(messages, config)
-            iterations_log << attach_step_number(step_result[:iteration], step_count) if step_result[:iteration]
+            iteration = step_result[:iteration]
+            iterations_log << attach_step_number(iteration, step_count) if iteration
 
             unless step_result[:continue]
               final_result = step_result[:result] || { success: false, response: { error: { message: 'Step returned no result' } } }
@@ -44,10 +45,20 @@ module SkillBench
           )
         end
 
+        # Attaches the step number to an iteration hash.
+        #
+        # @param iteration [Hash] The iteration metadata from a Step.
+        # @param step_count [Integer] The current step number.
+        # @return [Hash] The iteration with :step_number added.
         def self.attach_step_number(iteration, step_count)
           iteration.merge(step_number: step_count)
         end
 
+        # Merges the collected iterations into the result response.
+        #
+        # @param result [Hash] The final result hash from the loop.
+        # @param iterations_log [Array<Hash>] Collected iteration metadata.
+        # @return [Hash] The result with :iterations injected into :response.
         def self.merge_iterations(result, iterations_log)
           response = result[:response] || {}
           result.merge(response: response.merge(iterations: iterations_log))

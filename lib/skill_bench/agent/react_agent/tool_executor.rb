@@ -19,7 +19,7 @@ module SkillBench
             function_name = tool_call.dig('function', 'name')
             next tool_error_message(tool_call, 'Missing function name') unless function_name
 
-            warn "=== Calling Tool: #{function_name} ==="
+            warn "=== Calling Tool: #{function_name} ===" unless defined?(Minitest)
 
             result = execute_tool(tool_call, working_dir, container_id)
             if result.is_a?(Hash) && result[:role] == 'tool'

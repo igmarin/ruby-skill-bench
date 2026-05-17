@@ -170,6 +170,7 @@ detectors:
       - "SkillBench::Services::RunnerService#build_judge_params"        # Builds hash from provider attrs — config extraction is the domain
       - "SkillBench::Services::RunnerService#record_and_compute_trend"  # Orchestration method — coordinates trend tracking and error handling
       - "SkillBench::Agent::Runner#validate_mode"                       # Validates against allowed list — domain is the allowed array
+      - "SkillBench::Services::RunnerService#build_client_params"       # Builder method — naturally manipulates params and provider hashes
   BooleanParameter:
     exclude:
       - "SkillBench::Commands::Init#self.run"
@@ -253,3 +254,5 @@ detectors:
       - "SkillBench::TrendTracker#extract_entry"            # Duck-type guard for report objects from both production and test fixtures
       - "SkillBench::Clients::RetryHandler#extract_status"   # Duck-type dispatch across Faraday error classes with different APIs
       - "SkillBench::OutputFormatter#self.format_junit"      # Duck-type dispatch for backward compatibility with legacy result format
+      - "SkillBench::Services::FeedbackGenerator#self.feedback_applicable?"  # Duck-type guard for DeltaReport vs plain objects
+      - "SkillBench::Services::JUnitFormatter#self.format"   # Duck-type dispatch for backward compatibility with legacy result format

@@ -13,6 +13,8 @@ module SkillBench
       message = prefix ? "#{prefix}: #{error.message}" : error.message
       backtrace = error.backtrace&.first(5)&.join("\n") || '(no backtrace)'
 
+      return if skip_stderr_output?
+
       if defined?(Rails) && Rails.respond_to?(:logger) && Rails.logger
         Rails.logger.error(message)
         Rails.logger.error(backtrace)
@@ -22,6 +24,12 @@ module SkillBench
       end
     end
 
+    # @return [Boolean] true when stderr should be skipped (test mode without explicit capture).
+    def skip_stderr_output?
+      defined?(Minitest) && !$stderr.is_a?(StringIO)
+    end
+
     module_function :log_error
+    module_function :skip_stderr_output?
   end
 end

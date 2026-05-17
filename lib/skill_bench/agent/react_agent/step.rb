@@ -44,16 +44,18 @@ module SkillBench
 
           tool_calls = response_msg['tool_calls']
           content = response_msg['content']
+          tool_calls_array = Array(tool_calls)
+          thought = content.to_s
 
-          if Array(tool_calls).empty?
+          if tool_calls_array.empty?
             return {
               continue: false,
               result: { success: true, response: { content: content } },
-              iteration: build_iteration(thought: content.to_s, tools_used: [], observation_summary: '')
+              iteration: build_iteration(thought: thought, tools_used: [], observation_summary: '')
             }
           end
 
-          if content.to_s.strip.length.positive?
+          if thought.strip.length.positive?
             warn "\n=== Agent Thought ==="
             warn content
           end
@@ -61,13 +63,13 @@ module SkillBench
           tool_results = ToolExecutor.call(tool_calls, config[:working_dir], config[:container_id])
           messages.concat(tool_results)
 
-          tools_used = Array(tool_calls).map { |tc| tc.dig('function', 'name') }.compact
+          tools_used = tool_calls_array.map { |tc| tc.dig('function', 'name') }.compact
           observation_summary = Array(tool_results).map { |tr| tr[:content] || tr['content'] }.compact.join(', ')
 
           {
             continue: true,
             messages: messages,
-            iteration: build_iteration(thought: content.to_s, tools_used: tools_used, observation_summary: observation_summary)
+            iteration: build_iteration(thought: thought, tools_used: tools_used, observation_summary: observation_summary)
           }
         end
 

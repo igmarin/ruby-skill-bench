@@ -89,19 +89,40 @@ module SkillBench
       # Act
       result = Agent::ReactAgent::LoopRunner.call('Initial', 10, { working_dir: Dir.pwd, client_params: {} })
 
-      # Assert
+      # Assert structure
       assert result[:success]
       assert result[:response][:iterations]
       assert_equal 2, result[:response][:iterations].length
+    end
 
-      first = result[:response][:iterations].first
+    def test_call_iteration_fields_are_populated
+      Client.expects(:call).twice.returns(
+        {
+          success: true,
+          response: {
+            message: {
+              'content' => 'Step 1 thought',
+              'tool_calls' => [{ 'id' => 'call_1', 'function' => { 'name' => 'read_file', 'arguments' => '{"path":"a"}' } }]
+            }
+          }
+        }
+      ).then.returns(
+        { success: true, response: { message: { 'content' => 'Final Answer', 'tool_calls' => [] } } }
+      )
+
+      Agent::ReactAgent::ToolExecutor.expects(:call).returns([{ role: 'tool', tool_call_id: 'call_1', content: 'file content' }])
+
+      result = Agent::ReactAgent::LoopRunner.call('Initial', 10, { working_dir: Dir.pwd, client_params: {} })
+      iterations = result[:response][:iterations]
+
+      first = iterations.first
 
       assert_equal 1, first[:step_number]
       assert_equal 'Step 1 thought', first[:thought]
       assert_equal %w[read_file], first[:tools_used]
       assert_equal 'file content', first[:observation_summary]
 
-      last = result[:response][:iterations].last
+      last = iterations.last
 
       assert_equal 2, last[:step_number]
       assert_equal 'Final Answer', last[:thought]
