@@ -4,11 +4,222 @@ This module contains service objects that implement the Single Responsibility Pr
 
 ## Services Overview
 
+### RunnerService
+
+Orchestrates the execution of an eval with baseline and context runs. Coordinates multiple services to resolve entities, spawn agents, and evaluate results.
+
+**Responsibilities:**
+
+- Coordinate the evaluation workflow
+- Resolve eval, skills, and provider
+- Spawn baseline and context agents
+- Evaluate results and record trends
+
+**Usage:**
+
+```ruby
+result = RunnerService.call(
+  eval_name: 'test-eval',
+  skill_names: ['test-skill'],
+  pack: nil,
+  registry_manifest: nil
+)
+# => { success: true, eval_name: 'test-eval', skill_name: 'test-skill', provider_name: 'mock', response: {...} }
+```
+
+### EvalResolver
+
+Resolves an eval from a name or path.
+
+**Responsibilities:**
+
+- Resolve eval by name or full path
+- Load eval configuration from disk
+
+**Usage:**
+
+```ruby
+evaluation = EvalResolver.call('test-eval')
+# => #<SkillBench::Models::Eval>
+```
+
+### SkillResolverService
+
+Resolves skills from names, supporting both direct resolution and pack-based resolution.
+
+**Responsibilities:**
+
+- Resolve skills by name using SkillResolver
+- Resolve skills from registry packs using PackResolver
+- Handle registry manifest resolution
+
+**Usage:**
+
+```ruby
+skills = SkillResolverService.call(['test-skill'], pack: nil, registry_manifest: nil)
+# => [#<SkillBench::Models::Skill>]
+```
+
+### ProviderResolver
+
+Resolves the provider and its configuration.
+
+**Responsibilities:**
+
+- Load provider from configuration
+- Resolve provider config with error handling
+- Return mock provider when config fails
+
+**Usage:**
+
+```ruby
+result = ProviderResolver.call
+# => { success: true, provider: <provider>, config: {...} }
+```
+
+### PromptBuilderService
+
+Builds system prompts for baseline and context agent runs.
+
+**Responsibilities:**
+
+- Build baseline system prompt without skill context
+- Build context-aware system prompt with skill context
+- Handle skill_bundle_xml mode with source code hydration
+
+**Usage:**
+
+```ruby
+baseline_prompt = PromptBuilderService.build_baseline
+context_prompt = PromptBuilderService.build_context(evaluation, skills, skill_context)
+```
+
+### AgentSpawnerService
+
+Spawns and executes LLM agents for evaluation.
+
+**Responsibilities:**
+
+- Spawn agents with system prompts
+- Handle mock provider for testing
+- Capture agent output and iterations
+- Include diff in output
+
+**Usage:**
+
+```ruby
+result = AgentSpawnerService.call(evaluation, system_prompt, provider, config)
+# => { result: '...', status: :success, iterations: [...] }
+```
+
+### ContextLoaderService
+
+Loads and combines skill context from SKILL.md files.
+
+**Responsibilities:**
+
+- Load SKILL.md content from skill directories
+- Combine multiple skill contexts with separators
+- Handle missing SKILL.md files gracefully
+
+**Usage:**
+
+```ruby
+context = ContextLoaderService.call(skills)
+# => "Skill 1 content\n\n========================================\n\nSkill 2 content"
+```
+
+### SourcePathResolverService
+
+Resolves the source path for context hydration.
+
+**Responsibilities:**
+
+- Check eval's source/ subdirectory first
+- Fall back to SourcePathResolver inference
+- Return nil if no source path found
+
+**Usage:**
+
+```ruby
+source_path = SourcePathResolverService.call(evaluation)
+# => '/path/to/source' or nil
+```
+
+### JudgeParamsBuilder
+
+Builds judge parameters from provider configuration.
+
+**Responsibilities:**
+
+- Extract api_key, model, and provider from config
+- Handle mock provider case
+- Use provider llm when config model missing
+
+**Usage:**
+
+```ruby
+params = JudgeParamsBuilder.call(provider, config)
+# => { api_key: '...', model: 'gpt-4', provider: :openai }
+```
+
+### ErrorResponseBuilder
+
+Builds standardized error responses with metadata.
+
+**Responsibilities:**
+
+- Build config error responses
+- Build agent error responses
+- Build empty context error responses
+- Enrich existing errors with metadata
+
+**Usage:**
+
+```ruby
+error = ErrorResponseBuilder.config_error(exception, evaluation, provider, skill_names)
+# => { success: false, response: { error: { message: '...' } }, eval_name: '...', ... }
+```
+
+### TrendRecorderService
+
+Records evaluation results and computes trends.
+
+**Responsibilities:**
+
+- Record evaluation results to history
+- Compute trend deltas against previous runs
+- Handle record failures gracefully
+
+**Usage:**
+
+```ruby
+result = TrendRecorderService.call(evaluation_result, eval_name, skill_names)
+# => { success: true, trend: { delta: 5 } }
+```
+
+### OutputFormatter
+
+Formats agent output for evaluation.
+
+**Responsibilities:**
+
+- Convert agent result to string
+- Handle nil and non-string inputs
+
+**Usage:**
+
+```ruby
+output = OutputFormatter.call(agent_result)
+# => "Agent output as string"
+```
+
 ### OptionParserService
 
 Handles parsing of CLI arguments using Ruby's OptionParser. Provides standardized error handling for invalid flags and missing arguments.
 
 **Responsibilities:**
+
 - Parse command-line options (-e, -s, -o)
 - Handle help flag (-h/--help) behavior
 - Return standardized success/error responses
@@ -25,6 +236,7 @@ result = OptionParserService.call(['-e', 'evals/test', '-o', 'output.json'])
 Parses judge score responses from evaluation results. Handles JSON strings with optional markdown code blocks, Hash inputs, and provides error handling for malformed data.
 
 **Responsibilities:**
+
 - Parse JSON strings (with or without markdown code blocks)
 - Convert Hash inputs with string/symbol keys
 - Handle malformed data gracefully
@@ -41,6 +253,7 @@ result = JudgeScoreParserService.call('{"baseline_score": 80, "context_score": 9
 Formats and prints evaluation results to stdout. Handles both successful evaluations and error cases with proper formatting.
 
 **Responsibilities:**
+
 - Print formatted evaluation results with banners
 - Display judge scores and reasoning
 - Show baseline and context diffs
@@ -58,6 +271,7 @@ result = ResultPrinterService.call(evaluation_result, stdout: string_io)
 Persists evaluation results to JSON files with proper formatting and directory creation.
 
 **Responsibilities:**
+
 - Create parent directories if needed
 - Write formatted JSON output
 - Handle file system errors gracefully
@@ -74,6 +288,7 @@ result = OutputPersistenceService.call(evaluation_result, output_path: 'output.j
 Computes deterministic composite scores from eval results using weighted components.
 
 **Responsibilities:**
+
 - Calculate test pass rate (50% weight)
 - Calculate timing compliance (30% weight)
 - Calculate error handling score (20% weight)
@@ -110,6 +325,7 @@ result = ScoringService.call(
 Resolves and renders evaluation templates by type and category. Provides pre-built templates for generating eval scaffolding (task descriptions, scoring criteria, and skill instructions) across supported Rails pattern categories.
 
 **Responsibilities:**
+
 - Provide template strings for task.md, criteria.json, and skill.md
 - Support variable interpolation using `{{variable_name}}` syntax
 - Validate template types and categories

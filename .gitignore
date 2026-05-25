@@ -22,3 +22,4 @@ evals/test-*/
 .skill-bench-history.json
 .lean-ctx/*
 plans/
+.windsurf/
