@@ -10,6 +10,8 @@ module SkillBench
       #
       # @param eval_folder_path [String] Relative path to the eval directory.
       # @param skill_path [String, nil] Optional explicit override for the source directory.
+      # @param skill_sources [Hash] Optional skill source name → directory path mapping for fallback.
+      #   When provided and local resolution does not yield an existing path, each source is checked.
       # @return [String, nil] The resolved source path relative to the evaluator repo root, or nil if unmappable.
       # @example Infer a skill source path (NEW format):
       #   SkillBench::Execution::SourcePathResolver.call(
@@ -21,12 +23,57 @@ module SkillBench
       #     eval_folder_path: 'evals/skills/code-quality/rails-code-review/review-order'
       #   )
       #   # => "skills/code-quality/rails-code-review"
-      def self.call(eval_folder_path:, skill_path: nil)
+      def self.call(eval_folder_path:, skill_path: nil, skill_sources: {})
         return skill_path if skill_path && !skill_path.empty?
 
         segments = Pathname.new(eval_folder_path.to_s).each_filename.to_a
 
-        resolve_skills_path(segments) || resolve_workflows_path(segments)
+        local = resolve_skills_path(segments) || resolve_workflows_path(segments)
+
+        unless local.nil? || skill_sources.empty?
+          skill_name = extract_skill_name(segments)
+          return local unless skill_name
+          return local if skill_exists_at?(local)
+
+          skill_sources.each_value do |source_path|
+            candidate = find_skill_in_source(source_path, skill_name)
+            return candidate if candidate
+          end
+        end
+
+        local
+      end
+
+      # Extracts the skill name from the eval path segments.
+      #
+      # @param segments [Array<String>] Path segments
+      # @return [String, nil] Skill name or nil
+      def self.extract_skill_name(segments)
+        index = segments.rindex('skills')
+        return nil unless index
+
+        remaining = segments[(index + 1)..]
+        return nil if remaining.empty?
+
+        remaining[0]
+      end
+
+      # Finds a skill directory within a source path by name.
+      #
+      # @param source_path [String] Root directory containing skill categories
+      # @param skill_name [String] Name of the skill to find
+      # @return [String, nil] Path to the skill directory or nil
+      def self.find_skill_in_source(source_path, skill_name)
+        return nil unless source_path && Dir.exist?(source_path)
+
+        Dir.glob(File.join(source_path, '*')).each do |entry|
+          next unless Dir.exist?(entry)
+
+          candidate = File.join(entry, skill_name)
+          return candidate if Dir.exist?(candidate) && File.exist?(File.join(candidate, 'SKILL.md'))
+        end
+
+        nil
       end
 
       private_class_method def self.resolve_skills_path(segments)
@@ -56,6 +103,13 @@ module SkillBench
 
         workflow_name = segments[index + 1]
         "workflows/#{workflow_name}" if workflow_name
+      end
+
+      private_class_method def self.skill_exists_at?(path)
+        return false unless path
+
+        full_path = path.end_with?('SKILL.md') ? path : File.join(path, 'SKILL.md')
+        File.exist?(full_path)
       end
     end
   end

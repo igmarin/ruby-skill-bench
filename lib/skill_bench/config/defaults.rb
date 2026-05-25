@@ -19,6 +19,7 @@ module SkillBench
           current_llm_provider: :openai,
           max_execution_time: 30,
           allowed_commands: nil,
+          skill_sources: {},
           llm_providers_config: {
             openai: { api_key: nil, model: 'gpt-4o' },
             anthropic: { api_key: nil, model: 'claude-sonnet-4-20250514' },

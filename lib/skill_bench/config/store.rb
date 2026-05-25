@@ -24,6 +24,11 @@ module SkillBench
       # @return [Hash, nil] provider configuration by provider name
       attr_accessor :llm_providers_config
 
+      # Returns skill sources mapping.
+      #
+      # @return [Hash, nil] skill source name → directory path
+      attr_accessor :skill_sources
+
       # Initializes a new configuration store with empty provider settings.
       def initialize
         @llm_providers_config = {}

@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `Config::Store#skill_sources` — multi-repo skill source mapping parsed from `skill-bench.json` (Phase 5)
+- `SourcePathResolver` skill source fallback — when a skill is not found locally, iterates `skill_sources` config entries and returns first match
+- `Registry::PackResolver` — resolves skill paths from ecosystem registry manifest (`registry.json` → `tile.json` → skill path)
+- `--pack` flag on `skill-bench run` — resolve skills via registry manifest with configurable `--registry-manifest` path
+- `skill-bench compare` command — run the same eval with two skill variants and print side-by-side comparison report
+- 10 extracted atomic skill eval stubs: `write-yard-docs`, `create-service-object`, `define-domain-language`, `model-domain`, `triage-bug`, `integrate-api-client`, `implement-calculator-pattern`, `review-domain-boundaries`, `respond-to-review`, `skill-router`
 - `ReactAgent::Step.call` now returns `:iteration` metadata (`:thought`, `:tools_used`, `:observation_summary`) for per-step timeline rendering
 - `ReactAgent::LoopRunner` collects `:iterations` array into the final response
 - `DeltaReport` now preserves full per-dimension judge reasoning via `baseline_dimensions` and `context_dimensions` attributes
@@ -109,6 +115,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `OpenCode` provider docs now reference correct `SKILL_BENCH_OPENCODE_BASE_URL` env var
 - `README` config precedence wording aligned with hierarchy section
 - `README` "Step 2" heading clarified: "Run the Eval (Baseline + Context)"
+- `SourcePathResolver` caches `extract_skill_name` result to avoid redundant method calls
+- `PackResolver` adds nil guard for source before string split to prevent NoMethodError
+- `PackResolver` validates resolved skill paths are inside source directory to prevent directory traversal
+- `AgentSpawnerService` wraps sandbox execution in rescue block to catch exceptions and return standardized error shape
+- `AgentSpawnerService` extracts `run_agent` method to reduce cyclomatic complexity from 11 to 5
+- `ComparisonReporter` matches dimensions by name instead of index for robust comparison
+- `ComparisonReporter` uses `to_h` instead of `map{}.to_h` for dimension lookup
+- `ExitCodeCalculator` handles both Hash and object report types for verdict extraction
+- `JudgeParamsBuilder` catches specific exceptions (KeyError, NoMethodError) and removes useless rescue
+- `ProviderResolver` catches config loading errors (JSON::ParserError, ArgumentError, Errno::ENOENT) with fallback to mock
+- `VariantResolver` adds require for `ManifestFinder` to fix load order
+- `VariantResolver` raises ArgumentError on unknown variant types instead of returning nil
+- `ProviderResolverTest` resets Config state in teardown to prevent test leakage
+- `CompareCommandTest` wraps stdout capture in begin/ensure for exception safety
+- `CompareCommandTest` removes duplicate variant parser tests (already in variant_parser_test.rb)
+- `RunnerServiceTest` updated to expect mock provider fallback instead of raising on missing config
 
 ### Security
 - **CRITICAL:** `allowed_commands` nil default no longer allows unrestricted command execution — now returns clear error
@@ -136,8 +158,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `lib/skill_bench/mcp/` directory — MCP server stub (never required, dead code)
 
 ### Quality
-- 614 tests, 0 failures
-- 93.19% line coverage
+- 631 tests, 0 failures
+- 91.82% line coverage
 - Rubocop: 0 offenses
 - Reek: 0 warnings
 
