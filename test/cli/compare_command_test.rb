@@ -44,15 +44,13 @@ module SkillBench
     end
 
     def test_parse_variant_pack
-      command = Cli::CompareCommand.new([])
-      result = command.send(:parse_variant, 'pack:rails')
+      result = SkillBench::Services::VariantParser.call('pack:rails')
 
       assert_equal({ type: :pack, name: 'rails' }, result)
     end
 
     def test_parse_variant_path
-      command = Cli::CompareCommand.new([])
-      result = command.send(:parse_variant, '/path/to/skill')
+      result = SkillBench::Services::VariantParser.call('/path/to/skill')
 
       assert_equal({ type: :path, path: '/path/to/skill' }, result)
     end

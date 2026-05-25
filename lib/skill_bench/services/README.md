@@ -1,6 +1,6 @@
 # SkillBench Services
 
-This module contains service objects that implement the Single Responsibility Principle for the `EvaluateCommand` class. Each service handles a specific aspect of the evaluation workflow with proper error handling and standardized response formats.
+This module contains service objects that implement the Single Responsibility Principle for the `EvaluateCommand` and `CompareCommand` classes. Each service handles a specific aspect of the evaluation workflow with proper error handling and standardized response formats.
 
 ## Services Overview
 
@@ -25,6 +25,135 @@ result = RunnerService.call(
   registry_manifest: nil
 )
 # => { success: true, eval_name: 'test-eval', skill_name: 'test-skill', provider_name: 'mock', response: {...} }
+```
+
+### CompareOptionParser
+
+Parses CLI options for the compare command.
+
+**Responsibilities:**
+
+- Parse command-line options (--variant-a, --variant-b, --eval, --format)
+- Handle help flag (-h/--help) behavior
+- Return parsed options hash
+
+**Usage:**
+
+```ruby
+options = CompareOptionParser.call(['--variant-a', 'pack:rails', '--variant-b', 'pack:hanami', '--eval', 'evals/test'])
+# => { variant_a: 'pack:rails', variant_b: 'pack:hanami', eval: 'evals/test', format: :human }
+```
+
+### VariantParser
+
+Parses variant specifications for skill comparison.
+
+**Responsibilities:**
+
+- Parse pack: prefix for pack-based variants
+- Parse direct paths for file-based variants
+- Return structured variant hash
+
+**Usage:**
+
+```ruby
+variant = VariantParser.call('pack:rails')
+# => { type: :pack, name: 'rails' }
+
+variant = VariantParser.call('/path/to/skill')
+# => { type: :path, path: '/path/to/skill' }
+```
+
+### ManifestFinder
+
+Finds the registry manifest file path.
+
+**Responsibilities:**
+
+- Locate default registry.json path
+- Support custom manifest paths
+- Raise error when manifest not found
+
+**Usage:**
+
+```ruby
+path = ManifestFinder.call
+# => '/path/to/agent-mcp-runtime/registry.json'
+
+path = ManifestFinder.call(path: '/custom/path.json')
+# => '/custom/path.json'
+```
+
+### VariantResolver
+
+Resolves skill paths from variant specifications.
+
+**Responsibilities:**
+
+- Resolve pack-based skills using PackResolver
+- Return direct paths for file-based variants
+- Handle skill-not-found errors
+
+**Usage:**
+
+```ruby
+paths = VariantResolver.call({ type: :path, path: '/skill' }, 'test-skill')
+# => ['/skill']
+
+paths = VariantResolver.call({ type: :pack, name: 'rails' }, 'test-skill', manifest_path: 'registry.json')
+# => ['/resolved/skill/path']
+```
+
+### ComparisonRunner
+
+Runs both variants of a skill comparison.
+
+**Responsibilities:**
+
+- Resolve skill paths for both variants
+- Run evaluations via RunnerService
+- Return both results in a hash
+
+**Usage:**
+
+```ruby
+results = ComparisonRunner.call(variant_a, variant_b, 'test-skill', 'evals/test')
+# => { result_a: {...}, result_b: {...} }
+```
+
+### ComparisonReporter
+
+Prints a formatted comparison report for two evaluation results.
+
+**Responsibilities:**
+
+- Print dimension-by-dimension comparison
+- Show total scores and deltas
+- Display verdicts for both variants
+- Handle missing report data gracefully
+
+**Usage:**
+
+```ruby
+ComparisonReporter.call(result_a, result_b, 'pack:rails', 'pack:hanami')
+# Prints formatted table to stdout
+```
+
+### ExitCodeCalculator
+
+Calculates the exit code based on comparison results.
+
+**Responsibilities:**
+
+- Return 0 when both variants pass
+- Return 1 when either variant fails
+- Handle missing verdicts gracefully
+
+**Usage:**
+
+```ruby
+exit_code = ExitCodeCalculator.call(result_a, result_b)
+# => 0 (both pass) or 1 (either fails)
 ```
 
 ### EvalResolver
@@ -481,3 +610,27 @@ This refactoring provides:
 4. **Maintainability**: Changes to specific functionality are isolated
 5. **Error Handling**: Consistent error handling across all operations
 6. **Documentation**: Comprehensive YARD documentation for all public methods
+
+## CompareCommand Integration
+
+The compare command services work together within the `CompareCommand` class:
+
+```ruby
+def call
+  # Parse options
+  options = Services::CompareOptionParser.call(@argv)
+
+  # Parse variants
+  variant_a = Services::VariantParser.call(options[:variant_a])
+  variant_b = Services::VariantParser.call(options[:variant_b])
+
+  # Run both variants
+  results = Services::ComparisonRunner.call(variant_a, variant_b, skill_name, options[:eval])
+
+  # Print comparison
+  Services::ComparisonReporter.call(results[:result_a], results[:result_b], options[:variant_a], options[:variant_b])
+
+  # Calculate exit code
+  Services::ExitCodeCalculator.call(results[:result_a], results[:result_b])
+end
+```
