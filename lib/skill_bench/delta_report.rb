@@ -49,6 +49,26 @@ module SkillBench
       { success: false, response: { error: { message: e.message } } }
     end
 
+    # Compatibility methods for ComparisonReporter
+
+    # Returns the list of dimensions from the context run.
+    #
+    # @return [Array<Object>] List of objects responding to name and score
+    def dimensions
+      return [] unless context_dimensions
+
+      context_dimensions.map do |name, dim_hash|
+        Struct.new(:name, :score).new(name.to_s, dim_hash[:score] || dim_hash['score'])
+      end
+    end
+
+    # Returns the total context score.
+    #
+    # @return [Numeric, nil]
+    def total
+      context_total
+    end
+
     private
 
     attr_reader :baseline, :context

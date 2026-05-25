@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `Mock` client provider for structured scoring simulations without hitting LLM API.
+- `ecosystem-audit.rb` script for validating consistency across all sibling repositories in the ecosystem.
 - `Config::Store#skill_sources` — multi-repo skill source mapping parsed from `skill-bench.json` (Phase 5)
 - `SourcePathResolver` skill source fallback — when a skill is not found locally, iterates `skill_sources` config entries and returns first match
 - `Registry::PackResolver` — resolves skill paths from ecosystem registry manifest (`registry.json` → `tile.json` → skill path)
@@ -49,6 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SkillResolver` sibling-directory prefix bypass test coverage
 
 ### Changed
+- `Registry::PackResolver` recursively resolves deprecated skill redirects, traverses `depends_on` pack chains, and strips `/SKILL.md` suffix from path names.
+- `SkillResolver` allows sibling paths inside `skill_sources` to bypass boundary checks.
 - **BREAKING:** `skill-bench init` now requires a provider flag (`--openai`, `--gemini`, etc.)
 - **BREAKING:** Config format changed from multi-provider to single-provider: `{ "provider": "...", "max_execution_time": N, "config": {...} }`
 - **BREAKING:** `skill-bench run` no longer accepts `--provider` flag — reads provider from config
@@ -73,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `RunnerService` duplicated `provider.merged_config` rescue blocks extracted to `safe_merged_config` helper
 
 ### Fixed
+- Added `Config.reset` call in CLI boot to initialize config, with test-suite override protection to avoid workspace test pollution.
 - `CLI` HelpPrinter constant fully qualified to prevent NameError
 - All CLI command help handlers return `0` instead of calling `exit` (composable/testable)
 - `InitCommandTest` verifies no config file created on missing provider

@@ -87,6 +87,104 @@ module SkillBench
       assert_nil result
     end
 
+    def test_resolves_deprecated_skill_via_redirect
+      core_repo = File.join(@tmpdir, 'ruby-core-skills')
+      core_skills_dir = File.join(core_repo, 'skills')
+      write_yard_docs_dir = File.join(core_skills_dir, 'docs', 'write-yard-docs')
+      FileUtils.mkdir_p(write_yard_docs_dir)
+      File.write(File.join(write_yard_docs_dir, 'SKILL.md'), '# Write YARD Docs')
+
+      core_tile = {
+        'skills' => {
+          'write-yard-docs' => { 'path' => 'skills/docs/write-yard-docs' }
+        }
+      }
+      File.write(File.join(core_repo, 'tile.json'), JSON.generate(core_tile))
+
+      manifest = {
+        'packs' => {
+          'core' => {
+            'source' => 'igmarin/ruby-core-skills',
+            'tile' => 'tile.json'
+          },
+          'rails' => {
+            'source' => 'igmarin/rails-agent-skills',
+            'tile' => 'tile.json'
+          }
+        }
+      }
+      File.write(@registry_path, JSON.generate(manifest))
+
+      rails_tile = {
+        'skills' => {},
+        'deprecated_skills' => {
+          'write-yard-docs' => {
+            'moved_to' => 'igmarin/ruby-core-skills'
+          }
+        }
+      }
+      File.write(File.join(@rails_repo, 'tile.json'), JSON.generate(rails_tile))
+
+      resolver = Registry::PackResolver.new(@registry_path)
+      rails_repo = @rails_repo
+      resolver.define_singleton_method(:resolve_source) do |source|
+        if source == 'igmarin/ruby-core-skills'
+          core_repo
+        elsif source == 'igmarin/rails-agent-skills'
+          rails_repo
+        end
+      end
+
+      result = resolver.resolve_skill('rails', 'write-yard-docs')
+      assert_equal File.join(write_yard_docs_dir), result
+    end
+
+    def test_resolves_depends_on_skill
+      core_repo = File.join(@tmpdir, 'ruby-core-skills')
+      core_skills_dir = File.join(core_repo, 'skills')
+      tdd_process_dir = File.join(core_skills_dir, 'process', 'tdd-process')
+      FileUtils.mkdir_p(tdd_process_dir)
+      File.write(File.join(tdd_process_dir, 'SKILL.md'), '# TDD Process')
+
+      core_tile = {
+        'skills' => {
+          'tdd-process' => { 'path' => 'skills/process/tdd-process' }
+        }
+      }
+      File.write(File.join(core_repo, 'tile.json'), JSON.generate(core_tile))
+
+      manifest = {
+        'packs' => {
+          'core' => {
+            'source' => 'igmarin/ruby-core-skills',
+            'tile' => 'tile.json'
+          },
+          'rails' => {
+            'source' => 'igmarin/rails-agent-skills',
+            'tile' => 'tile.json',
+            'depends_on' => ['core']
+          }
+        }
+      }
+      File.write(@registry_path, JSON.generate(manifest))
+
+      rails_tile = { 'skills' => {} }
+      File.write(File.join(@rails_repo, 'tile.json'), JSON.generate(rails_tile))
+
+      resolver = Registry::PackResolver.new(@registry_path)
+      rails_repo = @rails_repo
+      resolver.define_singleton_method(:resolve_source) do |source|
+        if source == 'igmarin/ruby-core-skills'
+          core_repo
+        elsif source == 'igmarin/rails-agent-skills'
+          rails_repo
+        end
+      end
+
+      result = resolver.resolve_skill('rails', 'tdd-process')
+      assert_equal File.join(tdd_process_dir), result
+    end
+
     private
 
     def stub_resolve_source(resolver, repo_path)

@@ -19,6 +19,7 @@ module SkillBench
     # @param argv [Array<String>] Raw CLI arguments.
     # @return [Integer] Exit code.
     def self.call(argv)
+      Config.reset
       new(argv).call
     end
 

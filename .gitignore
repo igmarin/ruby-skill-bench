@@ -23,3 +23,5 @@ evals/test-*/
 .lean-ctx/*
 plans/
 .windsurf/
+/skill-bench.json
+.skill-bench-trends.json*
