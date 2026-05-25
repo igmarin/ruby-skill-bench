@@ -29,7 +29,7 @@ module SkillBench
 
         eval_name = @argv.shift
         return error_missing_eval unless eval_name
-        return error_missing_skill if options[:skill_names].empty?
+        return error_missing_skill if options[:skill_names].empty? && !options[:pack]
 
         options[:eval_name] = eval_name
         exec_options = options.reject { |key| key == :format }
@@ -48,6 +48,8 @@ module SkillBench
         OptionParser.new do |opts|
           opts.banner = 'Usage: skill-bench run <eval> [options]'
           opts.on('--skill NAME', 'Skill to use (can be specified multiple times)') { |v| options[:skill_names] << v }
+          opts.on('--pack NAME', 'Pack context for skill resolution') { |v| options[:pack] = v }
+          opts.on('--registry-manifest PATH', 'Path to registry.json manifest') { |v| options[:registry_manifest] = v }
           opts.on('--format FORMAT', 'Output format (human, json, junit)') { |v| options[:format] = v.to_sym }
           opts.on('-h', '--help', 'Prints this help') do
             puts opts
@@ -58,13 +60,13 @@ module SkillBench
 
       def error_missing_eval
         warn 'Error: eval name is required'
-        warn 'Usage: skill-bench run <eval> --skill <name>'
+        warn 'Usage: skill-bench run <eval> [--skill <name>] [--pack <name>]'
         1
       end
 
       def error_missing_skill
-        warn 'Error: skill name is required'
-        warn 'Usage: skill-bench run <eval> --skill <name>'
+        warn 'Error: skill name or pack is required'
+        warn 'Usage: skill-bench run <eval> --skill <name> [--pack <name>]'
         1
       end
     end

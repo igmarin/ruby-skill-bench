@@ -7,6 +7,21 @@
 
 *A high-fidelity evaluation engine for benchmarking AI agent skills across any stack (Rails-first, but extensible).*
 
+## Part of the AI Skill Ecosystem
+
+This repo is one of 6 in a composable AI skill ecosystem:
+
+| Repo | Role |
+|------|------|
+| [`ruby-core-skills`](https://github.com/igmarin/ruby-core-skills) | 15 shared Ruby skills + process discipline |
+| [`rails-agent-skills`](https://github.com/igmarin/rails-agent-skills) | 28 Rails-specific skills + 9 agents |
+| [`hanakai-yaku`](https://github.com/igmarin/hanakai-yaku) | 35 Hanami/dry-rb skills + 10 agents |
+| [`agnostic-planning-skills`](https://github.com/igmarin/agnostic-planning-skills) | 10 planning skills + 4 agents |
+| [`agent-mcp-runtime`](https://github.com/igmarin/agent-mcp-runtime) | Rust CLI runtime (pack resolution, MCP) |
+| [**`ruby-skill-bench`**](https://github.com/igmarin/ruby-skill-bench) | Benchmark/eval engine |
+
+See the [Ecosystem Overview](https://github.com/igmarin/agent-mcp-runtime/blob/main/docs/ecosystem.md) for the full architecture.
+
 ---
 
 ## Features
@@ -362,9 +377,9 @@ skill-bench run evals/skills/code-review/pr-review \
   --skill /path/to/rails-agent-skills/skills/code-quality/code-review
 ```
 
-### Config-Based Multi-Repo Resolution (Proposed Phase 5 Design)
+### Config-Based Multi-Repo Resolution
 
-In the future, you will be able to configure sources in `skill-bench.json` so you do not have to pass the absolute paths on the command line every time:
+Configure `skill_sources` in `skill-bench.json` to automatically resolve skills across repos without `--skill` every time:
 
 ```json
 {
@@ -378,7 +393,39 @@ In the future, you will be able to configure sources in `skill-bench.json` so yo
 }
 ```
 
-> **Note:** The `skill_sources` config key is a design suggestion for Phase 5. For now, use the `--skill` flag approach to override skill folders explicitly.
+Each key is a source name (for logging), each value is a path to a `skills/` directory. When a skill is not found locally, SkillBench iterates through `skill_sources` and uses the first match.
+
+### Pack-Based Resolution (`--pack`)
+
+Resolve skills via the ecosystem registry manifest (from `agent-mcp-runtime`):
+
+```bash
+# Run an eval using the Rails pack's version of code-review
+skill-bench run evals/skills/code-review/basic \
+  --skill code-review \
+  --pack rails
+
+# Override the default registry manifest path
+skill-bench run evals/skills/code-review/basic \
+  --skill code-review \
+  --pack rails \
+  --registry-manifest /path/to/registry.json
+```
+
+### Variant Comparison (`compare`)
+
+Compare the same skill across two pack variants to measure context-dependent performance:
+
+```bash
+skill-bench compare code-review \
+  --variant-a "pack:rails" \
+  --variant-b "pack:hanami" \
+  --eval evals/skills/code-review/basic
+```
+
+The `--variant` spec supports two forms:
+- `pack:<name>` — resolve via registry manifest
+- `/absolute/path` or `relative/path` — use a direct path
 
 ---
 

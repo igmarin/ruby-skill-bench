@@ -122,6 +122,13 @@ module SkillBench
         store.llm_providers_config || {}
       end
 
+      # Returns skill sources mapping.
+      #
+      # @return [Hash, nil] skill source name → directory path
+      def skill_sources
+        store.skill_sources || {}
+      end
+
       # Returns API key from configuration.
       #
       # @return [String, nil] API key

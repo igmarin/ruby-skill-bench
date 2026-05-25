@@ -2,6 +2,7 @@
 
 require_relative 'cli/init_command'
 require_relative 'cli/run_command'
+require_relative 'cli/compare_command'
 require_relative 'cli/skill_command'
 require_relative 'cli/eval_command'
 require_relative 'cli/help_printer'
@@ -35,10 +36,11 @@ module SkillBench
 
       subcommand = @argv.shift
       case subcommand
-      when 'init'  then Cli::InitCommand.call(@argv)
-      when 'run'   then Cli::RunCommand.call(@argv)
-      when 'skill' then Cli::SkillCommand.call(@argv)
-      when 'eval'  then Cli::EvalCommand.call(@argv)
+      when 'init'    then Cli::InitCommand.call(@argv)
+      when 'run'     then Cli::RunCommand.call(@argv)
+      when 'compare' then Cli::CompareCommand.call(@argv)
+      when 'skill'   then Cli::SkillCommand.call(@argv)
+      when 'eval'    then Cli::EvalCommand.call(@argv)
       when '-h', '--help', 'help'
         help.call
       else

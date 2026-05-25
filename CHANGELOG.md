@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `Config::Store#skill_sources` — multi-repo skill source mapping parsed from `skill-bench.json` (Phase 5)
+- `SourcePathResolver` skill source fallback — when a skill is not found locally, iterates `skill_sources` config entries and returns first match
+- `Registry::PackResolver` — resolves skill paths from ecosystem registry manifest (`registry.json` → `tile.json` → skill path)
+- `--pack` flag on `skill-bench run` — resolve skills via registry manifest with configurable `--registry-manifest` path
+- `skill-bench compare` command — run the same eval with two skill variants and print side-by-side comparison report
+- 10 extracted atomic skill eval stubs: `write-yard-docs`, `create-service-object`, `define-domain-language`, `model-domain`, `triage-bug`, `integrate-api-client`, `implement-calculator-pattern`, `review-domain-boundaries`, `respond-to-review`, `skill-router`
 - `ReactAgent::Step.call` now returns `:iteration` metadata (`:thought`, `:tools_used`, `:observation_summary`) for per-step timeline rendering
 - `ReactAgent::LoopRunner` collects `:iterations` array into the final response
 - `DeltaReport` now preserves full per-dimension judge reasoning via `baseline_dimensions` and `context_dimensions` attributes
@@ -136,8 +142,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `lib/skill_bench/mcp/` directory — MCP server stub (never required, dead code)
 
 ### Quality
-- 614 tests, 0 failures
-- 93.19% line coverage
+- 631 tests, 0 failures
+- 91.82% line coverage
 - Rubocop: 0 offenses
 - Reek: 0 warnings
 

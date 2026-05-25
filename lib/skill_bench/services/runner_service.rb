@@ -12,31 +12,46 @@ require_relative '../trend_tracker'
 require_relative '../execution/sandbox'
 require_relative '../execution/context_hydrator'
 require_relative '../execution/source_path_resolver'
+require_relative '../registry/pack_resolver'
 require_relative '../agent/react_agent'
 
 module SkillBench
   module Services
     # Orchestrates the execution of an eval with baseline and context runs.
-    # rubocop:disable Metrics/ClassLength
     class RunnerService
       # Stand-in provider when no LLM config is available.
       MOCK_PROVIDER = Struct.new(:name, :runtime, :llm, :merged_config)
       private_constant :MOCK_PROVIDER
 
+      # Default registry manifest path relative to the current working directory.
+      DEFAULT_REGISTRY_MANIFEST = '../agent-mcp-runtime/registry.json'
+      private_constant :DEFAULT_REGISTRY_MANIFEST
+
       # Runs an eval with the given parameters.
       #
       # @param eval_name [String] Name or path of the eval to run
       # @param skill_names [Array<String>] Names of the skills to use
+      # @param pack [String, nil] Optional pack name for registry-based skill resolution
+      # @param registry_manifest [String, nil] Optional path to registry.json manifest
       # @return [Hash] Result from EvaluationRunner
-      def self.call(eval_name:, skill_names:)
-        new(eval_name: eval_name, skill_names: skill_names).call
+      def self.call(eval_name:, skill_names:, pack: nil, registry_manifest: nil)
+        new(
+          eval_name: eval_name,
+          skill_names: skill_names,
+          pack: pack,
+          registry_manifest: registry_manifest
+        ).call
       end
 
       # @param eval_name [String] Name or path of the eval
       # @param skill_names [Array<String>] Names of the skills
-      def initialize(eval_name:, skill_names:)
+      # @param pack [String, nil] Optional pack name
+      # @param registry_manifest [String, nil] Optional registry.json path
+      def initialize(eval_name:, skill_names:, pack: nil, registry_manifest: nil)
         @eval_name = eval_name
         @skill_names = skill_names
+        @pack = pack
+        @registry_manifest = registry_manifest
       end
 
       # Executes the eval: resolves entities, runs baseline and context, evaluates.
@@ -98,7 +113,7 @@ module SkillBench
 
       private
 
-      attr_reader :eval_name, :skill_names
+      attr_reader :eval_name, :skill_names, :pack, :registry_manifest
 
       def resolve_eval
         eval_path = eval_name.include?('/') ? eval_name : "evals/#{eval_name}"
@@ -106,7 +121,29 @@ module SkillBench
       end
 
       def resolve_skills
-        skill_names.map { |name| Services::SkillResolver.call(name) }
+        return @resolve_skills if defined?(@resolve_skills)
+
+        @resolve_skills = if pack && !pack.empty?
+                            resolve_pack_skills
+                          else
+                            skill_names.map { |name| Services::SkillResolver.call(name) }
+                          end
+      end
+
+      def resolve_pack_skills
+        manifest_path = registry_manifest || DEFAULT_REGISTRY_MANIFEST
+        manifest_absolute = File.expand_path(manifest_path, Dir.pwd)
+
+        raise ArgumentError, "Registry manifest not found: #{manifest_path}" unless File.exist?(manifest_absolute)
+
+        resolver = Registry::PackResolver.new(manifest_absolute)
+
+        skill_names.map do |skill_name|
+          path = resolver.resolve_skill(pack, skill_name)
+          raise ArgumentError, "Skill '#{skill_name}' not found in pack '#{pack}'" unless path
+
+          Models::Skill.new(name: skill_name, path: path)
+        end
       end
 
       def resolve_provider_config(provider)
@@ -249,7 +286,11 @@ module SkillBench
         eval_source = File.join(eval_path, 'source')
         return eval_source if Dir.exist?(eval_source)
 
-        inferred = Execution::SourcePathResolver.call(eval_folder_path: eval_path.to_s)
+        sources = SkillBench::Config.skill_sources || {}
+        inferred = Execution::SourcePathResolver.call(
+          eval_folder_path: eval_path.to_s,
+          skill_sources: sources
+        )
         inferred if inferred && Dir.exist?(inferred)
       end
 
@@ -375,7 +416,6 @@ module SkillBench
         SkillBench::ErrorLogger.log_error(e, 'Trend tracking failed')
         { success: false, response: { error: { message: e.message } } }
       end
-      # rubocop:enable Metrics/ClassLength
     end
   end
 end
