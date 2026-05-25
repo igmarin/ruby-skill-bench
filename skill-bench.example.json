@@ -1,0 +1,9 @@
+{
+  "provider": "openai",
+  "model": "gpt-4o",
+  "skill_sources": {
+    "core": "../ruby-core-skills/skills",
+    "rails": "../rails-agent-skills/skills",
+    "hanami": "../hanakai-yaku/skills"
+  }
+}

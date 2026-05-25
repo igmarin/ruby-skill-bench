@@ -61,7 +61,7 @@ module SkillBench
 
     def test_handles_absolute_paths_with_ambiguous_segments
       # Simulate an absolute path where 'skills' appears early in the parent directories
-      absolute_path = '/Users/ismael/my-skills/rails-agent-skills/evaluator/evals/skills/graphql-best-practices/some-eval'
+      absolute_path = File.expand_path('my-skills/rails-agent-skills/evaluator/evals/skills/graphql-best-practices/some-eval', '/')
       resolved = Execution::SourcePathResolver.call(eval_folder_path: absolute_path)
 
       assert_equal 'skills/graphql-best-practices', resolved

@@ -343,6 +343,45 @@ Both skill contexts are concatenated and sent to the agent. The judge evaluates 
 
 ---
 
+## Multi-Repo Skill Benchmarking
+
+Skills in the ecosystem are split across multiple repos:
+- `ruby-core-skills` — 15 shared Ruby skills (DDD, patterns, process discipline)
+- `rails-agent-skills` — 28 Rails-specific skills
+- `hanakai-yaku` — 35 Hanami/dry-rb skills
+
+To benchmark a skill from an external repo, use the `--skill` flag:
+
+```bash
+# Benchmark a core skill
+skill-bench run evals/skills/write-yard-docs/basic \
+  --skill /path/to/ruby-core-skills/skills/patterns/write-yard-docs
+
+# Benchmark a Rails skill
+skill-bench run evals/skills/code-review/pr-review \
+  --skill /path/to/rails-agent-skills/skills/code-quality/code-review
+```
+
+### Config-Based Multi-Repo Resolution (Proposed Phase 5 Design)
+
+In the future, you will be able to configure sources in `skill-bench.json` so you do not have to pass the absolute paths on the command line every time:
+
+```json
+{
+  "provider": "openai",
+  "model": "gpt-4o",
+  "skill_sources": {
+    "core": "../ruby-core-skills/skills",
+    "rails": "../rails-agent-skills/skills",
+    "hanami": "../hanakai-yaku/skills"
+  }
+}
+```
+
+> **Note:** The `skill_sources` config key is a design suggestion for Phase 5. For now, use the `--skill` flag approach to override skill folders explicitly.
+
+---
+
 ## File Reference: What Lives on Disk
 
 SkillBench creates and manages three files in your project. Understanding them helps you iterate faster.
