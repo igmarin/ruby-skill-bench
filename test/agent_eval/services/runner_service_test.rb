@@ -131,6 +131,7 @@ module SkillBench
 
         # Should use mock provider
         assert_equal 'mock', result[:provider_name]
+        assert result[:success]
       end
 
       def test_call_returns_config_error_when_api_key_missing

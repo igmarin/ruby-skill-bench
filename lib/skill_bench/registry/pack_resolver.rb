@@ -39,7 +39,7 @@ module SkillBench
         # Ensure resolved path is inside source directory
         return nil unless resolved == base || resolved.start_with?(base + File::SEPARATOR)
 
-        skill_path
+        resolved
       end
 
       # Lists available pack names from the manifest.
