@@ -6,13 +6,14 @@ module SkillBench
   module Commands
     class SkillNewTest < Minitest::Test
       def setup
+        @original_dir = Dir.pwd
         @tmp_dir = Dir.mktmpdir('skill_new_test')
         Dir.chdir(@tmp_dir)
         FileUtils.mkdir('skills')
       end
 
       def teardown
-        Dir.chdir('/')
+        Dir.chdir(@original_dir)
         FileUtils.rm_rf(@tmp_dir)
       end
 

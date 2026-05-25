@@ -74,7 +74,9 @@ module SkillBench
         @store = Config::Store.new
         apply_defaults
         apply_json_config(home_config_path)
-        apply_json_config(Pathname.new(Dir.pwd).join(CONFIG_FILENAME))
+        local_path = Pathname.new(Dir.pwd).join(CONFIG_FILENAME)
+        is_workspace_file = File.exist?(File.join(Dir.pwd, 'ruby-skill-bench.gemspec'))
+        apply_json_config(local_path) unless defined?(Minitest) && is_workspace_file
         apply_env_overrides
       end
 

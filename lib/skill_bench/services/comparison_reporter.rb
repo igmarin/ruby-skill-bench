@@ -80,9 +80,17 @@ module SkillBench
       # @param report_a [Object] First evaluation report
       # @param report_b [Object] Second evaluation report
       def print_verdicts(report_a, report_b)
-        verdict_a = report_a.verdict
-        verdict_b = report_b.verdict
+        verdict_a = format_verdict(report_a.verdict)
+        verdict_b = format_verdict(report_b.verdict)
         puts "| A: #{verdict_a} | B: #{verdict_b} |"
+      end
+
+      def format_verdict(verdict)
+        case verdict
+        when true then 'PASS'
+        when false then 'FAIL'
+        else verdict.to_s
+        end
       end
     end
   end

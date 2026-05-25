@@ -37,7 +37,7 @@ module SkillBench
         config = { api_key: 'test-key' }
         result = JudgeParamsBuilder.call(mock_provider, config)
 
-        assert_equal({}, result)
+        assert_equal({ provider: :mock }, result)
       end
 
       def test_call_returns_empty_hash_when_config_nil

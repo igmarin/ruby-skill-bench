@@ -48,7 +48,21 @@ module SkillBench
         cwd = File.expand_path(Dir.pwd)
         cwd_with_sep = cwd + File::SEPARATOR
 
-        raise(ArgumentError, "Skill path escapes project boundary: #{identifier}") unless absolute_path == cwd || absolute_path.start_with?(cwd_with_sep)
+        allowed = absolute_path == cwd || absolute_path.start_with?(cwd_with_sep)
+        unless allowed
+          sources = SkillBench::Config.skill_sources
+          if sources.is_a?(Hash)
+            sources.each_value do |source_path|
+              abs_src = File.expand_path(source_path)
+              if absolute_path == abs_src || absolute_path.start_with?(abs_src + File::SEPARATOR)
+                allowed = true
+                break
+              end
+            end
+          end
+        end
+
+        raise(ArgumentError, "Skill path escapes project boundary: #{identifier}") unless allowed
 
         skill_md = File.join(normalized_path, 'SKILL.md')
 
@@ -57,21 +71,35 @@ module SkillBench
         raise(ArgumentError, "Skill not found: #{identifier}")
       end
 
-      # Resolves a skill by name using recursive discovery.
-      #
-      # @return [SkillBench::Models::Skill] The resolved skill
-      # @raise [ArgumentError] if no skill with matching name found
       def resolve_by_name
-        skills = Models::Skill.discover(base_path)
+        skills = discover_all_skills
         matches = skills.select { |skill| skill.name == identifier }
 
+        validate_matches!(matches)
+
+        matches.first
+      end
+
+      def discover_all_skills
+        skills = Models::Skill.discover(base_path)
+
+        sources = SkillBench::Config.skill_sources
+        if sources.is_a?(Hash)
+          sources.each_value do |source_path|
+            skills += Models::Skill.discover(source_path) if Dir.exist?(source_path)
+          end
+        end
+
+        skills
+      end
+
+      def validate_matches!(matches)
         if matches.empty?
           raise(ArgumentError, "Skill not found: #{identifier}")
         elsif matches.size > 1
-          raise(ArgumentError, "Multiple skills found with name '#{identifier}': #{matches.map(&:path).join(', ')}")
+          matches.uniq! { |m| File.expand_path(m.path) }
+          raise(ArgumentError, "Multiple skills found with name '#{identifier}': #{matches.map(&:path).join(', ')}") if matches.size > 1
         end
-
-        matches.first
       end
     end
   end

@@ -24,7 +24,7 @@ module SkillBench
       #
       # @return [Hash] Judge parameters with api_key, model, and provider
       def call
-        return {} if @provider.name == 'mock'
+        return { provider: :mock } if @provider.name == 'mock'
 
         config = @config || safe_merged_config
         return {} unless config
