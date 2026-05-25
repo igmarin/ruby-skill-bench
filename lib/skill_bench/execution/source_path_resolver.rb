@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'pathname'
+
 module SkillBench
   module Execution
     # Resolves the source skill or workflow path for a given evaluation target.
@@ -22,7 +24,7 @@ module SkillBench
       def self.call(eval_folder_path:, skill_path: nil)
         return skill_path if skill_path && !skill_path.empty?
 
-        segments = eval_folder_path.to_s.split('/').reject(&:empty?)
+        segments = Pathname.new(eval_folder_path.to_s).each_filename.to_a
 
         resolve_skills_path(segments) || resolve_workflows_path(segments)
       end
