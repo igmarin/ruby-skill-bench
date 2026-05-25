@@ -34,7 +34,8 @@ module SkillBench
           model: config[:model] || @provider.llm,
           provider: @provider.runtime.to_sym
         }
-      rescue StandardError
+      rescue KeyError, NoMethodError
+        # Expected errors from missing config keys or nil config
         {}
       end
 

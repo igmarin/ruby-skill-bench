@@ -31,10 +31,10 @@ module SkillBench
         local = resolve_skills_path(segments) || resolve_workflows_path(segments)
 
         unless local.nil? || skill_sources.empty?
-          return local unless extract_skill_name(segments)
+          skill_name = extract_skill_name(segments)
+          return local unless skill_name
           return local if skill_exists_at?(local)
 
-          skill_name = extract_skill_name(segments)
           skill_sources.each_value do |source_path|
             candidate = find_skill_in_source(source_path, skill_name)
             return candidate if candidate

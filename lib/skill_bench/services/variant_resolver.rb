@@ -2,6 +2,7 @@
 
 require_relative '../registry/pack_resolver'
 require_relative 'runner_service'
+require_relative 'manifest_finder'
 
 module SkillBench
   module Services
@@ -30,13 +31,15 @@ module SkillBench
       # Resolves skill paths from the variant specification.
       #
       # @return [Array<String>] Array of skill paths
-      # @raise [ArgumentError] when skill cannot be resolved
+      # @raise [ArgumentError] when skill cannot be resolved or variant type is unknown
       def call
         case @variant[:type]
         when :pack
           resolve_pack_skill
         when :path
           [@variant[:path]]
+        else
+          raise ArgumentError, "Unknown variant type: #{@variant[:type]}, variant: #{@variant.inspect}"
         end
       end
 

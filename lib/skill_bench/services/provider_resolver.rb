@@ -57,6 +57,10 @@ module SkillBench
 
         warn 'Config load failed, using mock provider'
         MOCK_PROVIDER.new('mock', 'mock', 'mock', {})
+      rescue JSON::ParserError, ArgumentError, Errno::ENOENT => e
+        # Config parsing/validation errors or missing config file - fall back to mock
+        warn "Config load failed with error: #{e.message}, using mock provider"
+        MOCK_PROVIDER.new('mock', 'mock', 'mock', {})
       end
 
       def resolve_provider_config(provider)

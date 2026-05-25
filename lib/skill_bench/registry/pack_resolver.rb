@@ -32,7 +32,14 @@ module SkillBench
         skill_entry = tile.dig('skills', skill_name)
         return nil unless skill_entry
 
-        File.join(source_path, skill_entry['path'])
+        skill_path = File.join(source_path, skill_entry['path'])
+        resolved = File.expand_path(skill_path)
+        base = File.expand_path(source_path)
+
+        # Ensure resolved path is inside source directory
+        return nil unless resolved == base || resolved.start_with?(base + File::SEPARATOR)
+
+        skill_path
       end
 
       # Lists available pack names from the manifest.
@@ -45,6 +52,8 @@ module SkillBench
       private
 
       def resolve_source(source)
+        return nil unless source.is_a?(String) && !source.empty?
+
         repo_name = source.split('/').last
         candidates = [
           File.expand_path("../#{repo_name}", Dir.pwd),

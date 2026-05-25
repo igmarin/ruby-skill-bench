@@ -24,8 +24,14 @@ module SkillBench
       #
       # @return [Integer] 0 if both pass, 1 otherwise
       def call
-        passed_a = @result_a.dig(:response, :report, :verdict) == 'PASS'
-        passed_b = @result_b.dig(:response, :report, :verdict) == 'PASS'
+        report_a = @result_a.dig(:response, :report)
+        report_b = @result_b.dig(:response, :report)
+
+        verdict_a = report_a.is_a?(Hash) ? report_a[:verdict] : report_a&.verdict
+        verdict_b = report_b.is_a?(Hash) ? report_b[:verdict] : report_b&.verdict
+
+        passed_a = verdict_a == 'PASS'
+        passed_b = verdict_b == 'PASS'
         passed_a && passed_b ? 0 : 1
       end
     end

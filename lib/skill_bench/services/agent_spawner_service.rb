@@ -38,6 +38,17 @@ module SkillBench
         client_params = build_client_params
         max_iterations = @config&.[](:max_iterations) || @config&.[]('max_iterations') || 25
 
+        run_agent(client_params, max_iterations)
+      end
+
+      private
+
+      # Runs the agent in a sandbox with error handling.
+      #
+      # @param client_params [Hash] Client parameters for the agent
+      # @param max_iterations [Integer] Maximum iterations for the agent
+      # @return [Hash] Agent response with result, status, runtime, usage, raw_response, iterations
+      def run_agent(client_params, max_iterations)
         Execution::Sandbox.run(@evaluation.path) do |sandbox|
           agent_result = Agent::ReactAgent.call(
             system_prompt: @system_prompt,
@@ -64,9 +75,16 @@ module SkillBench
             iterations: iterations
           }
         end
+      rescue StandardError => e
+        {
+          result: "Error: #{e.message}",
+          status: :error,
+          runtime: @provider.runtime,
+          usage: {},
+          raw_response: { error: e.message, backtrace: e.backtrace },
+          iterations: []
+        }
       end
-
-      private
 
       # Builds client parameters for the ReactAgent.
       #

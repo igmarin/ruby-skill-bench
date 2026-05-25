@@ -14,6 +14,7 @@ module SkillBench
       def teardown
         Dir.chdir(@original_dir)
         FileUtils.rm_rf(@tmp_dir)
+        Models::Config.instance_variable_set(:@loaded, nil)
       end
 
       def test_call_resolves_provider_and_config

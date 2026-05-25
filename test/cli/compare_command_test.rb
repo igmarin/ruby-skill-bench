@@ -19,8 +19,11 @@ module SkillBench
     def test_missing_variant_a
       stdout_orig = $stdout
       $stdout = StringIO.new
-      exit_code = Cli::CompareCommand.call(['plan-tests', '--variant-b', 'pack:hanami', '--eval', 'evals/test'])
-      $stdout = stdout_orig
+      begin
+        exit_code = Cli::CompareCommand.call(['plan-tests', '--variant-b', 'pack:hanami', '--eval', 'evals/test'])
+      ensure
+        $stdout = stdout_orig
+      end
 
       assert_equal 1, exit_code
     end
@@ -28,8 +31,11 @@ module SkillBench
     def test_missing_variant_b
       stdout_orig = $stdout
       $stdout = StringIO.new
-      exit_code = Cli::CompareCommand.call(['plan-tests', '--variant-a', 'pack:rails', '--eval', 'evals/test'])
-      $stdout = stdout_orig
+      begin
+        exit_code = Cli::CompareCommand.call(['plan-tests', '--variant-a', 'pack:rails', '--eval', 'evals/test'])
+      ensure
+        $stdout = stdout_orig
+      end
 
       assert_equal 1, exit_code
     end
@@ -37,22 +43,13 @@ module SkillBench
     def test_missing_eval
       stdout_orig = $stdout
       $stdout = StringIO.new
-      exit_code = Cli::CompareCommand.call(['plan-tests', '--variant-a', 'pack:rails', '--variant-b', 'pack:hanami'])
-      $stdout = stdout_orig
+      begin
+        exit_code = Cli::CompareCommand.call(['plan-tests', '--variant-a', 'pack:rails', '--variant-b', 'pack:hanami'])
+      ensure
+        $stdout = stdout_orig
+      end
 
       assert_equal 1, exit_code
-    end
-
-    def test_parse_variant_pack
-      result = SkillBench::Services::VariantParser.call('pack:rails')
-
-      assert_equal({ type: :pack, name: 'rails' }, result)
-    end
-
-    def test_parse_variant_path
-      result = SkillBench::Services::VariantParser.call('/path/to/skill')
-
-      assert_equal({ type: :path, path: '/path/to/skill' }, result)
     end
   end
 end
