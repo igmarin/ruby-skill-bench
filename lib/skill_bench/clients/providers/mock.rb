@@ -10,9 +10,16 @@ module SkillBench
       class Mock
         SkillBench::Clients::ProviderRegistry.register(:mock, self)
 
+        # Mock call implementation to simulate LLM responses for test suites.
+        #
+        # @param system_prompt [String] system prompt instructions.
+        # @param messages [Array<Hash>] chat history messages.
+        # @param _options [Hash] additional keyword options.
+        # @return [Hash] mock response hash.
         def self.call(system_prompt:, messages:, **_options)
+          _ = system_prompt
           prompt = messages.first[:content] || messages.first['content'] || ''
-          
+
           # Parse dimensions from prompt
           dimensions = {}
           prompt.scan(/-\s+([^:]+):\s+max_score=(\d+)/).each do |name, max_score|
@@ -26,16 +33,14 @@ module SkillBench
               'reasoning' => "Mock evaluation for #{name}"
             }
           end
-          
-          if dimensions.empty?
-            dimensions['correctness'] = { 'score' => 8, 'max_score' => 10, 'reasoning' => 'Mock correctness' }
-          end
-          
+
+          dimensions['correctness'] = { 'score' => 8, 'max_score' => 10, 'reasoning' => 'Mock correctness' } if dimensions.empty?
+
           content = {
             'dimensions' => dimensions,
             'overall_reasoning' => 'Mock evaluation overall reasoning'
           }.to_json
-          
+
           {
             success: true,
             response: {

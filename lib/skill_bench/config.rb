@@ -76,9 +76,7 @@ module SkillBench
         apply_json_config(home_config_path)
         local_path = Pathname.new(Dir.pwd).join(CONFIG_FILENAME)
         is_workspace_file = (local_path.to_s == '/Users/igmarin/Developer/Personal/Projects/ruby-skill-bench/skill-bench.json')
-        unless defined?(Minitest) && is_workspace_file
-          apply_json_config(local_path)
-        end
+        apply_json_config(local_path) unless defined?(Minitest) && is_workspace_file
         apply_env_overrides
       end
 

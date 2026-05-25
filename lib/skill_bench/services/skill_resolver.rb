@@ -71,11 +71,16 @@ module SkillBench
         raise(ArgumentError, "Skill not found: #{identifier}")
       end
 
-      # Resolves a skill by name using recursive discovery.
-      #
-      # @return [SkillBench::Models::Skill] The resolved skill
-      # @raise [ArgumentError] if no skill with matching name found
       def resolve_by_name
+        skills = discover_all_skills
+        matches = skills.select { |skill| skill.name == identifier }
+
+        validate_matches!(matches)
+
+        matches.first
+      end
+
+      def discover_all_skills
         skills = Models::Skill.discover(base_path)
 
         sources = SkillBench::Config.skill_sources
@@ -85,18 +90,16 @@ module SkillBench
           end
         end
 
-        matches = skills.select { |skill| skill.name == identifier }
+        skills
+      end
 
+      def validate_matches!(matches)
         if matches.empty?
           raise(ArgumentError, "Skill not found: #{identifier}")
         elsif matches.size > 1
-          matches = matches.uniq { |m| File.expand_path(m.path) }
-          if matches.size > 1
-            raise(ArgumentError, "Multiple skills found with name '#{identifier}': #{matches.map(&:path).join(', ')}")
-          end
+          matches.uniq! { |m| File.expand_path(m.path) }
+          raise(ArgumentError, "Multiple skills found with name '#{identifier}': #{matches.map(&:path).join(', ')}") if matches.size > 1
         end
-
-        matches.first
       end
     end
   end

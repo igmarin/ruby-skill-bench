@@ -41,7 +41,7 @@ end
 all_passed = true
 
 # 1. Every skill in tile.json has a matching directory with SKILL.md
-puts "--- Check 1: Skill Directories and SKILL.md ---"
+puts '--- Check 1: Skill Directories and SKILL.md ---'
 repos.each do |pack_name, repo_info|
   tile = repo_info[:tile]
   skills = tile['skills'] || {}
@@ -100,7 +100,7 @@ packs.each do |pack_name, pack_config|
   end
 end
 
-repos.each do |pack_name, repo_info|
+repos.each_value do |repo_info|
   tile = repo_info[:tile]
   depends_on = tile['depends_on'] || []
   depends_on.each do |dep_repo|
@@ -119,9 +119,16 @@ end
 
 # 4. No skill name appears in >1 repo's tile.json (within a pack stack)
 puts "\n--- Check 4: Skill Key Uniqueness in Pack Stack ---"
+# Resolves the stack of dependent packs recursively.
+#
+# @param pack_name [String] Name of the pack.
+# @param packs [Hash] All pack definitions.
+# @param visited [Array<String>] List of visited packs.
+# @return [Array<String>] Unique pack names in the stack.
 def resolve_stack(pack_name, packs, visited = [])
   return [] if visited.include?(pack_name)
-  visited = visited + [pack_name]
+
+  visited += [pack_name]
 
   pack_config = packs[pack_name]
   return [] unless pack_config
@@ -156,6 +163,7 @@ end
 
 # 5. Every agent's dependencies are resolvable
 puts "\n--- Check 5: Agent Dependencies Resolution ---"
+# rubocop:disable Metrics/BlockLength
 repos.each do |pack_name, repo_info|
   agents_json_path = File.join(repo_info[:path], 'agents.json')
   next unless File.exist?(agents_json_path)
@@ -198,15 +206,16 @@ repos.each do |pack_name, repo_info|
     if dependencies.is_a?(Array)
       dependencies.each do |dep|
         next unless dep.is_a?(Hash)
+
         source = dep['source']
         skills = dep['skills'] || []
 
-        target_repo_info = nil
-        if source == 'self' || source == repo_info[:name] || source == pack_name
-          target_repo_info = repo_info
-        else
-          target_repo_info = repos.values.find { |r| r[:name] == source || r[:name].split('/').last == source.split('/').last }
-        end
+        nil
+        target_repo_info = if source == 'self' || source == repo_info[:name] || source == pack_name
+                             repo_info
+                           else
+                             repos.values.find { |r| r[:name] == source || r[:name].split('/').last == source.split('/').last }
+                           end
 
         if target_repo_info.nil?
           puts "FAIL: Agent '#{agent_name}' in '#{pack_name}' depends on unknown source '#{source}'"
@@ -226,14 +235,15 @@ repos.each do |pack_name, repo_info|
       puts "FAIL: Agent '#{agent_name}' in '#{pack_name}' has invalid 'dependencies' in YAML front-matter (must be a list)"
       all_passed = false
     end
+    # rubocop:enable Metrics/BlockLength
   end
 end
 
 puts "\n========================================="
 if all_passed
-  puts "AUDIT STATUS: PASS"
+  puts 'AUDIT STATUS: PASS'
   exit 0
 else
-  puts "AUDIT STATUS: FAIL"
+  puts 'AUDIT STATUS: FAIL'
   exit 1
 end

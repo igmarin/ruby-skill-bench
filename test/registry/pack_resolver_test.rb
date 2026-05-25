@@ -136,6 +136,7 @@ module SkillBench
       end
 
       result = resolver.resolve_skill('rails', 'write-yard-docs')
+
       assert_equal File.join(write_yard_docs_dir), result
     end
 
@@ -182,6 +183,7 @@ module SkillBench
       end
 
       result = resolver.resolve_skill('rails', 'tdd-process')
+
       assert_equal File.join(tdd_process_dir), result
     end
 

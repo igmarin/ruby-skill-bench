@@ -7,7 +7,7 @@ module SkillBench
   class PackResolverE2ETest < Minitest::Test
     def setup
       @registry_path = File.expand_path('../../../agent-mcp-runtime/registry.json', __dir__)
-      skip "E2E sibling repositories not present" unless File.exist?(@registry_path)
+      skip 'E2E sibling repositories not present' unless File.exist?(@registry_path)
 
       @resolver = Registry::PackResolver.new(@registry_path)
     end
@@ -32,9 +32,11 @@ module SkillBench
 
         first_skill = skills.keys.first
         resolved = @resolver.resolve_skill(pack, first_skill)
+
         refute_nil resolved, "Could not resolve skill #{first_skill} in pack #{pack}"
 
-        expected_suffix = skills[first_skill]['path'].sub(/\/SKILL\.md$/, '')
+        expected_suffix = skills[first_skill]['path'].sub(%r{/SKILL\.md$}, '')
+
         assert resolved.end_with?(expected_suffix), "Expected #{resolved} to end with #{expected_suffix}"
         assert Dir.exist?(resolved), "Resolved path #{resolved} for skill #{first_skill} does not exist"
       end
@@ -42,14 +44,16 @@ module SkillBench
 
     def test_e2e_deprecated_skill_resolution
       deprecated = @resolver.resolve_skill('rails', 'write-yard-docs')
-      refute_nil deprecated, "Deprecated write-yard-docs should resolve"
+
+      refute_nil deprecated, 'Deprecated write-yard-docs should resolve'
       assert Dir.exist?(deprecated), "Resolved path #{deprecated} should exist"
       assert_match(/ruby-core-skills/, deprecated)
     end
 
     def test_e2e_depends_on_chain
       resolved = @resolver.resolve_skill('rails', 'tdd-process')
-      refute_nil resolved, "tdd-process should resolve via depends_on"
+
+      refute_nil resolved, 'tdd-process should resolve via depends_on'
       assert Dir.exist?(resolved), "Resolved path #{resolved} should exist"
       assert_match(/ruby-core-skills/, resolved)
     end
