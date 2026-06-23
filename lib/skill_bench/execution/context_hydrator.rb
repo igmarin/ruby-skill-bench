@@ -47,7 +47,7 @@ module SkillBench
         return missing_path_result unless full_path.exist? && full_path.directory?
 
         context_files = collect_context_files(full_path)
-        return missing_path_result unless validate_total_size(context_files)
+        return missing_path_result unless validate_total_size?(context_files)
 
         xml_context = build_xml(context_files)
 
@@ -70,7 +70,7 @@ module SkillBench
                          .sort
       end
 
-      def validate_total_size(context_files)
+      def validate_total_size?(context_files)
         total_size = context_files.sum { |f| File.size(f) }
         return true if total_size <= Constants::ContextHydration::MAX_TOTAL_CONTEXT_SIZE
 

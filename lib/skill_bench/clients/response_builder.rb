@@ -8,10 +8,9 @@ module SkillBench
       # Builds a standardized error response.
       #
       # @param message [String] The error message.
-      # @param provider_name [String, nil] The provider name for context (not appended to message).
       # @param status [String] The status identifier (default: 'error').
       # @return [Hash] Standardized error response hash.
-      def self.error(message:, provider_name: nil, status: 'error')
+      def self.error(message:, status: 'error')
         {
           success: false,
           response: { error: { message: message } },

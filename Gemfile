@@ -6,6 +6,7 @@ source 'https://rubygems.org'
 gemspec
 
 group :development, :test do
+  gem 'concurrent-ruby', '>= 1.3.5'
   gem 'minitest', '~> 5.0'
   gem 'mocha', '~> 2.1'
   gem 'rake', '~> 13.4'
@@ -18,5 +19,4 @@ group :development, :test do
   gem 'simplecov', '~> 0.22', require: false
   gem 'skunk', '~> 0.5.4'
   gem 'webmock', '~> 3.23'
-  gem 'concurrent-ruby', '>= 1.3.5'
 end

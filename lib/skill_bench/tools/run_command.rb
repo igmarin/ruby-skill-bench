@@ -10,7 +10,6 @@ module SkillBench
   module Tools
     # Handles executing a shell command within the working directory.
     class RunCommand
-
       # @return [Hash] The tool definition for the LLM API.
       def self.definition
         {
