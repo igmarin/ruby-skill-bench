@@ -23,14 +23,8 @@ module SkillBench
           error_msg += " - #{detail}"
         end
 
-        {
-          success: false,
-          result: error_msg,
-          usage: usage_extractor.call(parsed),
-          response: { error: { message: error_msg } },
-          status: 'error',
-          code: response.status
-        }
+        base_response = ResponseBuilder.api_error(error_message: error_msg, usage: usage_extractor.call(parsed))
+        base_response.merge(code: response.status)
       end
 
       # Creates an error response when the LLM response has no message content.
@@ -41,14 +35,8 @@ module SkillBench
       # @return [Hash] Standardized error response
       def self.missing_message_response(response, parsed, &usage_extractor)
         error_msg = 'LLM response missing message content'
-        {
-          success: false,
-          result: error_msg,
-          usage: usage_extractor.call(parsed),
-          response: { error: { message: error_msg } },
-          status: 'error',
-          code: response.status
-        }
+        base_response = ResponseBuilder.error(message: error_msg)
+        base_response.merge(usage: usage_extractor.call(parsed), code: response.status)
       end
 
       # Handles an exception by logging and returning a standardized error response.
@@ -58,7 +46,7 @@ module SkillBench
       # @return [Hash] Standardized error response
       def self.handle_exception(error, type)
         log_error(error)
-        { success: false, result: "#{type}: #{error.message}", status: 'error' }
+        ResponseBuilder.error(message: "#{type}: #{error.message}")
       end
 
       # Logs an error message and backtrace to Rails.logger or stderr.

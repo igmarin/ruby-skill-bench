@@ -4,26 +4,12 @@ require 'open3'
 require 'timeout'
 require 'shellwords'
 require_relative '../config'
+require_relative '../constants'
 
 module SkillBench
   module Tools
     # Handles executing a shell command within the working directory.
     class RunCommand
-      # Commands that are always blocked even if listed in allowed_commands,
-      # because they can be used to escape the sandbox or execute arbitrary code.
-      DANGEROUS_COMMANDS = %w[
-        bash sh zsh fish dash ksh csh tcsh
-        python python3 python2 ruby perl node
-        php lua tcl wish
-        curl wget nc ncat socat
-        eval exec
-        sudo su doas
-        chmod chown mount umount
-        dd mkfs fdisk parted
-        insmod rmmod modprobe
-        systemctl service
-        passwd useradd userdel groupadd groupdel
-      ].freeze
 
       # @return [Hash] The tool definition for the LLM API.
       def self.definition
@@ -59,7 +45,7 @@ module SkillBench
         return 'Error: Empty command.' if argv.empty?
 
         base_cmd = argv.first
-        return "Error: Command '#{base_cmd}' is blocked for security reasons." if DANGEROUS_COMMANDS.include?(base_cmd)
+        return "Error: Command '#{base_cmd}' is blocked for security reasons." if Constants::Tools::DANGEROUS_COMMANDS.include?(base_cmd)
 
         allowed = SkillBench::Config.allowed_commands
         return 'Error: No allowed commands configured. Set allowed_commands in skill-bench.json or use --mode mock.' if allowed.nil?

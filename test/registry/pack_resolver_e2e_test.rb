@@ -6,7 +6,7 @@ require 'json'
 module SkillBench
   class PackResolverE2ETest < Minitest::Test
     def setup
-      @registry_path = File.expand_path('../../../agent-mcp-runtime/registry.json', __dir__)
+      @registry_path = File.expand_path('../../agent-mcp-runtime/registry.json', __dir__)
       skip 'E2E sibling repositories not present' unless File.exist?(@registry_path)
 
       @resolver = Registry::PackResolver.new(@registry_path)

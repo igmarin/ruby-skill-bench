@@ -18,4 +18,5 @@ group :development, :test do
   gem 'simplecov', '~> 0.22', require: false
   gem 'skunk', '~> 0.5.4'
   gem 'webmock', '~> 3.23'
+  gem 'concurrent-ruby', '>= 1.3.5'
 end

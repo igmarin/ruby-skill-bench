@@ -2,6 +2,7 @@
 
 require 'pathname'
 require 'cgi'
+require_relative '../constants'
 
 module SkillBench
   module Execution
@@ -10,10 +11,6 @@ module SkillBench
     class ContextHydrator
       # Error message returned when context hydration fails.
       HYDRATION_FAILED = 'Failed to hydrate context from source path'
-      # File extensions considered for context hydration.
-      TEXT_EXTENSIONS = %w[.md .rb .json .yml .yaml .txt].freeze
-      # Maximum file size (in bytes) for files included in context hydration.
-      MAX_FILE_SIZE = 50_000
 
       # Loads and formats source context files.
       #
@@ -50,6 +47,8 @@ module SkillBench
         return missing_path_result unless full_path.exist? && full_path.directory?
 
         context_files = collect_context_files(full_path)
+        return missing_path_result unless validate_total_size(context_files)
+
         xml_context = build_xml(context_files)
 
         { success: true, response: { context: xml_context } }
@@ -65,10 +64,21 @@ module SkillBench
       end
 
       def collect_context_files(full_path)
-        pattern = full_path.join("*{#{TEXT_EXTENSIONS.join(',')}}").to_s
+        pattern = full_path.join("*{#{Constants::ContextHydration::TEXT_EXTENSIONS.join(',')}}").to_s
         Dir.glob(pattern).reject { |f| File.symlink?(f) }
-                         .select { |f| File.size(f) <= MAX_FILE_SIZE }
+                         .select { |f| File.size(f) <= Constants::ContextHydration::MAX_FILE_SIZE }
                          .sort
+      end
+
+      def validate_total_size(context_files)
+        total_size = context_files.sum { |f| File.size(f) }
+        return true if total_size <= Constants::ContextHydration::MAX_TOTAL_CONTEXT_SIZE
+
+        SkillBench::ErrorLogger.log_error(
+          StandardError.new("Total context size #{total_size} exceeds maximum #{Constants::ContextHydration::MAX_TOTAL_CONTEXT_SIZE}"),
+          'ContextHydrator'
+        )
+        false
       end
 
       # Builds the XML structure wrapping the contents of the context files.

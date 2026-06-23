@@ -2,6 +2,7 @@
 
 require 'faraday'
 require_relative '../error_logger'
+require_relative '../constants'
 
 module SkillBench
   module Clients
@@ -9,10 +10,6 @@ module SkillBench
     # Retries on transient errors (429, 503). Raises permanent errors immediately.
     # Returns the block result on success.
     class RetryHandler
-      RETRYABLE_STATUSES = [429, 503].freeze
-
-      MAX_DELAY = 30 # Maximum delay cap in seconds
-
       # Executes the given block with retry logic.
       #
       # @param max_attempts [Integer] Maximum number of attempts (default: 3).
@@ -21,7 +18,7 @@ module SkillBench
       # @return [Object] The block's return value on success.
       # @raise [Faraday::Error] On non-retryable errors or after exhausting retries.
       # @raise [ArgumentError] if no block is given or max_attempts < 1.
-      def self.call(max_attempts: 3, base_delay: 1, &block)
+      def self.call(max_attempts: Constants::HttpClient::DEFAULT_MAX_RETRIES, base_delay: Constants::HttpClient::DEFAULT_RETRY_DELAY, &block)
         raise ArgumentError, 'RetryHandler requires a block' unless block
         raise ArgumentError, 'max_attempts must be >= 1' if max_attempts < 1
 
@@ -59,11 +56,11 @@ module SkillBench
       private
 
       def retryable?(status, attempt)
-        RETRYABLE_STATUSES.include?(status) && attempt < @max_attempts
+        Constants::HttpClient::RETRYABLE_STATUSES.include?(status) && attempt < @max_attempts
       end
 
       def compute_delay(attempt)
-        [@base_delay * (2**(attempt - 1)), MAX_DELAY].min
+        [@base_delay * (2**(attempt - 1)), Constants::ReactAgent::DEFAULT_MAX_DELAY].min
       end
 
       def extract_status(error)
