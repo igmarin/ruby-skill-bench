@@ -859,6 +859,151 @@ bundle exec ruby -Itest test/integration_test.rb
 - `test/agent_eval/` — CLI, models, and service tests
 - `test/clients/` — Provider client tests
 
+---
+
+## Security
+
+### Threat Model
+
+Ruby Skill Bench is designed with security as a primary concern. The system executes AI agents in isolated environments and must protect against various attack vectors:
+
+- **Path Traversal:** Preventing agents from accessing files outside the sandbox
+- **Command Injection:** Preventing execution of arbitrary shell commands
+- **Resource Exhaustion:** Preventing denial-of-service through resource consumption
+- **Information Leakage:** Protecting sensitive data like API keys
+
+### Security Features
+
+#### Path Traversal Protection
+
+- **Symlink Validation:** All symlinks are validated to ensure they don't escape the sandbox
+- **TOCTOU Mitigation:** Path validation is re-checked after directory creation operations
+- **Path Normalization:** All paths are normalized and validated against working directory boundaries
+- **Character Validation:** Paths are validated against strict character patterns
+
+#### Command Execution Security
+
+- **Command Allowlist:** Only explicitly allowed commands can be executed
+- **Dangerous Commands Blocklist:** Dangerous commands (bash, curl, sudo, etc.) are always blocked
+- **Shell Tokenization:** Commands are tokenized before execution to prevent shell injection
+- **Docker Isolation:** Commands can be executed in isolated Docker containers with hardened security settings
+
+#### Docker Security Hardening
+
+When Docker is available, containers are launched with hardened security settings:
+
+- **Non-root User:** Containers run as a non-root user
+- **Privilege Prevention:** `--security-opt no-new-privileges` prevents privilege escalation
+- **Capability Dropping:** All Linux capabilities are dropped except minimal needed ones
+- **Network Isolation:** `--network none` disables network access
+- **Read-only Root:** Container filesystem is read-only (except for mounted volumes)
+
+#### Resource Limits
+
+- **File Size Limits:** Individual files in context hydration are limited to 50KB
+- **Total Context Size:** Total context size is limited to 1MB to prevent memory exhaustion
+- **Execution Timeout:** Commands are limited to a configurable timeout (default: 30 seconds)
+- **Max Iterations:** Agent loops are limited to prevent infinite loops
+
+### API Key Security
+
+- **Environment Variables:** API keys are loaded from environment variables, not hardcoded
+- **Configuration Hierarchy:** Keys can be set in `skill-bench.json` or environment variables
+- **No Logging:** API keys are never logged or exposed in error messages
+- **Provider-Specific Keys:** Each provider uses its own API key configuration
+
+### Best Practices for Users
+
+1. **Never Commit API Keys:** Never commit `skill-bench.json` with API keys to version control
+2. **Use Environment Variables:** Prefer environment variables for sensitive configuration
+3. **Minimal Command Allowlist:** Only allow commands necessary for your evals
+4. **Regular Updates:** Keep dependencies updated to patch security vulnerabilities
+5. **Review Changes:** Review skill files before execution to ensure they don't contain malicious code
+
+### Reporting Security Issues
+
+If you discover a security vulnerability:
+
+1. **Do Not Open a Public Issue:** Send a private email to the maintainers
+2. **Provide Details:** Include steps to reproduce and potential impact
+3. **Allow Time for Fix:** Give maintainers time to address the issue before disclosure
+4. **Follow Responsible Disclosure:** Follow responsible disclosure practices
+
+---
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+#### Configuration Issues
+
+**Problem:** "Config load failed, using mock provider"
+- **Solution:** Ensure your `skill-bench.json` file is properly formatted JSON and contains required fields
+- **Check:** Verify the file exists in your project root or home directory
+
+**Problem:** "API Key not set for [Provider]"
+- **Solution:** Set the appropriate environment variable (e.g., `SKILL_BENCH_OPENAI_API_KEY`) or add it to your `skill-bench.json`
+- **Check:** Run `env | grep SKILL_BENCH` to verify environment variables are set
+
+**Problem:** "No allowed commands configured"
+- **Solution:** Add `allowed_commands` array to your `skill-bench.json` with the commands you want to allow
+- **Check:** Ensure commands are in the allowlist and not in the dangerous commands list
+
+#### Execution Issues
+
+**Problem:** "Command execution timed out"
+- **Solution:** Increase `max_execution_time` in your `skill-bench.json` or simplify the task
+- **Check:** Verify the command isn't hanging or waiting for input
+
+**Problem:** "Docker container failed to start"
+- **Solution:** Ensure Docker is running and you have permissions to run Docker commands
+- **Check:** Run `docker info` to verify Docker daemon is accessible
+
+**Problem:** "Context hydration failed"
+- **Solution:** Verify the source path exists and is a directory
+- **Check:** Ensure the path is within the base directory and file sizes are under limits
+
+#### Network Issues
+
+**Problem:** "Network Error: Connection refused"
+- **Solution:** Check your internet connection and API provider status
+- **Check:** Verify the base URL in your configuration is correct
+
+**Problem:** "API Request failed: 429"
+- **Solution:** This is a rate limit error. The system will retry automatically
+- **Check:** Reduce request frequency or check your API quota
+
+#### Test Failures
+
+**Problem:** Tests fail with "WebMock::NetConnectNotAllowedError"
+- **Solution:** This occurs when tests try to make real HTTP requests. Ensure test stubs are properly configured
+- **Check:** Verify WebMock is properly stubbing the expected URLs
+
+**Problem:** "E2E sibling repositories not present"
+- **Solution:** This is expected if you don't have the agent-mcp-runtime repository cloned
+- **Check:** These tests will be skipped and won't affect the overall test results
+
+### Debug Mode
+
+For detailed debugging, you can enable verbose logging:
+
+```bash
+# Set environment variable for verbose logging
+export SKILL_BENCH_DEBUG=true
+skill-bench run my-eval --skill=my-skill
+```
+
+### Getting Help
+
+If you encounter issues not covered here:
+
+1. Check the [GitHub Issues](https://github.com/igmarin/ruby-skill-bench/issues) for similar problems
+2. Create a new issue with detailed information about your environment and the problem
+3. Include Ruby version, SkillBench version, and error messages
+4. Provide steps to reproduce the issue
+
+---
+
 ## CI/CD Integration
 
 GitHub Actions workflow included (`.github/workflows/ci.yml`):

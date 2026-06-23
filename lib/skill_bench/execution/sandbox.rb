@@ -3,6 +3,7 @@
 require 'fileutils'
 require 'tmpdir'
 require 'open3'
+require_relative '../constants'
 
 module SkillBench
   module Execution
@@ -143,18 +144,32 @@ module SkillBench
 
       # Starts a Docker container for isolated command execution.
       # Builds the image only if it does not already exist.
+      # Uses hardened security settings for production safety.
       #
       # @raise [RuntimeError] when the Docker image cannot be built or the container fails to start.
       def start_container
-        image_name = 'evaluator-sandbox'
+        image_name = Constants::Sandbox::DOCKER_IMAGE_NAME
         docker_dir = File.expand_path('docker', __dir__)
 
         # Build image (Docker layer cache handles no-op builds)
         raise "Failed to build Docker image #{image_name}" unless system('docker', 'build', '-t', image_name, docker_dir, '--quiet')
 
-        # Start a detached container mounting the sandbox dir to /sandbox
+        # Start a detached container with hardened security settings
+        # --user $(id -u):$(id -g): Runs as non-root user
+        # --security-opt no-new-privileges: Prevents privilege escalation
+        # --cap-drop ALL: Drops all Linux capabilities
+        # --cap-add CHOWN, DAC_OVERRIDE: Adds back minimal capabilities for git operations
+        # --network none: Disables network access for additional isolation
         stdout, stderr, status = Open3.capture3(
-          'docker', 'run', '-d', '--rm', '-v', "#{@path}:/sandbox", image_name
+          'docker', 'run', '-d', '--rm',
+          '--user', "#{Process.uid}:#{Process.gid}",
+          '--security-opt', 'no-new-privileges',
+          '--cap-drop', 'ALL',
+          '--cap-add', 'CHOWN',
+          '--cap-add', 'DAC_OVERRIDE',
+          '--network', 'none',
+          '-v', "#{@path}:/sandbox:rw",
+          image_name
         )
 
         raise "Failed to start Docker container: #{stderr}" unless status.success?

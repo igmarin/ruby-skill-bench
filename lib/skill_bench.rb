@@ -8,6 +8,7 @@
 
 # Core modules
 require_relative 'skill_bench/version'
+require_relative 'skill_bench/constants'
 require_relative 'skill_bench/dimension'
 require_relative 'skill_bench/criteria'
 require_relative 'skill_bench/delta_report'

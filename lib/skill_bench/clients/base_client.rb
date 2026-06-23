@@ -4,6 +4,7 @@ require_relative '../config'
 require_relative 'provider_config'
 require_relative 'response_parser'
 require_relative 'response_error_handler'
+require_relative 'response_builder'
 require_relative 'request_builder'
 require_relative 'retry_handler'
 
@@ -135,7 +136,7 @@ module SkillBench
                   else
                     "#{missing.first} not set for #{@provider_display_name}"
                   end
-        { success: false, response: { error: { message: message } }, result: message, status: 'error' }
+        ResponseBuilder.error(message: message)
       end
 
       # Extracts the message hash from the provider's specific response body structure.
@@ -182,10 +183,6 @@ module SkillBench
         message = extract_message(parsed)
         return missing_message_response(response, parsed) unless ResponseParser.valid_message?(message)
 
-        success_response(parsed, message)
-      end
-
-      def success_response(parsed, message)
         content = ResponseParser.extract_content(message)
         {
           success: true,

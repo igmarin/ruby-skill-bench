@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative '../constants'
 require_relative 'react_agent/step'
 require_relative 'react_agent/loop_runner'
 
@@ -29,7 +30,7 @@ module SkillBench
       def initialize(params)
         @system_prompt = params[:system_prompt]
         @initial_prompt = params[:initial_prompt]
-        @max_iterations = params[:max_iterations] || 25
+        @max_iterations = params[:max_iterations] || Constants::ReactAgent::DEFAULT_MAX_ITERATIONS
         @working_dir = params[:working_dir] || Dir.pwd
         @container_id = params[:container_id]
         @client_params = params[:client_params] || {}

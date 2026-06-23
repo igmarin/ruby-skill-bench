@@ -2,6 +2,7 @@
 
 require_relative 'response_parser'
 require_relative 'response_error_handler'
+require_relative 'response_builder'
 require_relative 'request_builder'
 require_relative 'retry_handler'
 require_relative 'base_client'

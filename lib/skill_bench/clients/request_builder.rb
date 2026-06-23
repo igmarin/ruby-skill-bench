@@ -1,22 +1,20 @@
 # frozen_string_literal: true
 
 require 'faraday'
+require_relative '../constants'
 
 module SkillBench
   module Clients
     # Builds and executes HTTP requests to LLM provider APIs.
     # Encapsulates Faraday connection setup and request execution.
     class RequestBuilder
-      DEFAULT_OPEN_TIMEOUT = 10
-      DEFAULT_TIMEOUT = 120
-
       # Creates a Faraday connection with JSON middleware.
       #
       # @param base_url [String] The API base URL
       # @param open_timeout [Integer] Connection open timeout in seconds
       # @param timeout [Integer] Request timeout in seconds
       # @return [Faraday::Connection] Configured Faraday connection
-      def self.build_connection(base_url, open_timeout: DEFAULT_OPEN_TIMEOUT, timeout: DEFAULT_TIMEOUT)
+      def self.build_connection(base_url, open_timeout: Constants::HttpClient::DEFAULT_OPEN_TIMEOUT, timeout: Constants::HttpClient::DEFAULT_TIMEOUT)
         Faraday.new(url: base_url) do |f|
           f.request :json
           f.response :json

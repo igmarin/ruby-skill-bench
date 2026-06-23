@@ -23,7 +23,8 @@ module SkillBench
         result = Providers::OpenAI.call(
           api_key: 'test_key',
           system_prompt: 'System',
-          messages: [{ role: 'user', content: 'Hi' }]
+          messages: [{ role: 'user', content: 'Hi' }],
+          base_url: 'https://api.openai.com'
         )
 
         # Assert
@@ -62,7 +63,8 @@ module SkillBench
         result = Providers::OpenAI.call(
           api_key: 'test_key',
           system_prompt: 'System',
-          messages: [{ role: 'user', content: 'Hi' }]
+          messages: [{ role: 'user', content: 'Hi' }],
+          base_url: 'https://api.openai.com'
         )
 
         # Assert
