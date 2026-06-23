@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    ruby-skill-bench (0.2.0)
+    ruby-skill-bench (1.1.0)
       activesupport (>= 6.0)
       cgi (~> 0.5.1)
       dotenv (~> 3.2.0)
@@ -284,7 +284,7 @@ CHECKSUMS
   rubocop-rake (0.7.1) sha256=3797f2b6810c3e9df7376c26d5f44f3475eda59eb1adc38e6f62ecf027cbae4d
   rubocop-yard (1.2.0) sha256=a749b1feccd16ca049d1c65c4b62dbfc8ce39904bfdbc6e5c08f6b5dc0422dc4
   ruby-progressbar (1.13.0) sha256=80fc9c47a9b640d6834e0dc7b3c94c9df37f08cb072b7761e4a71e22cff29b33
-  ruby-skill-bench (0.2.0)
+  ruby-skill-bench (1.1.0)
   ruby2_keywords (0.0.5) sha256=ffd13740c573b7301cf7a2e61fc857b2a8e3d3aff32545d6f8300d8bae10e3ef
   ruby_parser (3.22.0) sha256=1eb4937cd9eb220aa2d194e352a24dba90aef00751e24c8dfffdb14000f15d23
   rubycritic (4.12.0) sha256=024fed90fe656fa939f6ea80aab17569699ac3863d0b52fd72cb99892247abc8

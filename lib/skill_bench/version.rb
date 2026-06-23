@@ -2,5 +2,5 @@
 
 module SkillBench
   # The current gem version.
-  VERSION = '0.2.0'
+  VERSION = '1.1.0'
 end
