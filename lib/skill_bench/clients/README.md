@@ -125,3 +125,5 @@ Every client, regardless of its internal complexity, guarantees a standard respo
 - **Silent Errors**: We prioritize "Fail Fast, Fail Clean". Errors are caught, logged with 5-line backtraces, and returned as `{ success: false }`.
 - **JSON Safety**: Robust parsing prevents malformed LLM responses from crashing the system.
 - **URL Sanitization**: All provider URL parameters are CGI-escaped to prevent injection attacks.
+- **Base URL Validation**: `ProviderConfig` runs every provider's transport URL (`base_url`, and Azure's `endpoint`) through `BaseUrlValidator` at config-load time. A URL must be an absolute `http(s)` URL with a host; blank/relative/garbage values are rejected. When a credential (API key / bearer token) is attached, **non-loopback hosts must use `https`** so the token is never sent in cleartext (mitigating SSRF + token exfiltration). Loopback hosts (`localhost`, `127.0.0.1`, `::1`) may use `http` — the legitimate self-hosted/Ollama case — and `allow_insecure_base_url: true` is an explicit opt-in for cleartext to a non-loopback host. Error messages describe only the transport and never include the credential.
+
