@@ -84,7 +84,7 @@ module SkillBench
           opts.on('--skill NAME', 'Skill to use (can be specified multiple times)') { |v| options[:skill_names] << v }
           opts.on('--pack NAME', 'Pack context for skill resolution') { |v| options[:pack] = v }
           opts.on('--registry-manifest PATH', 'Path to registry.json manifest') { |v| options[:registry_manifest] = v }
-          opts.on('--format FORMAT', 'Output format (human, json, junit)') { |v| options[:format] = v.to_sym }
+          opts.on('--format FORMAT', 'Output format (human, json, junit, html)') { |v| options[:format] = v.to_sym }
           opts.on('--all', 'Run every eval under the default evals/ directory') { options[:all] = true }
           opts.on('--evals-dir DIR', 'Run every eval under DIR') { |v| options[:evals_dir] = v }
           opts.on('--cache', 'Enable content-addressed response caching') { ENV['SKILL_BENCH_CACHE'] = '1' }

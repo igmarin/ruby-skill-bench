@@ -24,7 +24,7 @@ module SkillBench
               --skill    Skill to use (can be specified multiple times)
               --pack     Pack context for registry-based skill resolution
               --registry-manifest PATH  Path to registry.json manifest
-              --format   Output format: human, json, junit (default: human)
+              --format   Output format: human, json, junit, html (default: human)
 
             compare <skill-name> --variant-a SPEC --variant-b SPEC --eval PATH
               Compare the same skill across two pack variants
