@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'fileutils'
-require_relative '../rails/skill_templates'
 
 module SkillBench
   module Commands
@@ -107,6 +106,9 @@ module SkillBench
         file_name = RAILS_TEMPLATES[template]
         raise ArgumentError, "Invalid template: #{template}. Use one of: #{RAILS_TEMPLATES.keys.join(', ')}." unless file_name
 
+        # Lazily load the scaffold generator so a normal `skill-bench run` does
+        # not pull it (and its dependencies) in at boot.
+        require_relative '../rails/skill_templates'
         content = Rails::SkillTemplates.public_send(template.to_sym, name)
         File.write(File.join(path, file_name), content)
       end
