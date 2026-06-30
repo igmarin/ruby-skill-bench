@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'parallel'
 require_relative '../evaluation/runner'
 require_relative 'eval_resolver'
 require_relative 'skill_resolver_service'
@@ -61,13 +62,11 @@ module SkillBench
         provider = provider_result[:provider]
         config = provider_result[:config]
 
-        baseline_output = run_baseline_agent(evaluation, provider, config)
-        return agent_error_result(baseline_output, 'baseline', evaluation, provider) if baseline_output[:status] == :error
-
         skill_context = ContextLoaderService.call(skills)
         return empty_context_error_result(evaluation, provider) if skill_context.strip.empty?
 
-        context_output = run_context_agent(evaluation, skills, skill_context, provider, config)
+        baseline_output, context_output = run_agents_concurrently(evaluation, skills, skill_context, provider, config)
+        return agent_error_result(baseline_output, 'baseline', evaluation, provider) if baseline_output[:status] == :error
         return agent_error_result(context_output, 'context', evaluation, provider) if context_output[:status] == :error
 
         context = EvaluationContext.new(
@@ -109,6 +108,29 @@ module SkillBench
       def run_context_agent(evaluation, skills, skill_context, provider, config)
         context_prompt = PromptBuilderService.build_context(evaluation, skills, skill_context)
         AgentSpawnerService.call(evaluation, context_prompt, provider, config)
+      end
+
+      # Runs the baseline and context agents concurrently.
+      #
+      # The two runs are independent: each spawns its own `Dir.mktmpdir`
+      # sandbox and uses a per-call client, and neither reads the other's
+      # state. The work is I/O-bound (HTTP + subprocess), so threads release
+      # the GIL and the agent phase is bound by the slower run instead of the
+      # sum of both. The skill context is built once by the caller and passed
+      # in, so no skill-dependent work is duplicated or moved into the baseline.
+      #
+      # @param evaluation [SkillBench::Models::Eval] The eval being run
+      # @param skills [Array<SkillBench::Models::Skill>] Resolved skills
+      # @param skill_context [String] Combined skill context, built once pre-fork
+      # @param provider [Object] The resolved provider
+      # @param config [Hash, nil] Provider config
+      # @return [Array(Hash, Hash)] Baseline and context outputs, in that order
+      def run_agents_concurrently(evaluation, skills, skill_context, provider, config)
+        runs = [
+          -> { run_baseline_agent(evaluation, provider, config) },
+          -> { run_context_agent(evaluation, skills, skill_context, provider, config) }
+        ]
+        Parallel.map(runs, in_threads: runs.size, &:call)
       end
 
       def evaluate_and_record_trend(context)

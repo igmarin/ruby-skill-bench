@@ -348,6 +348,47 @@ module SkillBench
         assert_includes captured[:context], 'Agent result'
       end
 
+      def test_runs_baseline_and_context_with_distinct_outputs
+        write_openai_config
+        stub_trend_tracker
+
+        Agent::ReactAgent.stubs(:call).with { |params| baseline_prompt?(params[:system_prompt]) }.returns(
+          { success: true, response: { content: 'BASELINE ANSWER', iterations: [] } }
+        )
+        Agent::ReactAgent.stubs(:call).with { |params| !baseline_prompt?(params[:system_prompt]) }.returns(
+          { success: true, response: { content: 'CONTEXT ANSWER', iterations: [] } }
+        )
+        Execution::Sandbox.stubs(:capture_diff).returns('No code changes made.')
+
+        captured = { baseline: nil, context: nil }
+        SkillBench::Evaluation::Runner.stubs(:call).with do |params|
+          captured[:baseline] = params[:baseline_output]
+          captured[:context] = params[:context_output]
+          true
+        end.returns({
+                      success: true,
+                      response: {
+                        report: Struct.new(:verdict, :baseline_total, :context_total, :deltas,
+                                           keyword_init: true).new(
+                                             verdict: true, baseline_total: 30, context_total: 80, deltas: {}
+                                           )
+                      }
+                    })
+
+        result = RunnerService.call(
+          eval_name: 'test-eval',
+          skill_names: ['test-skill']
+        )
+
+        # Both runs must execute and stay correctly attributed; this fails if
+        # either run is dropped or both collapse onto the same prompt path.
+        assert result[:success]
+        assert_includes captured[:baseline], 'BASELINE ANSWER'
+        assert_includes captured[:context], 'CONTEXT ANSWER'
+        refute_includes captured[:baseline], 'CONTEXT ANSWER'
+        refute_includes captured[:context], 'BASELINE ANSWER'
+      end
+
       private
 
       def stub_react_agent_with_iterations
@@ -359,13 +400,22 @@ module SkillBench
           { step_number: 1, thought: 'Final', tools_used: [], observation_summary: '' }
         ]
 
-        Agent::ReactAgent.stubs(:call).returns(
+        # The baseline and context runs execute concurrently, so invocation
+        # order is non-deterministic. Key each stub on the system prompt
+        # (only the baseline prompt mentions reading the task) instead of
+        # relying on call order.
+        Agent::ReactAgent.stubs(:call).with { |params| baseline_prompt?(params[:system_prompt]) }.returns(
           { success: true, response: { content: 'Agent result', iterations: baseline_iterations } }
-        ).then.returns(
+        )
+        Agent::ReactAgent.stubs(:call).with { |params| !baseline_prompt?(params[:system_prompt]) }.returns(
           { success: true, response: { content: 'Agent result', iterations: context_iterations } }
         )
 
         Execution::Sandbox.stubs(:capture_diff).returns('+added line')
+      end
+
+      def baseline_prompt?(system_prompt)
+        system_prompt.to_s.include?('Your job is to read the task')
       end
 
       def stub_trend_tracker
