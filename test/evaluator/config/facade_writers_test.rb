@@ -50,6 +50,11 @@ module SkillBench
         Config.allowed_commands = commands
       end
 
+      def test_allow_host_execution_assignment_calls_store
+        @store.expects(:assign_allow_host_execution).with(true)
+        Config.allow_host_execution = true
+      end
+
       def test_llm_providers_config_assignment_calls_store
         config = { openai: { api_key: 'key' } }
         @store.expects(:replace_provider_config).with(config)

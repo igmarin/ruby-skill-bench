@@ -9,7 +9,12 @@ module SkillBench
   module Execution
     # Manages isolated sandbox environments for running agent evaluations.
     # Handles copying files, initializing git, and capturing diffs.
-    # Now supports Docker container isolation for secure command execution.
+    #
+    # NOTE: Container isolation is not yet shipped. No Docker build context is
+    # packaged, so `docker_available?` always returns false and `start_container`
+    # is never reached — `container_id` stays nil and commands run on the host
+    # (gated by the allowlist and `Config.allow_host_execution`). The container
+    # code below is the planned isolation model, retained but currently inactive.
     class Sandbox
       attr_reader :path, :container_id
 

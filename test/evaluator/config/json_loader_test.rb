@@ -11,6 +11,7 @@ module SkillBench
           current_llm_provider: 'gemini',
           max_execution_time: 45,
           allowed_commands: ['ruby'],
+          allow_host_execution: true,
           providers: { gemini: { location: 'us-east1' } }
         ) do |path|
           result = JsonLoader.call(path)
@@ -20,6 +21,7 @@ module SkillBench
           assert_equal 'gemini', config[:current_llm_provider]
           assert_equal 45, config[:max_execution_time]
           assert_equal ['ruby'], config[:allowed_commands]
+          assert config[:allow_host_execution]
           assert_equal({ gemini: { location: 'us-east1' } }, config[:providers])
         end
       end

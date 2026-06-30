@@ -29,7 +29,7 @@ module SkillBench
         data = JSON.parse(File.read(@path), symbolize_names: true)
         return warn_invalid_config unless data.is_a?(Hash)
 
-        success_data = data.slice(:current_llm_provider, :max_execution_time, :allowed_commands, :skill_sources).compact
+        success_data = data.slice(:current_llm_provider, :max_execution_time, :allowed_commands, :allow_host_execution, :skill_sources).compact
         success_data[:current_llm_provider] ||= data[:provider] if data.key?(:provider)
         success(success_data.merge(providers: normalized_providers(data[:providers])))
       rescue JSON::ParserError => e

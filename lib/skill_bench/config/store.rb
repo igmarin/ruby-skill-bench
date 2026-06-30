@@ -19,6 +19,12 @@ module SkillBench
       # @return [Array<String>, nil] allowed commands
       attr_accessor :allowed_commands
 
+      # Returns whether running commands directly on the host is permitted
+      # when no real sandbox isolation (container) is active.
+      #
+      # @return [Boolean, nil] true when host execution is explicitly allowed
+      attr_reader :allow_host_execution
+
       # Returns provider configuration.
       #
       # @return [Hash, nil] provider configuration by provider name
@@ -107,6 +113,14 @@ module SkillBench
       # @return [Array<String>, nil] assigned allowed commands
       def assign_allowed_commands(value)
         @allowed_commands = value
+      end
+
+      # Sets whether host command execution is permitted without isolation.
+      #
+      # @param value [Boolean] true to permit un-isolated host execution
+      # @return [Boolean] assigned host execution flag
+      def assign_allow_host_execution(value)
+        @allow_host_execution = value
       end
 
       # Sets provider configuration.

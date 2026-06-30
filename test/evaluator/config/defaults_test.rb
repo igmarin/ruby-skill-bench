@@ -55,6 +55,13 @@ module SkillBench
 
         assert_nil config[:allowed_commands]
       end
+
+      def test_default_allow_host_execution_is_false
+        config = Defaults.config
+
+        assert_includes config, :allow_host_execution
+        refute config[:allow_host_execution]
+      end
     end
   end
 end
