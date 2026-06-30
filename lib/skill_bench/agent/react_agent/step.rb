@@ -12,7 +12,8 @@ module SkillBench
         #
         # @param messages [Array<Hash>] The conversation history.
         # @param config [Hash] Configuration for this step (client params, system prompt, working dir).
-        # @return [Hash] Step outcome containing :continue (boolean), :result (hash, if finished), and :messages.
+        # @return [Hash] Step outcome containing :continue (boolean), :result (hash, if finished),
+        #   :usage (token usage for this step), and :messages.
         def self.call(messages, config)
           messages = messages.dup
           client_result = Client.call(
@@ -21,12 +22,14 @@ module SkillBench
             tools: Tools.definitions,
             **config[:client_params]
           )
+          usage = client_result[:usage] || {}
 
           unless client_result[:success]
             error_msg = client_result.dig(:response, :error, :message) || 'Unknown error'
             return {
               continue: false,
               result: client_result,
+              usage: usage,
               iteration: build_iteration(thought: '', tools_used: [], observation_summary: error_msg)
             }
           end
@@ -36,6 +39,7 @@ module SkillBench
             return {
               continue: false,
               result: { success: false, response: { error: { message: 'Empty response from LLM' } } },
+              usage: usage,
               iteration: build_iteration(thought: '', tools_used: [], observation_summary: 'Empty response from LLM')
             }
           end
@@ -51,6 +55,7 @@ module SkillBench
             return {
               continue: false,
               result: { success: true, response: { content: content } },
+              usage: usage,
               iteration: build_iteration(thought: thought, tools_used: [], observation_summary: '')
             }
           end
@@ -69,6 +74,7 @@ module SkillBench
           {
             continue: true,
             messages: messages,
+            usage: usage,
             iteration: build_iteration(thought: thought, tools_used: tools_used, observation_summary: observation_summary)
           }
         end

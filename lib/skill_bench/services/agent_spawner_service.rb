@@ -7,6 +7,9 @@ module SkillBench
   module Services
     # Spawns and executes LLM agents for evaluation.
     class AgentSpawnerService
+      # Zeroed token usage used when a run produces no usage data (e.g. mock, rescue).
+      EMPTY_USAGE = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }.freeze
+
       # Spawns the LLM agent with the given system prompt.
       #
       # @param evaluation [SkillBench::Models::Eval] The eval being run
@@ -33,7 +36,7 @@ module SkillBench
       #
       # @return [Hash] Agent response with result, status, runtime, usage, raw_response, iterations
       def call
-        return { result: 'mock result', status: :success, iterations: [] } if @provider.name == 'mock'
+        return { result: 'mock result', status: :success, iterations: [], usage: EMPTY_USAGE } if @provider.name == 'mock'
 
         client_params = build_client_params
         max_iterations = @config&.[](:max_iterations) || @config&.[]('max_iterations') || 25
@@ -63,6 +66,7 @@ module SkillBench
           final_answer = agent_result.dig(:response, :content) || ''
           diff = Execution::Sandbox.capture_diff(sandbox.path)
           iterations = agent_result.dig(:response, :iterations) || []
+          usage = agent_result.dig(:response, :usage) || EMPTY_USAGE
 
           output = [final_answer, diff].reject(&:empty?).join("\n\n")
 
@@ -70,7 +74,7 @@ module SkillBench
             result: output,
             status: status,
             runtime: @provider.runtime,
-            usage: {},
+            usage: usage,
             raw_response: agent_result,
             iterations: iterations
           }
@@ -80,7 +84,7 @@ module SkillBench
           result: "Error: #{e.message}",
           status: :error,
           runtime: @provider.runtime,
-          usage: {},
+          usage: EMPTY_USAGE,
           raw_response: { error: e.message, backtrace: e.backtrace },
           iterations: []
         }

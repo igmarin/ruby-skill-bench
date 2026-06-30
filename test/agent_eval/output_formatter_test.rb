@@ -125,6 +125,35 @@ module SkillBench
       assert_includes output, 'VERDICT: FAIL'
     end
 
+    def test_format_human_renders_tokens_and_cost
+      report = build_delta_report(verdict: true)
+      result = {
+        success: true,
+        eval_name: 'test-eval',
+        response: { report: report },
+        tokens: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 },
+        cost: 0.0125
+      }
+      output = OutputFormatter.format(result, format: :human)
+
+      assert_includes output, 'Tokens: 150'
+      assert_includes output, 'Est. Cost: $0.0125'
+    end
+
+    def test_format_human_renders_dash_cost_when_unknown
+      report = build_delta_report(verdict: true)
+      result = {
+        success: true,
+        response: { report: report },
+        tokens: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+        cost: nil
+      }
+      output = OutputFormatter.format(result, format: :human)
+
+      assert_includes output, 'Tokens: 0'
+      assert_includes output, 'Est. Cost: —'
+    end
+
     def test_exit_code_returns_0_for_delta_report_pass
       result = { success: true, response: { report: build_delta_report(verdict: true) } }
 
