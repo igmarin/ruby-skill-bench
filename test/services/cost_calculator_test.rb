@@ -31,6 +31,20 @@ module SkillBench
         assert_in_delta 0.003, cost, 1e-6
       end
 
+      def test_prices_claude_4_default_models
+        usage = { prompt_tokens: 1000, completion_tokens: 1000, total_tokens: 2000 }
+
+        # Defaults the codebase actually passes in (config/defaults.rb,
+        # clients/provider_schemas.rb) must resolve, not fall through to nil.
+        sonnet_cost = CostCalculator.call(usage: usage, model: 'claude-sonnet-4-20250514')
+        opus_cost = CostCalculator.call(usage: usage, model: 'claude-opus-4-7')
+
+        # claude-sonnet-4: 1K * $0.003 + 1K * $0.015 = 0.018
+        assert_in_delta 0.018, sonnet_cost, 1e-6
+        # claude-opus-4: 1K * $0.015 + 1K * $0.075 = 0.090
+        assert_in_delta 0.090, opus_cost, 1e-6
+      end
+
       def test_prefers_longest_matching_prefix
         usage = { prompt_tokens: 1000, completion_tokens: 0, total_tokens: 1000 }
 
