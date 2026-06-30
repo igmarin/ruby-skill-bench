@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require_relative '../dimension'
 require_relative 'template_registry/category_data'
 
 module SkillBench
@@ -20,6 +21,24 @@ module SkillBench
     class TemplateRegistry
       TEMPLATE_TYPES = %i[task_md criteria_json skill_md].freeze
       CATEGORIES = REGISTRY.keys.freeze
+
+      # Score weight per core scoring dimension. Keyed by the canonical
+      # +SkillBench::DEFAULT_DIMENSIONS+ names so scaffolded criteria can never
+      # drift from the names the runtime loader requires; values sum to 100.
+      CRITERIA_DIMENSION_SCORES = {
+        'correctness' => 30,
+        'skill_adherence' => 25,
+        'code_quality' => 20,
+        'test_coverage' => 15,
+        'documentation' => 10
+      }.freeze
+
+      # Canonical dimension descriptions keyed by name, sourced from the runtime defaults.
+      CORE_DIMENSION_DESCRIPTIONS = SkillBench::DEFAULT_DIMENSIONS.to_h { |dimension| [dimension.name, dimension.description] }.freeze
+
+      # Top-level thresholds emitted with scaffolded criteria.
+      CRITERIA_PASS_THRESHOLD = 70
+      CRITERIA_MINIMUM_DELTA = 10
 
       # @param template_type [Symbol, String] Template type (:task_md, :criteria_json, :skill_md)
       # @param category [Symbol, String] Category (:crud, :api, :background_job, etc.)
@@ -105,19 +124,34 @@ module SkillBench
         MARKDOWN
       end
 
+      # Builds runtime-loadable scoring criteria for the category.
+      #
+      # Emits the five core dimensions required by {SkillBench::Criteria}
+      # (+correctness+, +skill_adherence+, +code_quality+, +test_coverage+,
+      # +documentation+) with integer +max_score+ values summing to 100, plus
+      # the top-level +pass_threshold+ and +minimum_delta+ the loader expects.
+      # Category-specific flavor lives only in the dimension descriptions.
+      #
+      # @return [String] Pretty-printed criteria JSON.
       def build_criteria_json
         JSON.pretty_generate(
           category: category.to_s,
-          dimensions: [
-            { name: 'correctness', weight: 30, pass_threshold: 70 },
-            { name: 'adherence',   weight: 25, pass_threshold: 60 },
-            { name: 'quality',     weight: 20, pass_threshold: 60 },
-            { name: 'tests',       weight: 15, pass_threshold: 80 },
-            { name: 'docs',        weight: 10, pass_threshold: 50 }
-          ],
-          minimum_delta: 5,
-          category_specific: category_data.criteria
+          dimensions: criteria_dimensions,
+          pass_threshold: CRITERIA_PASS_THRESHOLD,
+          minimum_delta: CRITERIA_MINIMUM_DELTA
         )
+      end
+
+      # @return [Array<Hash>] Core dimensions with integer +max_score+ summing to 100.
+      def criteria_dimensions
+        focus = category_data.criteria[:focus]
+        CRITERIA_DIMENSION_SCORES.map do |name, max_score|
+          {
+            name: name,
+            max_score: max_score,
+            description: "#{CORE_DIMENSION_DESCRIPTIONS.fetch(name)} (#{category} focus: #{focus})"
+          }
+        end
       end
 
       def build_skill_md
