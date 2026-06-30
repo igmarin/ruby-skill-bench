@@ -44,6 +44,7 @@ module SkillBench
           opts.on('--variant-b SPEC', 'Second variant (e.g., "pack:hanami" or "/path/to/skill")') { |v| options[:variant_b] = v }
           opts.on('--eval PATH', 'Path to the eval directory') { |v| options[:eval] = v }
           opts.on('--format FORMAT', 'Output format (human, json)') { |v| options[:format] = v.to_sym }
+          opts.on('--cache', 'Enable content-addressed response caching') { ENV['SKILL_BENCH_CACHE'] = '1' }
           opts.on('-h', '--help', 'Prints this help') do
             puts opts
             raise SkillBench::HelpRequested

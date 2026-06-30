@@ -87,6 +87,7 @@ module SkillBench
           opts.on('--format FORMAT', 'Output format (human, json, junit)') { |v| options[:format] = v.to_sym }
           opts.on('--all', 'Run every eval under the default evals/ directory') { options[:all] = true }
           opts.on('--evals-dir DIR', 'Run every eval under DIR') { |v| options[:evals_dir] = v }
+          opts.on('--cache', 'Enable content-addressed response caching') { ENV['SKILL_BENCH_CACHE'] = '1' }
           opts.on('-h', '--help', 'Prints this help') do
             puts opts
             raise SkillBench::HelpRequested
