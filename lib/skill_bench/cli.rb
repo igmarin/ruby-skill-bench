@@ -7,6 +7,7 @@ require_relative 'cli/skill_command'
 require_relative 'cli/eval_command'
 require_relative 'cli/help_printer'
 require_relative 'cli/result_printer'
+require_relative 'cli/batch_result_printer'
 
 module SkillBench
   # Raised when -h/--help is passed to abort OptionParser and return exit code 0.

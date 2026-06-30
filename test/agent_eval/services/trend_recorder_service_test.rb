@@ -108,6 +108,27 @@ module SkillBench
         assert_equal 2, history.size
       end
 
+      # Concurrent records (as in a batch run) must serialize their
+      # read-modify-write of the shared trend file: every call succeeds and no
+      # appended entry is lost to a temp-file rename race.
+      def test_concurrent_records_do_not_lose_entries
+        original_dir = Dir.pwd
+        Dir.chdir(@tmp_dir)
+
+        threads = Array.new(8) do |i|
+          Thread.new { TrendRecorderService.call(report_result, "eval-#{i}", @skill_names) }
+        end
+        results = threads.map(&:value)
+
+        assert(results.all? { |result| result[:success] })
+
+        history = JSON.parse(File.read(TrendTracker::DEFAULT_HISTORY_FILE), symbolize_names: true)
+
+        assert_equal 8, history.size
+      ensure
+        Dir.chdir(original_dir)
+      end
+
       private
 
       def report_result(baseline_total: 30, context_total: 80)

@@ -76,7 +76,48 @@ module SkillBench
         assert_equal 0, exit_code
       end
 
+      def test_all_flag_dispatches_to_batch_runner
+        SkillBench::Services::BatchRunnerService.expects(:call).returns(batch_aggregate(failed: 0))
+
+        exit_code = RunCommand.call(['--all', '--skill=test-skill'])
+
+        assert_equal 0, exit_code
+      end
+
+      def test_evals_dir_flag_dispatches_to_batch_runner_with_dir
+        SkillBench::Services::BatchRunnerService.expects(:call).with do |kw|
+          kw[:evals_dir] == 'custom-evals'
+        end.returns(batch_aggregate(failed: 0))
+
+        exit_code = RunCommand.call(['--evals-dir=custom-evals', '--skill=test-skill'])
+
+        assert_equal 0, exit_code
+      end
+
+      def test_batch_exit_code_nonzero_when_any_eval_fails
+        SkillBench::Services::BatchRunnerService.stubs(:call).returns(batch_aggregate(failed: 1))
+
+        exit_code = RunCommand.call(['--all', '--skill=test-skill'])
+
+        assert_equal 1, exit_code
+      end
+
+      def test_batch_without_skill_returns_error
+        SkillBench::Services::BatchRunnerService.expects(:call).never
+
+        exit_code = RunCommand.call(['--all'])
+
+        assert_equal 1, exit_code
+      end
+
       private
+
+      def batch_aggregate(failed:)
+        results = [{ success: true, eval_name: 'evals/eval-a', response: { report: build_report_struct } }]
+        results << { success: false, eval_name: 'evals/eval-b', response: { error: { message: 'boom' } } } if failed.positive?
+        passed = results.size - failed
+        { results: results, summary: { total: results.size, passed: passed, failed: failed } }
+      end
 
       def build_report_struct
         Struct.new(:verdict, :baseline_total, :context_total, :deltas, keyword_init: true).new(
