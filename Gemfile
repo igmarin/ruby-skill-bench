@@ -6,6 +6,7 @@ source 'https://rubygems.org'
 gemspec
 
 group :development, :test do
+  gem 'bundler-audit', '~> 0.9', require: false
   gem 'concurrent-ruby', '>= 1.3.5'
   gem 'minitest', '~> 5.0'
   gem 'mocha', '~> 2.1'

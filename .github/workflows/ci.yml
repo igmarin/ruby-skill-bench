@@ -22,6 +22,9 @@ jobs:
           ruby-version: ${{ matrix.ruby-version }}
           bundler-cache: true
 
+      - name: Run bundle-audit
+        run: bundle exec bundle-audit check --update
+
       - name: Run rubocop
         run: bundle exec rubocop
 
