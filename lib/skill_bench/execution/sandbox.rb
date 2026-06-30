@@ -18,6 +18,32 @@ module SkillBench
     class Sandbox
       attr_reader :path, :container_id
 
+      # Global `git` options applied to every host-side invocation. They strip
+      # the repository's and user's ability to launch external programs during
+      # routine git operations on untrusted source:
+      #   - core.attributesFile=/dev/null  no user-level .gitattributes drivers
+      #   - core.fsmonitor=false           no fsmonitor hook program
+      #   - core.hooksPath=/dev/null       no git hooks (pre-commit, etc.)
+      #   - core.symlinks=false            symlinks treated as plain files
+      # Combined with not copying the source `.git`, this neutralizes the
+      # `.gitattributes`/config diff & filter driver code-execution vector.
+      GIT_HARDENING = [
+        '-c', 'core.attributesFile=/dev/null',
+        '-c', 'core.fsmonitor=false',
+        '-c', 'core.hooksPath=/dev/null',
+        '-c', 'core.symlinks=false'
+      ].freeze
+
+      # Builds a hardened `git` argv: the binary, the hardening flags, then the
+      # given subcommand and arguments. Single source of truth so every git
+      # call in this file is invoked with the same protections.
+      #
+      # @param args [Array<String>] git subcommand and its arguments.
+      # @return [Array<String>] full argv beginning with `git` and the flags.
+      def self.git_command(*args)
+        ['git', *GIT_HARDENING, *args]
+      end
+
       # Runs a block of code within a temporary, isolated sandbox directory.
       # The sandbox is initialized as a git repository and optionally wrapped in a Docker container.
       #
@@ -71,9 +97,9 @@ module SkillBench
 
         return 'No code changes made.' unless File.directory?(File.join(sandbox_path, '.git'))
 
-        raise "Failed to stage changes in #{sandbox_path}" unless system('git', 'add', '.', chdir: sandbox_path)
+        raise "Failed to stage changes in #{sandbox_path}" unless system(*git_command('add', '.'), chdir: sandbox_path)
 
-        diff, status = Open3.capture2('git', 'diff', '--cached', chdir: sandbox_path)
+        diff, status = Open3.capture2(*git_command('diff', '--cached'), chdir: sandbox_path)
         raise "Failed to capture diff in #{sandbox_path}" unless status.success?
 
         diff.strip.empty? ? 'No code changes made.' : diff
@@ -81,21 +107,28 @@ module SkillBench
 
       private
 
+      # Initializes a fresh git repository in the sandbox and commits the
+      # copied source as the baseline. All git calls are hardened so a
+      # malicious source cannot trigger external programs (see GIT_HARDENING).
+      #
+      # @raise [RuntimeError] when any git command fails.
       def setup_git
-        cmds = [
-          ['git', 'init', '--quiet'],
-          ['git', 'config', 'user.email', 'evaluator@tessl.io'],
-          ['git', 'config', 'user.name', 'Evaluator Sandbox'],
-          ['git', 'add', '.'],
-          ['git', 'commit', '--quiet', '-m', 'Initial commit']
+        subcommands = [
+          ['init', '--quiet'],
+          ['config', 'user.email', 'evaluator@tessl.io'],
+          ['config', 'user.name', 'Evaluator Sandbox'],
+          ['add', '.'],
+          ['commit', '--quiet', '-m', 'Initial commit']
         ]
 
-        cmds.each do |argv|
+        subcommands.each do |args|
+          argv = self.class.git_command(*args)
           raise "Git command failed: #{argv.join(' ')}" unless system(*argv, chdir: @path)
         end
       end
 
-      # Copies source files into the sandbox, including dotfiles.
+      # Copies source files into the sandbox, including dotfiles, but never the
+      # source's own `.git` directory (the sandbox creates its own fresh repo).
       # Validates symlinks to prevent path traversal.
       #
       # @param sandbox_dir [String] The destination sandbox directory.
@@ -105,9 +138,18 @@ module SkillBench
         copy_tree(@source_dir, sandbox_dir, source_real)
       end
 
+      # Recursively copies entries from +src_dir+ into +dst_dir+. Any entry
+      # named `.git` is skipped so a pre-existing repository (config diff/filter
+      # drivers, hooks) from untrusted source never reaches host git operations.
+      #
+      # @param src_dir [String] The directory whose entries are copied.
+      # @param dst_dir [String] The destination directory.
+      # @param source_real [String] Real path of the copy root for symlink containment.
+      # @raise [RuntimeError] when a symlink points outside the source directory.
       def copy_tree(src_dir, dst_dir, source_real)
         Dir.entries(src_dir).each do |entry|
           next if %w[. ..].include?(entry)
+          next if entry == '.git'
 
           src = File.join(src_dir, entry)
           dst = File.join(dst_dir, entry)
