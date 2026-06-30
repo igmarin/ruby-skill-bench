@@ -45,6 +45,7 @@ module SkillBench
         OptionParser.new do |opts|
           opts.banner = 'Usage: skill-bench init --<provider> [options]'
           register_provider_options(opts, options)
+          opts.on('--mock', 'Generate offline mock config (no API key required)') { options[:provider] = :mock }
           opts.on('--force', 'Overwrite existing config file') { options[:force] = true }
           opts.on('-h', '--help', 'Prints this help') do
             puts opts
@@ -60,7 +61,7 @@ module SkillBench
       end
 
       def error_missing_provider
-        providers = SkillBench::Clients::ProviderSchemas.names.map { |provider_name| "--#{provider_name}" }.join(', ')
+        providers = (SkillBench::Clients::ProviderSchemas.names.map { |provider_name| "--#{provider_name}" } + ['--mock']).join(', ')
         warn "Error: provider is required. Use one of: #{providers}"
         1
       end

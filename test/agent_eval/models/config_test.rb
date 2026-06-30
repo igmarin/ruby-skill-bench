@@ -71,6 +71,36 @@ module SkillBench
 
         assert_equal 30, config.max_execution_time
       end
+
+      def test_mock_predicate_true_for_mock_provider
+        assert_predicate Config.new({ provider: 'mock' }), :mock?
+      end
+
+      def test_mock_predicate_false_for_other_or_missing_provider
+        refute_predicate Config.new({ provider: 'openai' }), :mock?
+        refute_predicate Config.new({}), :mock?
+      end
+
+      def test_loaded_memoizes_and_reads_file_once
+        Config.instance_variable_set(:@loaded, nil)
+        File.write('skill-bench.json', JSON.generate({ provider: 'mock', max_execution_time: 30, config: {} }))
+        loads = 0
+        stub_config = Config.new({ provider: 'mock', max_execution_time: 30, config: {} })
+
+        Config.stub(:load, lambda { |*_args|
+          loads += 1
+          stub_config
+        }) do
+          first = Config.loaded
+          second = Config.loaded
+
+          assert_same first, second
+        end
+
+        assert_equal 1, loads
+      ensure
+        Config.instance_variable_set(:@loaded, nil)
+      end
     end
   end
 end

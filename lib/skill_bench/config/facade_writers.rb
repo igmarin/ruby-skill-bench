@@ -110,6 +110,15 @@ module SkillBench
         store.assign_allow_host_execution(value)
       end
 
+      # Sets the optional per-command argument constraints.
+      #
+      # @param value [Hash, nil] base command => disallowed argument
+      #   substrings/flags
+      # @return [Hash, nil] assigned constraints
+      def command_argument_constraints=(value)
+        store.assign_command_argument_constraints(value)
+      end
+
       # Replaces provider configuration.
       #
       # @param value [Hash] provider configuration

@@ -30,7 +30,7 @@ See the [Ecosystem Overview](https://github.com/igmarin/agent-mcp-runtime/blob/m
 - **Isolated Git Sandboxes**: Every run operates in a temporary repo. Clean diffs, zero side-effects, 100% reproducibility.
 - **Blind Judging with Dimensions**: LLM judge scores baseline and context independently across 5 canonical dimensions (Correctness, Skill Adherence, Code Quality, Test Coverage, Documentation). Eval authors configure weights and thresholds via `criteria.json`.
 - **Sophisticated ReAct Loop**: Employs a robust `Thought → Tool → Observation` loop to handle complex, multi-step engineering tasks.
-- **Multi-Provider Ecosystem**: Native support for **OpenAI**, **Anthropic**, **Google Gemini**, **Azure OpenAI**, **Ollama**, **Groq**, **DeepSeek**, and **OpenCode**.
+- **Multi-Provider Ecosystem**: Native support for **OpenAI**, **Anthropic**, **Google Gemini**, **Azure OpenAI**, **Ollama**, **Groq**, **DeepSeek**, **Mistral**, and **OpenCode**.
 - **Standardized Intelligence**: Consistent reporting format regardless of the underlying LLM provider.
 
 ---
@@ -64,11 +64,14 @@ CLI / API → RunnerService → Sandbox + ReAct Agent → LLM Client Layer → P
 | **Ollama** | — | `:ollama` |
 | **Groq** | `SKILL_BENCH_GROQ_API_KEY` | `:groq` |
 | **DeepSeek** | `SKILL_BENCH_DEEPSEEK_API_KEY` | `:deepseek` |
+| **Mistral** | `SKILL_BENCH_MISTRAL_API_KEY` | `:mistral` |
 | **OpenCode** | `SKILL_BENCH_OPENCODE_API_KEY`, `SKILL_BENCH_OPENCODE_BASE_URL` | `:opencode` |
 
 > **Note:** Environment variables are loaded automatically. You can also configure provider settings in `skill-bench.json` (created by `skill-bench init`).
 >
 > **OpenCode requires a custom `base_url`:** OpenCode does not host a public LLM API. You must provide your own OpenAI-compatible endpoint (e.g. a LiteLLM proxy, self-hosted vLLM, or company gateway) via the `base_url` config key. Without it, the provider will fail with "Base URL not set for Opencode".
+>
+> **Mistral** uses Mistral's OpenAI-compatible chat completions API (default model `mistral-large-latest`). Set `SKILL_BENCH_MISTRAL_API_KEY` and scaffold it with `skill-bench init --mistral`.
 
 ### Command Allowlist
 
@@ -140,7 +143,9 @@ skill-bench init --openai
 }
 ```
 
-**Available providers:** `--openai`, `--anthropic`, `--gemini`, `--ollama`, `--azure`, `--groq`, `--deepseek`, `--opencode`
+**Available providers:** `--openai`, `--anthropic`, `--gemini`, `--ollama`, `--azure`, `--groq`, `--deepseek`, `--mistral`, `--opencode`
+
+**Zero-config offline path:** `skill-bench init --mock` scaffolds a minimal offline config that needs no API key and no network — `{"provider":"mock","max_execution_time":30}`. Use it to try the full flow (and run the bundled examples) before wiring up a real provider.
 
 Use `--force` to overwrite an existing config.
 
@@ -353,11 +358,54 @@ skill-bench run my-first-eval --skill=skill-a --skill=skill-b
 
 Both skill contexts are concatenated and sent to the agent. The judge evaluates whether the combined context improves results.
 
-**Output Formats:**
+**Output Formats:** `--format human` (default), `json`, `junit`, or `html`.
 
-- Human-readable (default)
-- JSON: `--format json`
-- JUnit XML: `--format junit`
+- Human-readable (default) — full delta table, iteration timeline, and a `Tokens: N | Est. Cost: $X.XXXX` line.
+- JSON: `--format json` — machine-readable, including top-level `tokens` and `cost` fields.
+- JUnit XML: `--format junit` — for CI test reporting.
+- HTML: `--format html` — a self-contained, shareable report (styles inlined, no external assets) with the delta table and iteration timeline. Redirect it to a file:
+
+  ```bash
+  skill-bench run my-first-eval --skill=my-service --format html > report.html
+  ```
+
+---
+
+## Pre-flight Checks: `validate` / `doctor`
+
+Before spending tokens on a run, sanity-check your setup. `skill-bench validate` (aliased as `doctor`) runs read-only pre-flight checks — it never runs an eval and never makes a network call:
+
+```bash
+skill-bench validate
+# or, identically:
+skill-bench doctor
+```
+
+It runs three checks and prints a `PASS` / `FAIL` / `SKIP` line for each:
+
+1. **criteria** — validates the criteria JSON (default `criteria.json`, override with `--criteria PATH`). Skipped if the default file is absent.
+2. **config** — schema-checks `skill-bench.json` (default, override with `--config PATH`): `provider` is required and must be a known provider, `max_execution_time` must be a positive integer, and `config` (when present) must be an object.
+3. **provider key** — reports whether the configured provider's API key is present (the `mock` provider needs none).
+
+A passing report exits `0`:
+
+```text
+skill-bench validate
+
+[PASS] criteria      criteria.json is valid
+[PASS] config        skill-bench.json matches the expected shape
+[PASS] provider key  openai credentials present
+
+All checks passed.
+```
+
+A failure exits non-zero and names what is wrong:
+
+```text
+[FAIL] provider key  openai is missing: api_key
+
+1 check(s) failed.
+```
 
 ---
 
@@ -429,6 +477,22 @@ skill-bench compare code-review \
 The `--variant` spec supports two forms:
 - `pack:<name>` — resolve via registry manifest
 - `/absolute/path` or `relative/path` — use a direct path
+
+### Response Caching (opt-in, `--cache`)
+
+LLM responses can be cached so identical requests reuse a previous result instead of calling the provider again. Caching is **off by default**. Enable it per run with `--cache`, or set the `SKILL_BENCH_CACHE` environment variable to a truthy value (`1`, `true`, `yes`, or `on`):
+
+```bash
+# Per-run flag
+skill-bench run my-first-eval --skill=my-service --cache
+
+# Or via the environment
+SKILL_BENCH_CACHE=1 skill-bench run my-first-eval --skill=my-service
+```
+
+The cache is in-memory (process-lifetime) and content-addressed: the key is a SHA-256 digest of the provider, model, system prompt, messages, tools, and temperature, so only truly identical requests share an entry. The `mock` and null providers are never cached.
+
+This pays off most with `compare`, which runs the skill-less baseline twice with identical inputs — with caching enabled, the repeated baseline reuses the cached response instead of making a second call.
 
 ---
 
@@ -734,6 +798,7 @@ These 5 dimensions are **mandatory** in every `criteria.json`. You can add custo
   Eval: my-first-eval
   Skill: my-service
   Provider: openai
+  Tokens: 18432  |  Est. Cost: $0.0934
 ═══════════════════════════════════════════════════════
 
   === BASELINE ITERATIONS ===
@@ -781,6 +846,7 @@ These 5 dimensions are **mandatory** in every `criteria.json`. You can add custo
 - **TOTAL:** Sum of all dimension scores. Max possible is 100.
 - **TREND:** Comparison against the previous run of the same eval + skill (from `.skill-bench-trends.json`). Shows whether scores are improving over time.
 - **VERDICT:** `PASS` only if `CONTEXT >= pass_threshold` AND `DELTA >= minimum_delta`.
+- **Tokens / Est. Cost:** The header shows total tokens used across the run and an estimated USD cost as `Tokens: N | Est. Cost: $X.XXXX`. The cost is approximate — it comes from a built-in per-model price table (`Services::CostCalculator`) and shows `—` when the model isn't in that table. JSON output (`--format json`) exposes the same data as top-level `tokens` and `cost` fields.
 
 **Iteration timeline:**
 
@@ -902,6 +968,10 @@ Ruby Skill Bench is designed with security as a primary concern. The system exec
 - **Shell Tokenization:** Commands are tokenized before execution to prevent shell injection
 - **Fail-Closed Host Execution:** Container isolation is not yet active, so commands run on the host inside a temporary sandbox directory. To match this reality, `run_command` refuses to execute unless `allow_host_execution: true` is set; it is **disabled by default**.
 
+> **The allowlist is the only real authorization control — and it only checks the base command.** `run_command` authorizes by the first token of the command (`rake`, `find`, `git`, …); it does **not** inspect arguments. Shell tokenization stops metacharacter injection, but it does **not** sandbox what an allowlisted binary can do. Because many common tools are general-purpose execution wrappers, **allowlisting any one of them is equivalent to granting arbitrary host code execution** — for example `rake -e '...'`, `rspec -e`, `make` (arbitrary recipes), `find . -exec ...`, or `git` (hooks, `-c core.fsmonitor=...`, `! ...` aliases). Combined with the fail-closed model above (`run_command` refuses to run on the host unless `allow_host_execution` is explicitly enabled — see `HOST_EXECUTION_REFUSED` in `run_command.rb`), the practical guidance is: **keep `allowed_commands` as minimal as possible — empty for untrusted skills** — and treat every entry as if you were handing the skill a shell.
+>
+> An **optional, default-off** `command_argument_constraints` setting can refuse commands whose arguments contain configured substrings/flags (for example blocking `-e` or `-exec`). It is a defense-in-depth speed bump, **not** a sandbox, and is unset by default; the allowlist remains the control that matters.
+
 #### Docker Security Hardening (Planned — Not Yet Active)
 
 > **Status:** The container isolation model described below is **planned, not shipped**. No Docker build context is packaged, so containers are never launched today — `run_command` runs on the host gated by the allowlist and `allow_host_execution`. The settings below document the intended hardened model for when container isolation lands.
@@ -1020,15 +1090,62 @@ If you encounter issues not covered here:
 
 ## CI/CD Integration
 
-GitHub Actions workflow included (`.github/workflows/ci.yml`):
+### Batch Runs
 
-- Runs on push and pull requests
-- Tests against Ruby 3.3 and 3.4
-- Executes rubocop, reek, and minitest
-- Outputs JUnit XML for test reporting
+Run every eval at once instead of one at a time:
 
 ```bash
-# Run locally with CI output
+# Every eval under the default evals/ directory
+skill-bench run --all --skill=my-service
+
+# Or point at a specific directory
+skill-bench run --evals-dir path/to/evals --skill=my-service
+```
+
+A batch run exits `0` only when **every** eval passes and non-zero if any fail, so the process exit code is itself a CI gate. Two formats are built for batch consumption:
+
+- `--summary` emits an aggregate JSON gate — `passed` / `failed` / `total` counts, summed `tokens` and `cost`, and the `worst_delta` eval (the smallest context-minus-baseline delta in the batch). Archive it as a single machine-readable artifact:
+
+  ```bash
+  skill-bench run --all --skill=my-service --summary
+  ```
+
+- `--format junit` aggregates the batch into one JUnit document with **one `<testcase>` per eval** (a `<failure>` child for each failing eval), so test reporters show per-eval results:
+
+  ```bash
+  skill-bench run --all --skill=my-service --format junit > junit.xml
+  ```
+
+### GitHub Action
+
+Downstream repos can gate a skill change on every push or PR with the bundled composite action. Add a step that references `igmarin/ruby-skill-bench@v1`:
+
+```yaml
+# .github/workflows/skill-bench.yml
+name: skill-bench
+on: [pull_request]
+
+jobs:
+  skill-bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: igmarin/ruby-skill-bench@v1
+        with:
+          evals-dir: evals          # directory scanned for evals (default: evals)
+          skill: skills/my-service  # skill applied to every eval (default: "")
+          format: junit             # human | json | junit | html (default: junit)
+          ruby-version: "3.3"       # Ruby for ruby/setup-ruby (default: 3.3)
+          args: --summary           # extra flags appended verbatim (e.g. --summary, --pack NAME)
+```
+
+The action installs the gem and runs `skill-bench run --all --evals-dir <evals-dir> --format <format>` (adding `--skill` when set and appending `args` verbatim). The run step's exit code is the gate. For a full copy-paste workflow template, see [`examples/ci/`](examples/ci/).
+
+> The gem's own repository CI (`.github/workflows/ci.yml`) runs the test suite — rubocop, reek, and minitest against Ruby 3.3 and 3.4, on push and pull requests — and is separate from the reusable action above.
+
+To preview the machine-readable output locally:
+
+```bash
 skill-bench run my-eval --skill=my-skill --format json
 ```
 

@@ -75,11 +75,39 @@ module SkillBench
         return 'Error: No allowed commands configured. Set allowed_commands in skill-bench.json or use --mode mock.' if allowed.nil?
         return "Error: Command '#{base_cmd}' is not permitted." unless allowed.include?(base_cmd)
 
+        return "Error: Command '#{base_cmd}' arguments are not permitted by the configured argument constraints." unless arguments_permitted?(base_cmd, argv)
+
         return HOST_EXECUTION_REFUSED unless container_id || SkillBench::Config.allow_host_execution
 
         warn_unisolated_host_execution unless container_id
         execute(argv, working_dir_path, container_id)
       end
+
+      # Checks the command's arguments against the optional, per-command
+      # argument constraints from configuration.
+      #
+      # This is a default-off seam: the command allowlist remains the primary
+      # authorization control, and any allowlisted wrapper binary still grants
+      # broad host execution. When no constraints are configured (the default),
+      # or none apply to +base_cmd+, every argument is permitted so behavior is
+      # unchanged. When a constraint exists for +base_cmd+, the command is
+      # refused if any argument contains a disallowed substring/flag.
+      #
+      # @param base_cmd [String] The base command (first token of the command).
+      # @param argv [Array<String>] The tokenized command and arguments.
+      # @return [Boolean] true when the arguments are permitted to run.
+      def self.arguments_permitted?(base_cmd, argv)
+        constraints = SkillBench::Config.command_argument_constraints
+        return true if constraints.nil? || constraints.empty?
+
+        # Constraint keys may be strings (facade API) or symbols (loaded from
+        # JSON via symbolize_names), so look the command up under both.
+        disallowed = constraints[base_cmd] || constraints[base_cmd.to_sym]
+        return true if disallowed.nil? || disallowed.empty?
+
+        argv.drop(1).none? { |arg| disallowed.any? { |bad| arg.include?(bad.to_s) } }
+      end
+      private_class_method :arguments_permitted?
 
       # Runs the resolved command and formats its result, enforcing the
       # configured execution timeout.

@@ -25,6 +25,12 @@ module SkillBench
       # @return [Boolean, nil] true when host execution is explicitly allowed
       attr_reader :allow_host_execution
 
+      # Returns the optional per-command argument constraints.
+      #
+      # @return [Hash, nil] base command => disallowed argument
+      #   substrings/flags, or nil when unconfigured
+      attr_reader :command_argument_constraints
+
       # Returns provider configuration.
       #
       # @return [Hash, nil] provider configuration by provider name
@@ -121,6 +127,15 @@ module SkillBench
       # @return [Boolean] assigned host execution flag
       def assign_allow_host_execution(value)
         @allow_host_execution = value
+      end
+
+      # Sets the optional per-command argument constraints.
+      #
+      # @param value [Hash, nil] base command => disallowed argument
+      #   substrings/flags
+      # @return [Hash, nil] assigned constraints
+      def assign_command_argument_constraints(value)
+        @command_argument_constraints = value
       end
 
       # Sets provider configuration.

@@ -5,6 +5,7 @@ require_relative 'services/delta_table_formatter'
 require_relative 'services/feedback_generator'
 require_relative 'services/json_formatter'
 require_relative 'services/junit_formatter'
+require_relative 'services/html_formatter'
 
 module SkillBench
   # Handles formatting output for different use cases (human, CI, etc.).
@@ -14,7 +15,7 @@ module SkillBench
     # Format the eval result for output.
     #
     # @param result [Hash] Eval result with keys like :eval_name, :pass, :score, etc.
-    # @param format [Symbol] Output format (:human, :json, :junit)
+    # @param format [Symbol] Output format (:human, :json, :junit, :html)
     # @return [String] Formatted output string
     def self.format(result, format: :human)
       case format
@@ -22,6 +23,8 @@ module SkillBench
         Services::JsonFormatter.format(result)
       when :junit
         Services::JUnitFormatter.format(result)
+      when :html
+        Services::HtmlFormatter.format(result)
       else
         format_human(result)
       end

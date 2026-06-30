@@ -102,6 +102,29 @@ module SkillBench
         assert_equal 1, exit_code
       end
 
+      def test_all_flag_with_junit_format_emits_xml
+        SkillBench::Services::BatchRunnerService.stubs(:call).returns(batch_aggregate(failed: 0))
+
+        exit_code = nil
+        out, = capture_io { exit_code = RunCommand.call(['--all', '--skill=test-skill', '--format=junit']) }
+
+        assert_equal 0, exit_code
+        assert_includes out, '<testsuite name="SkillBench"'
+        assert_includes out, '<testcase name="evals/eval-a"'
+      end
+
+      def test_all_flag_with_summary_emits_json_gate
+        SkillBench::Services::BatchRunnerService.stubs(:call).returns(batch_aggregate(failed: 1))
+
+        exit_code = nil
+        out, = capture_io { exit_code = RunCommand.call(['--all', '--skill=test-skill', '--summary']) }
+        parsed = JSON.parse(out)
+
+        assert_equal 1, exit_code
+        assert_equal 1, parsed['failed']
+        assert_equal 2, parsed['total']
+      end
+
       def test_batch_without_skill_returns_error
         SkillBench::Services::BatchRunnerService.expects(:call).never
 

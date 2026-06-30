@@ -1,0 +1,80 @@
+# ---------------------------------------------------------------------------
+# Ruby Skill Bench — reusable GitHub composite action
+# ---------------------------------------------------------------------------
+# Add this to a downstream repo to gate a skill change on every run:
+#
+#   - uses: igmarin/ruby-skill-bench@v1
+#     with:
+#       evals-dir: evals
+#       skill: skills/greeting-skill
+#       format: junit          # human | json | junit (CI gate) | html
+#
+# The action installs the `ruby-skill-bench` gem and runs
+# `skill-bench run --all` over `evals-dir`. The gem exits 0 when every eval
+# passes and non-zero when any fails, so the run step's exit code IS the gate.
+#
+# This is the reusable action definition. For a full copy-paste *workflow*
+# template, see `examples/ci/github-action.yml`.
+# ---------------------------------------------------------------------------
+name: "Ruby Skill Bench"
+description: "Run ruby-skill-bench evals over a directory and gate CI on the results."
+author: "igmarin"
+
+branding:
+  icon: "check-circle"
+  color: "purple"
+
+inputs:
+  evals-dir:
+    description: "Directory to scan for evals (passed to --evals-dir)."
+    required: false
+    default: "evals"
+  skill:
+    description: "Skill to apply to every eval (passed to --skill). Leave blank when using --pack via `args`."
+    required: false
+    default: ""
+  format:
+    description: "Output format: human, json, junit, or html. junit/json are machine-readable CI gates."
+    required: false
+    default: "junit"
+  ruby-version:
+    description: "Ruby version for ruby/setup-ruby."
+    required: false
+    default: "3.3"
+  args:
+    description: "Extra arguments appended verbatim to the `skill-bench run` command (e.g. --summary, --pack NAME)."
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ inputs.ruby-version }}
+
+    - name: Install ruby-skill-bench
+      shell: bash
+      run: gem install ruby-skill-bench
+
+    - name: Run skill-bench
+      shell: bash
+      # Inputs are passed through env (not interpolated into the script) so a
+      # crafted input cannot inject shell before bash parses it. A non-zero exit
+      # here fails the step — that is the CI gate.
+      env:
+        EVALS_DIR: ${{ inputs.evals-dir }}
+        SKILL: ${{ inputs.skill }}
+        FORMAT: ${{ inputs.format }}
+        EXTRA_ARGS: ${{ inputs.args }}
+      run: |
+        run_args=(run --all --evals-dir "$EVALS_DIR" --format "$FORMAT")
+        if [ -n "$SKILL" ]; then
+          run_args+=(--skill "$SKILL")
+        fi
+        if [ -n "$EXTRA_ARGS" ]; then
+          # Intentionally unquoted so multiple extra flags split into words.
+          run_args+=($EXTRA_ARGS)
+        fi
+        skill-bench "${run_args[@]}"

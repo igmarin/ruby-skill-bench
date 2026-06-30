@@ -57,7 +57,7 @@ module SkillBench
         return error_missing_skill if options[:skill_names].empty? && !options[:pack]
 
         options[:eval_name] = eval_name
-        exec_options = options.reject { |key| key == :format }
+        exec_options = options.reject { |key| %i[format summary all evals_dir].include?(key) }
         result = Commands::Run.run(**exec_options)
         ResultPrinter.call(result, format: options[:format] || :human)
       end
@@ -75,7 +75,7 @@ module SkillBench
           pack: options[:pack],
           registry_manifest: options[:registry_manifest]
         )
-        BatchResultPrinter.call(aggregate)
+        BatchResultPrinter.call(aggregate, format: options[:format], summary: options[:summary])
       end
 
       def build_parser(options)
@@ -84,9 +84,11 @@ module SkillBench
           opts.on('--skill NAME', 'Skill to use (can be specified multiple times)') { |v| options[:skill_names] << v }
           opts.on('--pack NAME', 'Pack context for skill resolution') { |v| options[:pack] = v }
           opts.on('--registry-manifest PATH', 'Path to registry.json manifest') { |v| options[:registry_manifest] = v }
-          opts.on('--format FORMAT', 'Output format (human, json, junit)') { |v| options[:format] = v.to_sym }
+          opts.on('--format FORMAT', 'Output format (human, json, junit, html)') { |v| options[:format] = v.to_sym }
           opts.on('--all', 'Run every eval under the default evals/ directory') { options[:all] = true }
           opts.on('--evals-dir DIR', 'Run every eval under DIR') { |v| options[:evals_dir] = v }
+          opts.on('--summary', 'Emit a JSON summary gate for a batch run') { options[:summary] = true }
+          opts.on('--cache', 'Enable content-addressed response caching') { ENV['SKILL_BENCH_CACHE'] = '1' }
           opts.on('-h', '--help', 'Prints this help') do
             puts opts
             raise SkillBench::HelpRequested

@@ -51,11 +51,14 @@ module SkillBench
       private
 
       def resolve_provider
-        config = SkillBench::Models::Config.load
+        config = SkillBench::Models::Config.loaded
         provider = config.to_provider
         return provider if provider
 
-        warn 'Config load failed, using mock provider'
+        # Explicit `{"provider":"mock"}` is a valid choice, not a load failure,
+        # so it falls through to the mock provider without a warning. A missing
+        # provider key (genuine misconfiguration) still warns below.
+        warn 'Config load failed, using mock provider' unless config.mock?
         MOCK_PROVIDER.new('mock', 'mock', 'mock', {})
       rescue JSON::ParserError, ArgumentError, Errno::ENOENT => e
         # Config parsing/validation errors or missing config file - fall back to mock

@@ -103,6 +103,16 @@ module SkillBench
         store.allow_host_execution || false
       end
 
+      # Returns the optional per-command argument constraints.
+      #
+      # When unconfigured, returns an empty Hash meaning no argument constraints
+      # apply (the allowlist remains the only command-authorization control).
+      #
+      # @return [Hash] base command => disallowed argument substrings/flags
+      def command_argument_constraints
+        store.command_argument_constraints || {}
+      end
+
       # Returns max execution time from configuration.
       #
       # @return [Integer] Maximum execution time in seconds

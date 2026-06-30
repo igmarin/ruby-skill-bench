@@ -12,16 +12,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > In progress — the v1.2.0 quality program (security, performance, documentation, examples). The release date is set when the version is tagged.
 
 ### Added
+- `skill-bench validate` (alias `doctor`): a pre-flight check that validates `criteria.json` via `CriteriaValidator`, schema-checks `skill-bench.json`, and reports missing provider API keys — all without running an eval or hitting the network (#45).
+- `--format html`: a self-contained HTML report rendering the delta-score table and the baseline/context iteration timelines, with all dynamic text escaped (#44).
+- Per-run token & cost accounting: agent token usage is threaded through the run, an estimated USD cost is shown in the human report (`Tokens: N | Est. Cost: $X.XXXX`) and exposed in JSON output; new `Services::CostCalculator` with a per-model price table (#40).
+- Opt-in content-addressed response caching via `--cache` / `SKILL_BENCH_CACHE`: identical agent/judge calls — notably `compare`'s twice-run skill-less baseline — reuse a cached response instead of hitting the network. Default off (#42).
+- Batch CI surfaces: a `--summary` JSON gate (aggregate pass/fail counts, summed tokens/cost, worst-delta eval) and per-eval `<testcase>` aggregation in JUnit output, plus a top-level composite `action.yml` so downstream repos can gate skill changes with `uses: igmarin/ruby-skill-bench@v1` (#46).
+- Mistral provider, an OpenAI-compatible client subclass (#47).
+- `skill-bench init --mock` scaffolds a ready-to-run offline `mock` config (`{"provider":"mock","max_execution_time":30}`) (#53).
+- Community-health files: `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), issue templates, and a pull-request template (#38).
 - Runnable, fully offline `examples/offline-quickstart/` that demonstrates a complete eval with the built-in `mock` provider — no API keys, no network (#49).
 - Example files are now tracked: removed the blanket `examples/` rule from `.gitignore` (#48).
 
+### Security
+- Documented that the command allowlist authorizes only the base token, so any allowlisted wrapper binary (`rake`, `rspec`, `make`, `find`, `git`) is equivalent to arbitrary host execution, and tied this to the fail-closed host-execution model. Added an optional, default-off `command_argument_constraints` hook to constrain high-risk allowed commands (#21).
+
 ### Performance
+- Provider resolution now parses `skill-bench.json` at most once per run via an mtime-memoized load, removing a redundant per-run file read + parse (#31).
 - Baseline and context agent runs now execute concurrently, roughly halving the dominant agent phase of a run. The previously unused `parallel` dependency is now wired into the active `RunnerService` path (#26).
 
 ### Fixed
+- An explicit `{"provider":"mock"}` config no longer prints a misleading "Config load failed" warning on a clean offline run; genuine load failures (missing/broken config) still warn (#54).
 - `Judge::Prompt` no longer emits an empty `## Skill Context` section on baseline (skill-less) runs. The empty header had caused the `mock` provider to score baseline and context identically (delta 0); baseline prompts are now cleaner and offline scoring is correct (#58).
 
 ### Documentation
+- `docs/architecture.md` now shows the correct `.skill-bench-trends.json` filename and notes the `.skill-bench-trends.json.bak` auto-backup (#39).
 - Corrected the evaluation-history filename throughout the README and docs: the engine writes `.skill-bench-trends.json`, not the previously-documented `.skill-bench-history.json` (#34).
 
 ## [1.1.0] - 2026-06-23
