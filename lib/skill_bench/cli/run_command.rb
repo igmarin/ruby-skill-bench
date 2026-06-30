@@ -57,7 +57,7 @@ module SkillBench
         return error_missing_skill if options[:skill_names].empty? && !options[:pack]
 
         options[:eval_name] = eval_name
-        exec_options = options.reject { |key| key == :format }
+        exec_options = options.reject { |key| %i[format summary all evals_dir].include?(key) }
         result = Commands::Run.run(**exec_options)
         ResultPrinter.call(result, format: options[:format] || :human)
       end

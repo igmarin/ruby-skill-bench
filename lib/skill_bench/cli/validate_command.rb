@@ -148,6 +148,10 @@ module SkillBench
         return pass_result('provider key', "#{provider} credentials present") if missing.empty?
 
         fail_result('provider key', "#{provider} is missing: #{missing.join(', ')}")
+      rescue StandardError => e
+        # Building the client can raise on unrelated config (e.g. base_url
+        # validation); surface that as a structured FAIL rather than crashing.
+        fail_result('provider key', "#{provider} config is invalid: #{e.message}")
       end
 
       def config_provider(data)

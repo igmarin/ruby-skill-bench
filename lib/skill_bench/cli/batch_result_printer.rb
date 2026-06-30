@@ -25,12 +25,16 @@ module SkillBench
 
       # Selects the rendered batch output for the requested mode.
       #
+      # `:junit` and `:json` produce machine-readable batch output; `:json` maps
+      # to the same JSON gate as `summary: true`. `:html` (and any other format)
+      # falls back to the human batch summary, since there is no batch HTML report.
+      #
       # @param aggregate [Hash] Aggregate envelope from BatchRunnerService.
-      # @param format [Symbol, nil] Output format (:junit for JUnit XML, else human).
+      # @param format [Symbol, nil] Output format (:junit, :json, else human).
       # @param summary [Boolean] When true, render the JSON summary gate.
       # @return [String] The formatted batch output.
       def self.batch_output(aggregate, format:, summary:)
-        return Services::SummaryFormatter.format(aggregate) if summary
+        return Services::SummaryFormatter.format(aggregate) if summary || format == :json
         return Services::JUnitFormatter.format_batch(aggregate) if format == :junit
 
         OutputFormatter.format_batch(aggregate)

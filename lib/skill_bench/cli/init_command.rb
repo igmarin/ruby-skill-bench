@@ -61,7 +61,7 @@ module SkillBench
       end
 
       def error_missing_provider
-        providers = SkillBench::Clients::ProviderSchemas.names.map { |provider_name| "--#{provider_name}" }.join(', ')
+        providers = (SkillBench::Clients::ProviderSchemas.names.map { |provider_name| "--#{provider_name}" } + ['--mock']).join(', ')
         warn "Error: provider is required. Use one of: #{providers}"
         1
       end
