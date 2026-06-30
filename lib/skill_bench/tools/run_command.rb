@@ -100,7 +100,9 @@ module SkillBench
         constraints = SkillBench::Config.command_argument_constraints
         return true if constraints.nil? || constraints.empty?
 
-        disallowed = constraints[base_cmd]
+        # Constraint keys may be strings (facade API) or symbols (loaded from
+        # JSON via symbolize_names), so look the command up under both.
+        disallowed = constraints[base_cmd] || constraints[base_cmd.to_sym]
         return true if disallowed.nil? || disallowed.empty?
 
         argv.drop(1).none? { |arg| disallowed.any? { |bad| arg.include?(bad.to_s) } }

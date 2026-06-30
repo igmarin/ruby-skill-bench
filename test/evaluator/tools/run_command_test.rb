@@ -170,6 +170,34 @@ module SkillBench
           assert_empty lingering, 'the runaway sleep child must be killed and reaped on timeout'
         end
       end
+
+      def test_call_enforces_argument_constraints_loaded_from_json_config
+        config = {
+          provider: 'mock',
+          allowed_commands: %w[echo],
+          allow_host_execution: true,
+          command_argument_constraints: { 'echo' => ['-n'] }
+        }
+
+        Dir.mktmpdir do |dir|
+          Dir.chdir(dir) do
+            File.write('skill-bench.json', JSON.generate(config))
+            SkillBench::Config.reset
+
+            working_dir = Pathname.new(dir).expand_path
+
+            # The constraint loaded from skill-bench.json (symbol-keyed after
+            # symbolize_names) must block execution before anything is spawned.
+            Open3.expects(:popen3).never
+            result = RunCommand.call('echo -n test', working_dir)
+
+            assert_equal(
+              "Error: Command 'echo' arguments are not permitted by the configured argument constraints.",
+              result
+            )
+          end
+        end
+      end
     end
   end
 end
