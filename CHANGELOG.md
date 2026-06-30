@@ -5,7 +5,43 @@ All notable changes to `ruby-skill-bench` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0]
+## [Unreleased]
+
+## [1.2.0]
+
+> In progress — the v1.2.0 quality program (security, performance, documentation, examples). The release date is set when the version is tagged.
+
+### Added
+- Runnable, fully offline `examples/offline-quickstart/` that demonstrates a complete eval with the built-in `mock` provider — no API keys, no network (#49).
+- Example files are now tracked: removed the blanket `examples/` rule from `.gitignore` (#48).
+
+### Performance
+- Baseline and context agent runs now execute concurrently, roughly halving the dominant agent phase of a run. The previously unused `parallel` dependency is now wired into the active `RunnerService` path (#26).
+
+### Fixed
+- `Judge::Prompt` no longer emits an empty `## Skill Context` section on baseline (skill-less) runs. The empty header had caused the `mock` provider to score baseline and context identically (delta 0); baseline prompts are now cleaner and offline scoring is correct (#58).
+
+### Documentation
+- Corrected the evaluation-history filename throughout the README and docs: the engine writes `.skill-bench-trends.json`, not the previously-documented `.skill-bench-history.json` (#34).
+
+## [1.1.0] - 2026-06-23
+
+### Added
+- `CONTRIBUTING.md` with development setup, code-style, service-object, TDD, and security-reporting guidance.
+- README "Security" / "Threat Model" section documenting the sandbox, command controls, and resource limits.
+- `Clients::ResponseBuilder` service object for standardized success/error response hashes.
+- `Clients::RetryHandler` for retrying transient provider HTTP failures.
+- Command-safety constants including the `DANGEROUS_COMMANDS` blocklist.
+
+### Security
+- Hardened command execution in `tools/run_command.rb` (allowlist + dangerous-command blocklist, tokenized execution).
+- Strengthened sandbox path/symlink validation in `execution/sandbox.rb`.
+- Added file-size and symlink restrictions to context hydration in `execution/context_hydrator.rb`.
+
+### Changed
+- Refactored the HTTP client layer (`clients/base_client.rb`, `clients/request_builder.rb`, `clients/response_error_handler.rb`) around the new `ResponseBuilder` / `RetryHandler`.
+
+## [1.0.0] - 2026-05-28
 
 ### Added
 - `Mock` client provider for structured scoring simulations without hitting LLM API.
