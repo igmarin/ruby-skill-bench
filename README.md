@@ -841,7 +841,7 @@ Your eval result depends on **both** conditions. Here is every scenario:
 - **Traceability**: Every thought and tool call is logged with full backtrace for post-mortem analysis.
 - **Robust Error Recovery**: Handles provider outages and rate limits gracefully with standardized error logging.
 - **XML-Safe Output**: JUnit XML output is properly escaped to prevent injection attacks.
-- **Test Coverage**: 373+ tests covering core engine, CLI commands, and all provider clients.
+- **Test Coverage**: 700+ tests covering core engine, CLI commands, and all provider clients. Run `bundle exec rake test` to see the current count.
 
 ## Testing
 
@@ -860,9 +860,18 @@ bundle exec ruby -Itest test/integration_test.rb
 
 **Test Structure:**
 
-- `test/evaluator/` — Core evaluation engine tests
-- `test/agent_eval/` — CLI, models, and service tests
+- `test/agent/` — Agent runtime tests
+- `test/agent_eval/` — Agent evaluation tests
+- `test/cli/` — CLI command tests
 - `test/clients/` — Provider client tests
+- `test/evaluator/` — Core evaluation engine tests
+- `test/history_recorder/` — Benchmark history persistence tests
+- `test/models/` — Domain model tests
+- `test/registry/` — Skill/eval registry tests
+- `test/services/` — Service layer tests
+- `test/skills/` — Skill loading tests
+- `test/tools/` — Agent tool tests
+- Plus several top-level `test/*_test.rb` files (e.g. `integration_test.rb`, `evaluation_runner_test.rb`, `trend_tracker_test.rb`).
 
 ---
 
