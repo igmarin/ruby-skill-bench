@@ -13,6 +13,8 @@ module SkillBench
         new(provider, options).call
       end
 
+      # @param provider [Symbol, String] provider identifier, coerced to a Symbol (e.g., :openai, :ollama)
+      # @param options [Hash] override options that take precedence over the loaded provider config
       def initialize(provider, options)
         @provider = provider.to_sym
         @options = options

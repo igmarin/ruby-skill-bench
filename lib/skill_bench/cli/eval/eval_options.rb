@@ -9,6 +9,7 @@ module SkillBench
       class BaseEvalOptions
         attr_reader :options, :parser
 
+        # Initializes the option set and the OptionParser used to parse the command's arguments.
         def initialize
           @options = default_options
           @parser = create_parser
@@ -39,10 +40,12 @@ module SkillBench
       class NewEvalOptions < BaseEvalOptions
         protected
 
+        # @return [Hash] default options for the `eval new` command, with the runtime defaulting to "ruby"
         def default_options
           { runtime: 'ruby' }
         end
 
+        # @return [OptionParser] parser for the `eval new` command, handling --runtime and --help
         def create_parser
           OptionParser.new do |opts|
             opts.banner = 'Usage: skill-bench eval new <name> [options]'
@@ -59,6 +62,7 @@ module SkillBench
       class GenerateEvalOptions < BaseEvalOptions
         protected
 
+        # @return [OptionParser] parser for the `eval generate` command, handling --name and --help
         def create_parser
           OptionParser.new do |opts|
             opts.banner = 'Usage: skill-bench eval generate <skill-name> [options]'

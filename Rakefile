@@ -3,6 +3,7 @@
 require 'rake/testtask'
 require 'reek/rake/task'
 require 'rubocop/rake_task'
+require 'yard'
 
 Rake::TestTask.new(:test) do |t|
   t.libs << 'test'
@@ -15,6 +16,32 @@ RuboCop::RakeTask.new(:rubocop)
 Reek::Rake::Task.new(:reek) do |t|
   t.config_file = '.reek.yml'
   t.source_files = 'lib'
+end
+
+YARD::Rake::YardocTask.new(:yard)
+
+namespace :yard do
+  desc 'Fail the build when any public or protected method lacks YARD documentation'
+  task :coverage do
+    YARD::Registry.clear
+    YARD.parse(Dir['lib/**/*.rb'])
+
+    undocumented = YARD::Registry.all(:method).select do |method|
+      next false if method.visibility == :private
+
+      # YARD auto-adds "@return a new instance of X" to bare initializers; that is not real documentation.
+      meaningful_tags = method.tags.reject { |tag| tag.tag_name == 'return' && tag.text.to_s.start_with?('a new instance of') }
+      method.docstring.to_s.strip.empty? && meaningful_tags.empty?
+    end
+
+    if undocumented.empty?
+      puts 'YARD doc coverage: 0 undocumented public objects.'
+    else
+      warn "YARD doc coverage failed: #{undocumented.size} undocumented public object(s):"
+      undocumented.sort_by(&:path).each { |method| warn "  #{method.path} (#{method.file}:#{method.line})" }
+      abort
+    end
+  end
 end
 
 namespace :package do
