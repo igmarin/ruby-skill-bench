@@ -52,6 +52,12 @@ module SkillBench
         assert_equal 0, parsed['tokens']['total_tokens']
         assert_nil parsed['cost']
       end
+
+      def test_format_keeps_tokens_when_explicitly_nil
+        parsed = JSON.parse(JsonFormatter.format({ eval_name: 'e', tokens: nil }))
+
+        assert_equal 0, parsed['tokens']['total_tokens']
+      end
     end
   end
 end

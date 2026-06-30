@@ -41,7 +41,8 @@ module SkillBench
         system_prompt: system_prompt,
         messages: messages,
         tools: options[:tools],
-        temperature: options[:temperature]
+        temperature: options[:temperature],
+        provider_config: options.slice(:base_url, :request_path, :endpoint, :location, :project_id, :api_version)
       )
       Services::ResponseCache.fetch(cache_key, &invoke)
     end

@@ -27,11 +27,9 @@ module SkillBench
       def self.with_usage_fields(result)
         return result unless result.is_a?(Hash)
 
-        defaults = {
-          tokens: result[:tokens] || result.dig(:response, :tokens) || EMPTY_USAGE,
-          cost: result.key?(:cost) ? result[:cost] : result.dig(:response, :cost)
-        }
-        defaults.merge(result)
+        tokens = result[:tokens] || result.dig(:response, :tokens) || EMPTY_USAGE
+        cost = result.key?(:cost) ? result[:cost] : result.dig(:response, :cost)
+        result.merge(tokens: tokens, cost: cost)
       end
     end
   end
