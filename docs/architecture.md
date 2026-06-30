@@ -175,6 +175,8 @@ project-root/
 └── .skill-bench-trends.json      # Benchmark history (auto-generated)
 ```
 
+A `.skill-bench-trends.json.bak` file is created automatically as a backup of the trend file.
+
 ### Skill Discovery
 
 Skills are discovered recursively. These are all valid:
