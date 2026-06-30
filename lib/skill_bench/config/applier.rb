@@ -41,6 +41,7 @@ module SkillBench
         assign_current_provider
         @store.assign_max_execution_time(@data[:max_execution_time]) if @data.key?(:max_execution_time)
         @store.assign_allowed_commands(@data[:allowed_commands]) if @data.key?(:allowed_commands)
+        @store.assign_allow_host_execution(@data[:allow_host_execution]) if @data.key?(:allow_host_execution)
         @store.skill_sources = @data[:skill_sources] if @data.key?(:skill_sources)
       end
 

@@ -34,6 +34,18 @@ module SkillBench
         assert_equal commands, Config.allowed_commands
       end
 
+      def test_allow_host_execution_delegates_to_store
+        @store.expects(:allow_host_execution).returns(true)
+
+        assert Config.allow_host_execution
+      end
+
+      def test_allow_host_execution_defaults_to_false
+        @store.expects(:allow_host_execution).returns(nil)
+
+        refute Config.allow_host_execution
+      end
+
       def test_llm_providers_config_delegates_to_store
         config = { openai: { api_key: 'key' } }
         @store.expects(:llm_providers_config).returns(config)

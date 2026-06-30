@@ -50,6 +50,16 @@ module SkillBench
         Applier.call(store: @store, data: { allowed_commands: commands })
       end
 
+      def test_call_applies_allow_host_execution
+        @store.expects(:assign_allow_host_execution).with(true)
+        @store.stubs(:assign_current_llm_provider)
+        @store.stubs(:assign_max_execution_time)
+        @store.stubs(:assign_allowed_commands)
+        @store.stubs(:apply_provider_config)
+
+        Applier.call(store: @store, data: { allow_host_execution: true })
+      end
+
       def test_call_applies_provider_config
         providers = { openai: { api_key: 'key' } }
         @store.expects(:apply_provider_config).with(providers)

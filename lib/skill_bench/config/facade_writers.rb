@@ -102,6 +102,14 @@ module SkillBench
         store.assign_allowed_commands(value)
       end
 
+      # Sets whether un-isolated host command execution is permitted.
+      #
+      # @param value [Boolean] true to permit un-isolated host execution
+      # @return [Boolean] assigned host execution flag
+      def allow_host_execution=(value)
+        store.assign_allow_host_execution(value)
+      end
+
       # Replaces provider configuration.
       #
       # @param value [Hash] provider configuration

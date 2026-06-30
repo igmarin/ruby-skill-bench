@@ -25,6 +25,13 @@ module SkillBench
         store.allowed_commands
       end
 
+      # Returns whether un-isolated host command execution is permitted.
+      #
+      # @return [Boolean, nil] true when host execution is explicitly allowed
+      def allow_host_execution
+        store.allow_host_execution
+      end
+
       # Returns provider configuration.
       #
       # @return [Hash] provider configuration by provider name

@@ -79,6 +79,7 @@ By default, no shell commands are permitted. You must configure `allowed_command
   "provider": "openai",
   "max_execution_time": 30,
   "allowed_commands": ["rspec", "bundle", "ruby", "git"],
+  "allow_host_execution": false,
   "config": {
     "api_key": null,
     "model": "gpt-4o"
@@ -87,6 +88,8 @@ By default, no shell commands are permitted. You must configure `allowed_command
 ```
 
 > **Security:** The agent can only execute commands on this list. Dangerous commands (bash, curl, sudo, etc.) are always blocked regardless of configuration.
+>
+> **Where commands run:** Allowed commands run inside a temporary git **sandbox directory** on the host — a copy of your eval files, not your project. True container isolation (Docker) is **not yet shipped**, so the sandbox directory is the only boundary. Because of this, host execution **fails closed**: it is disabled by default and must be explicitly enabled with `"allow_host_execution": true`. With it disabled (the default), `run_command` refuses to execute and returns an error instead of running un-isolated. Enable it only when you accept that allowed commands run directly on your machine.
 
 ### Configuration Hierarchy
 
@@ -446,6 +449,7 @@ SkillBench creates and manages three files in your project. Understanding them h
   "provider": "openai",
   "max_execution_time": 300,
   "allowed_commands": ["rspec", "bundle", "ruby", "git"],
+  "allow_host_execution": false,
   "config": {
     "api_key": "sk-...",
     "model": "gpt-4o",
@@ -458,6 +462,7 @@ SkillBench creates and manages three files in your project. Understanding them h
 - Configuration is loaded in this order: **code defaults** → `~/.skill-bench.json` (user-wide) → `./skill-bench.json` (local) → **environment variables**. Later sources override earlier ones.
 - If `api_key` is `null`, SkillBench looks for the matching environment variable (e.g. `SKILL_BENCH_OPENAI_API_KEY`).
 - `allowed_commands` is a **safeguard**, not a convenience. By default the agent cannot run *any* shell command. Add only what your evals need.
+- `allow_host_execution` (default `false`) gates whether `run_command` may run on the host when no container isolation is active. Since container isolation is not yet shipped, leaving it `false` means `run_command` **fails closed** (refuses to execute). Set it to `true` only if you accept that allowed commands run directly on your machine inside the temporary sandbox directory.
 
 ---
 
@@ -827,7 +832,7 @@ Your eval result depends on **both** conditions. Here is every scenario:
 
 ## Reliability & Security
 
-- **Safe-by-Design**: No code execution occurs on the host system; everything happens in the sandbox.
+- **Allowlist-Gated Execution**: The agent can only run commands you add to `allowed_commands`; with an empty allowlist it can run nothing. Commands run inside a temporary git sandbox **directory** (a copy of the eval files) on the host — container isolation is not yet shipped, so host execution is **disabled by default** and must be explicitly opted into with `allow_host_execution: true`.
 - **Command Blocklist**: Dangerous commands (`bash`, `sh`, `python`, `curl`, etc.) are always blocked, even if listed in `allowed_commands`.
 - **Path Validation**: Eval paths are validated to prevent directory traversal attacks.
 - **Atomic History Writes**: Benchmark history uses file locking to prevent corruption from concurrent writes.
@@ -886,11 +891,13 @@ Ruby Skill Bench is designed with security as a primary concern. The system exec
 - **Command Allowlist:** Only explicitly allowed commands can be executed
 - **Dangerous Commands Blocklist:** Dangerous commands (bash, curl, sudo, etc.) are always blocked
 - **Shell Tokenization:** Commands are tokenized before execution to prevent shell injection
-- **Docker Isolation:** Commands can be executed in isolated Docker containers with hardened security settings
+- **Fail-Closed Host Execution:** Container isolation is not yet active, so commands run on the host inside a temporary sandbox directory. To match this reality, `run_command` refuses to execute unless `allow_host_execution: true` is set; it is **disabled by default**.
 
-#### Docker Security Hardening
+#### Docker Security Hardening (Planned — Not Yet Active)
 
-When Docker is available, containers are launched with hardened security settings:
+> **Status:** The container isolation model described below is **planned, not shipped**. No Docker build context is packaged, so containers are never launched today — `run_command` runs on the host gated by the allowlist and `allow_host_execution`. The settings below document the intended hardened model for when container isolation lands.
+
+When container isolation is enabled in a future release, containers are intended to launch with hardened security settings:
 
 - **Non-root User:** Containers run as a non-root user
 - **Privilege Prevention:** `--security-opt no-new-privileges` prevents privilege escalation
@@ -955,9 +962,9 @@ If you discover a security vulnerability:
 - **Solution:** Increase `max_execution_time` in your `skill-bench.json` or simplify the task
 - **Check:** Verify the command isn't hanging or waiting for input
 
-**Problem:** "Docker container failed to start"
-- **Solution:** Ensure Docker is running and you have permissions to run Docker commands
-- **Check:** Run `docker info` to verify Docker daemon is accessible
+**Problem:** "Command execution refused: no sandbox isolation is active and 'allow_host_execution' is not enabled"
+- **Cause:** Container isolation is not yet shipped, so commands would run on the host. SkillBench fails closed by default rather than run un-isolated.
+- **Solution:** Set `"allow_host_execution": true` in `skill-bench.json` to permit allowed commands to run directly on the host (inside the temporary sandbox directory). Enable it only when you accept that trade-off.
 
 **Problem:** "Context hydration failed"
 - **Solution:** Verify the source path exists and is a directory

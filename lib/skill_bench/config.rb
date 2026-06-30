@@ -95,6 +95,14 @@ module SkillBench
         store.allowed_commands
       end
 
+      # Returns whether commands may run directly on the host when no sandbox
+      # isolation (container) is active. Defaults to false (fail closed).
+      #
+      # @return [Boolean] true when un-isolated host execution is explicitly enabled
+      def allow_host_execution
+        store.allow_host_execution || false
+      end
+
       # Returns max execution time from configuration.
       #
       # @return [Integer] Maximum execution time in seconds
