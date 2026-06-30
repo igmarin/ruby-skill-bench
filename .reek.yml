@@ -51,6 +51,7 @@ detectors:
     enabled: false
   ControlParameter:
     exclude:
+      - "SkillBench::Cli::BatchResultPrinter#self.batch_output"
       - "SkillBench::Commands::Run#validate_api_key"
       - "SkillBench::Execution::ContextHydrator#initialize"
       - "SkillBench::EvaluateCommand#print_parse_error"
@@ -128,6 +129,7 @@ detectors:
       - "SkillBench::Criteria#assign_attributes"
       - "SkillBench::Dimension#=="
       - "SkillBench::Evaluation::Runner#compute_deltas"
+      - "SkillBench::Services::SummaryFormatter#total_cost"   # Reduces a collected costs array — array manipulation is the domain
       - "SkillBench::Judge::Prompt#criteria_section"
       - "SkillBench::Judge::Response#extract_dimensions"
       - "SkillBench::CLI#handle_eval"
@@ -173,6 +175,7 @@ detectors:
       - "SkillBench::Services::RunnerService#build_client_params"       # Builder method — naturally manipulates params and provider hashes
   BooleanParameter:
     exclude:
+      - "SkillBench::Cli::BatchResultPrinter#self.call"   # summary: toggles the JSON gate — part of the documented CI signature
       - "SkillBench::Commands::Init#self.run"
   UtilityFunction:
     enabled: false
@@ -255,4 +258,6 @@ detectors:
       - "SkillBench::Clients::RetryHandler#extract_status"   # Duck-type dispatch across Faraday error classes with different APIs
       - "SkillBench::OutputFormatter#self.format_junit"      # Duck-type dispatch for backward compatibility with legacy result format
       - "SkillBench::Services::FeedbackGenerator#self.feedback_applicable?"  # Duck-type guard for DeltaReport vs plain objects
-      - "SkillBench::Services::JUnitFormatter#self.format"   # Duck-type dispatch for backward compatibility with legacy result format
+      - "SkillBench::Services::JUnitFormatter#self.passing?"  # Duck-type dispatch for backward compatibility with legacy result format
+      - "SkillBench::Services::JUnitFormatter#self.score_for" # Duck-type dispatch for backward compatibility with legacy result format
+      - "SkillBench::Services::SummaryFormatter#delta_entry"  # Duck-type guard for DeltaReport vs results without a report

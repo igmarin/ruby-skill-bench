@@ -20,11 +20,14 @@ module SkillBench
               --force    Overwrite existing config file
 
             run <eval> --skill <name> [--skill <name>] [--format FORMAT] [--pack NAME]
-              Run an evaluation
+              Run an evaluation (single eval, or a whole directory with --all)
               --skill    Skill to use (can be specified multiple times)
               --pack     Pack context for registry-based skill resolution
               --registry-manifest PATH  Path to registry.json manifest
               --format   Output format: human, json, junit, html (default: human)
+              --all      Run every eval under evals/ (batch mode)
+              --evals-dir DIR  Run every eval under DIR (batch mode)
+              --summary  Emit a JSON summary gate for a batch run (batch mode)
 
             compare <skill-name> --variant-a SPEC --variant-b SPEC --eval PATH
               Compare the same skill across two pack variants

@@ -58,7 +58,44 @@ module SkillBench
         assert_includes output, 'test&lt;eval&gt;&amp;name'
       end
 
+      def test_format_batch_emits_one_testcase_per_result
+        output = JUnitFormatter.format_batch(batch_aggregate)
+
+        assert_equal 3, output.scan('<testcase').size
+        assert_includes output, '<testsuite name="SkillBench" tests="3" failures="1">'
+      end
+
+      def test_format_batch_adds_failure_for_failing_eval
+        output = JUnitFormatter.format_batch(batch_aggregate)
+
+        assert_includes output, '<testcase name="fail-eval" classname="SkillBench">'
+        assert_includes output, '<failure message="Score: 0.3">Eval failed</failure>'
+      end
+
+      def test_format_batch_escapes_eval_names
+        aggregate = { results: [{ eval_name: 'a<b>&c', pass: true }], summary: {} }
+        output = JUnitFormatter.format_batch(aggregate)
+
+        refute_includes output, 'a<b>&c'
+        assert_includes output, 'a&lt;b&gt;&amp;c'
+      end
+
+      def test_format_batch_handles_empty_results
+        output = JUnitFormatter.format_batch({ results: [], summary: {} })
+
+        assert_includes output, '<testsuite name="SkillBench" tests="0" failures="0">'
+      end
+
       private
+
+      def batch_aggregate
+        results = [
+          { eval_name: 'pass-legacy', pass: true, score: 1.0 },
+          { eval_name: 'pass-delta', success: true, response: { report: build_delta_report(verdict: true) } },
+          { eval_name: 'fail-eval', pass: false, score: 0.3 }
+        ]
+        { results: results, summary: { total: 3, passed: 2, failed: 1 } }
+      end
 
       def build_delta_report(verdict:)
         dimensions = [
