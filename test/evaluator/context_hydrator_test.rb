@@ -69,6 +69,48 @@ module SkillBench
       end
     end
 
+    def test_rejects_sibling_directory_prefix_bypass
+      Dir.mktmpdir do |parent|
+        base = File.join(parent, 'foo')
+        sibling = File.join(parent, 'foo-evil')
+        FileUtils.mkdir_p(base)
+        FileUtils.mkdir_p(sibling)
+        File.write(File.join(sibling, 'secret.md'), 'SIBLING_SECRET_CONTENT')
+
+        result = Execution::ContextHydrator.call(source_path: '../foo-evil', base_path: Pathname.new(base))
+
+        refute result[:success]
+        assert_match(/does not exist/, result[:response][:error][:message])
+      end
+    end
+
+    def test_accepts_base_directory_itself
+      Dir.mktmpdir do |parent|
+        base = File.join(parent, 'foo')
+        FileUtils.mkdir_p(base)
+        File.write(File.join(base, 'base.md'), 'BASE_DIR_CONTENT')
+
+        result = Execution::ContextHydrator.call(source_path: '.', base_path: Pathname.new(base))
+
+        assert result[:success]
+        assert_match(/BASE_DIR_CONTENT/, result[:response][:context])
+      end
+    end
+
+    def test_accepts_legitimate_nested_subdirectory
+      Dir.mktmpdir do |parent|
+        base = File.join(parent, 'foo')
+        nested = File.join(base, 'sub')
+        FileUtils.mkdir_p(nested)
+        File.write(File.join(nested, 'nested.md'), 'NESTED_SUBDIR_CONTENT')
+
+        result = Execution::ContextHydrator.call(source_path: 'sub', base_path: Pathname.new(base))
+
+        assert result[:success]
+        assert_match(/NESTED_SUBDIR_CONTENT/, result[:response][:context])
+      end
+    end
+
     def test_rejects_symlinks
       secret_file = File.join(Dir.tmpdir, "skill_bench_test_secret_#{Process.pid}_#{Time.now.to_f}.txt")
       File.write(secret_file, 'SYMLINK_SECRET_CONTENT')

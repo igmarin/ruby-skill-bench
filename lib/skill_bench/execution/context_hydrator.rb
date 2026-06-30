@@ -43,7 +43,7 @@ module SkillBench
         full_path = @base_path.join(@source_path).expand_path
         base_expanded = @base_path.expand_path
 
-        return missing_path_result unless full_path.to_path.start_with?(base_expanded.to_path)
+        return missing_path_result unless within_base?(full_path, base_expanded)
         return missing_path_result unless full_path.exist? && full_path.directory?
 
         context_files = collect_context_files(full_path)
@@ -58,6 +58,19 @@ module SkillBench
       end
 
       private
+
+      # Determines whether the resolved path is contained within the base directory.
+      # Uses a separator-aware boundary so a sibling directory whose name merely shares
+      # the base directory's prefix (e.g. base `/tmp/foo` vs `/tmp/foo-evil`) is rejected.
+      #
+      # @param full_path [Pathname] The expanded source path to validate.
+      # @param base_expanded [Pathname] The expanded base directory.
+      # @return [Boolean] true when full_path is the base directory or a descendant of it.
+      def within_base?(full_path, base_expanded)
+        full = full_path.to_path
+        base = base_expanded.to_path
+        full == base || full.start_with?(base + File::SEPARATOR)
+      end
 
       def missing_path_result
         { success: false, response: { error: { message: "Source path #{@source_path} does not exist or is not a directory" } } }
