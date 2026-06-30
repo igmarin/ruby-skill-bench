@@ -15,7 +15,6 @@ gems-report.csv
 .github/copilot-instructions.md
 .github/hooks/rtk-rewrite.json
 *.gem
-examples/
 # Generated eval artifacts — these are created by `skill-bench eval new` and `eval generate`
 evals/*-eval/
 evals/test-*/
