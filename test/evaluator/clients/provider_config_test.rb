@@ -60,6 +60,66 @@ module SkillBench
         assert_equal 'test-project', result[:project_id]
         assert_equal 'us-central1', result[:location]
       end
+
+      def test_call_accepts_https_base_url_with_key
+        result = ProviderConfig.call(
+          provider: :openai,
+          options: { api_key: 'key', base_url: 'https://api.example.com' }
+        )
+
+        assert_equal 'https://api.example.com', result[:base_url]
+      end
+
+      def test_call_rejects_cleartext_base_url_with_key
+        error = assert_raises(BaseUrlValidator::InvalidBaseURLError) do
+          ProviderConfig.call(
+            provider: :openai,
+            options: { api_key: 'key', base_url: 'http://evil.example.com' }
+          )
+        end
+
+        assert_match(/cleartext http/i, error.message)
+      end
+
+      def test_call_accepts_loopback_http_base_url_with_key
+        result = ProviderConfig.call(
+          provider: :ollama,
+          options: { api_key: 'key', base_url: 'http://localhost:11434' }
+        )
+
+        assert_equal 'http://localhost:11434', result[:base_url]
+      end
+
+      def test_call_rejects_relative_base_url
+        assert_raises(BaseUrlValidator::InvalidBaseURLError) do
+          ProviderConfig.call(
+            provider: :openai,
+            options: { api_key: 'key', base_url: '/v1/chat/completions' }
+          )
+        end
+      end
+
+      def test_call_opt_in_flag_permits_cleartext_base_url
+        result = ProviderConfig.call(
+          provider: :openai,
+          options: {
+            api_key: 'key',
+            base_url: 'http://internal-proxy.example.com',
+            allow_insecure_base_url: true
+          }
+        )
+
+        assert_equal 'http://internal-proxy.example.com', result[:base_url]
+      end
+
+      def test_call_validates_azure_endpoint_as_transport_url
+        assert_raises(BaseUrlValidator::InvalidBaseURLError) do
+          ProviderConfig.call(
+            provider: :azure,
+            options: { api_key: 'key', endpoint: 'http://evil.example.com' }
+          )
+        end
+      end
     end
   end
 end
