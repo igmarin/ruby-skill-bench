@@ -130,5 +130,60 @@ module SkillBench
     ensure
       FileUtils.rm_f(secret_file)
     end
+
+    def test_enforces_total_size_cap
+      Dir.mktmpdir do |dir|
+        # Each file is under MAX_FILE_SIZE (50_000) but together they exceed
+        # MAX_TOTAL_CONTEXT_SIZE (1_000_000), so hydration must fail.
+        21.times { |i| File.write(File.join(dir, "chunk_#{i}.md"), 'x' * 49_000) }
+
+        result = Execution::ContextHydrator.call(source_path: '.', base_path: Pathname.new(dir))
+
+        refute result[:success]
+        assert_match(/does not exist/, result[:response][:error][:message])
+      end
+    end
+
+    def test_included_files_are_read_and_stat_at_most_once
+      Dir.mktmpdir do |dir|
+        files = {
+          File.join(dir, 'alpha.md') => 'alpha content',
+          File.join(dir, 'beta.rb') => 'class Beta; end'
+        }
+        files.each { |path, body| File.write(path, body) }
+
+        read_counts = Hash.new(0)
+        size_counts = Hash.new(0)
+        tracked = files.keys
+        File.singleton_class.prepend(io_spy(tracked, read_counts, size_counts))
+
+        result = Execution::ContextHydrator.call(source_path: '.', base_path: Pathname.new(dir))
+
+        assert result[:success]
+        files.each_key do |path|
+          assert_equal 1, read_counts[path], "expected #{path} to be read exactly once"
+          assert_operator size_counts[path], :<=, 1, "expected #{path} to be stat-ed at most once"
+        end
+      end
+    end
+
+    private
+
+    # Builds a module that, when prepended onto File's singleton class, counts how
+    # often the tracked paths are passed to File.read / File.size while delegating
+    # to the real implementations so behavior is preserved.
+    def io_spy(tracked, read_counts, size_counts)
+      Module.new do
+        define_method(:read) do |*args, &block|
+          read_counts[args.first] += 1 if tracked.include?(args.first)
+          super(*args, &block)
+        end
+
+        define_method(:size) do |*args, &block|
+          size_counts[args.first] += 1 if tracked.include?(args.first)
+          super(*args, &block)
+        end
+      end
+    end
   end
 end
