@@ -78,7 +78,7 @@ module SkillBench
           skill_context_section,
           agent_output_section,
           instructions_section
-        ]
+        ].compact
 
         sections.join("\n\n")
       end
@@ -100,6 +100,8 @@ module SkillBench
       end
 
       def skill_context_section
+        return nil if skill_context.nil?
+
         "## Skill Context\n\n#{skill_context}"
       end
 

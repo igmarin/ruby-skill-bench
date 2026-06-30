@@ -73,6 +73,32 @@ module SkillBench
       refute_match(/skill context.*required/i, result[:response][:prompt])
     end
 
+    def test_omits_skill_context_section_for_baseline_runs
+      criteria = build_criteria
+      result = Judge::Prompt.call(
+        task: 'Create API',
+        criteria: criteria,
+        skill_context: nil,
+        agent_output: 'output'
+      )
+
+      assert result[:success]
+      refute_match(/## Skill Context/, result[:response][:prompt])
+    end
+
+    def test_includes_skill_context_section_when_present
+      criteria = build_criteria
+      result = Judge::Prompt.call(
+        task: 'Create API',
+        criteria: criteria,
+        skill_context: 'Real skill guidance',
+        agent_output: 'output'
+      )
+
+      assert result[:success]
+      assert_match(/## Skill Context\n\nReal skill guidance/, result[:response][:prompt])
+    end
+
     def test_returns_error_when_skill_context_empty_string
       criteria = build_criteria
       result = Judge::Prompt.call(
