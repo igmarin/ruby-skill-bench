@@ -489,7 +489,7 @@ A JSON array recording every successful eval run. SkillBench writes it automatic
 
 ### `.skill-bench-trends.json.bak` — Backup (Auto-Generated)
 
-A safety copy of the history file. If the main file gets corrupted, SkillBench recovers from this backup automatically. You never need to touch it.
+A snapshot of the previous good version of the history file, copied just before each new write. If the main file gets corrupted, SkillBench recovers from this backup automatically. You never need to touch it.
 
 ---
 

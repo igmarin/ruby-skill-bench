@@ -508,7 +508,7 @@ The trend compares the current run against the *previous run of the same eval + 
 
 ### `.skill-bench-trends.json.bak` — Backup (Auto-Generated)
 
-**What it is:** A copy of `.skill-bench-trends.json` created every time SkillBench writes a new entry. If the main file gets corrupted (e.g. you kill the process mid-write), SkillBench automatically falls back to the `.bak` file.
+**What it is:** A snapshot of the *previous* good version of `.skill-bench-trends.json`, copied just before each new write. (The first run has no prior version yet, so it creates no `.bak`.) If the main file gets corrupted (e.g. you kill the process mid-write), SkillBench automatically falls back to the `.bak` file.
 
 **Who edits it:** Nobody. It is a safety net.
 

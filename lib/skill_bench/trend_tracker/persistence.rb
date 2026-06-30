@@ -2,6 +2,7 @@
 
 require 'json'
 require 'pathname'
+require 'fileutils'
 
 module SkillBench
   class TrendTracker
@@ -27,22 +28,23 @@ module SkillBench
         []
       end
 
-      # Writes history to file with atomic operation and backup.
-      # Returns a result hash so callers do not need to rescue SystemCallError.
+      # Writes history to file atomically, snapshotting the previous good
+      # version into the backup first.
+      #
+      # The existing history file (if any) is copied to +#{history_file}.bak+
+      # before the new content is written, so the backup always holds the
+      # previous good version rather than a duplicate of the current file. The
+      # new content is serialized once and written via a temp-file + rename so
+      # the main file is never left partially written. Returns a result hash so
+      # callers do not need to rescue SystemCallError.
       #
       # @param history [Array<Hash>] History entries to write
       # @return [Hash] { success: true } on success, { success: false, error: { message: '...' } } on failure
       def write(history)
-        json = JSON.pretty_generate(history)
+        backup_previous_version
         temp_file = "#{history_file}.tmp"
-        File.write(temp_file, json)
+        File.write(temp_file, JSON.pretty_generate(history))
         File.rename(temp_file, history_file)
-
-        begin
-          File.write("#{history_file}.bak", json)
-        rescue SystemCallError => e
-          warn "Backup write failed for #{history_file}: #{e.message}"
-        end
 
         { success: true }
       rescue SystemCallError => e
@@ -52,6 +54,21 @@ module SkillBench
       private
 
       attr_reader :history_file
+
+      # Copies the current history file to the backup path so the backup keeps
+      # the previous good version. No-op on the first run when no history file
+      # exists yet. A failed copy is non-fatal: it warns and lets the main
+      # write proceed.
+      #
+      # @return [void]
+      def backup_previous_version
+        source = history_file
+        return unless File.exist?(source)
+
+        FileUtils.cp(source, "#{source}.bak")
+      rescue SystemCallError => e
+        warn "Backup copy failed for #{source}: #{e.message}"
+      end
 
       # Reads backup file if it exists
       #

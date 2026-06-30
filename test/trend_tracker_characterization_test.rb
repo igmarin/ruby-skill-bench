@@ -47,10 +47,15 @@ module SkillBench
       assert_equal 80, entry['context_total']
     end
 
-    # Characterization test: Handles file corruption with backup recovery
+    # Characterization test: Handles file corruption with backup recovery.
+    # The backup holds the PREVIOUS good version, so recovery must fall back to
+    # it. A backup only exists once a second write has snapshotted the prior
+    # file, hence two records before corrupting the main file.
     def test_load_history_handles_corruption_with_backup
-      # Create initial history
-      @tracker.record(build_complete_result)
+      # First run: writes history, no .bak yet (nothing to back up).
+      @tracker.record(build_complete_result(context_total: 80))
+      # Second run: snapshots the previous version into .bak before writing.
+      @tracker.record(build_complete_result(context_total: 90))
 
       # Corrupt main file
       File.write(@history_file, 'invalid json{')
@@ -59,6 +64,7 @@ module SkillBench
 
       assert_equal 1, history.size
       assert_equal 'test-eval', history.first[:eval_name]
+      assert_equal 80, history.first[:context_total] # recovered the previous good version
     end
 
     # Characterization test: Computes trend direction correctly

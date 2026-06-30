@@ -27,12 +27,16 @@ module SkillBench
 
       # Records evaluation results and computes trends.
       #
+      # Loads the trend history once and reuses it for both the trend
+      # computation and the append+write, avoiding a duplicate parse per run.
+      #
       # @return [Hash] Result with success status and trend data
       def call
         tracker = TrendTracker.new
         enriched = @result.merge(eval_name: @eval_name, skill_names: @skill_names)
-        trend = tracker.trend_for(enriched)
-        record_result = tracker.record(enriched)
+        history = tracker.history
+        trend = tracker.trend_for(enriched, history)
+        record_result = tracker.record(enriched, history)
 
         record_success = record_result.is_a?(Hash) && record_result[:success]
         unless record_success

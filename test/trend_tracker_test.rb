@@ -82,6 +82,28 @@ module SkillBench
       assert_nil trend
     end
 
+    def test_first_write_creates_no_backup
+      tracker = TrendTracker.new(history_file: @history_file)
+
+      result = tracker.record(build_result)
+
+      assert result[:success]
+      refute_path_exists "#{@history_file}.bak", 'first run has no previous version to back up'
+    end
+
+    def test_backup_holds_previous_version_not_current
+      tracker = TrendTracker.new(history_file: @history_file)
+      tracker.record(build_result(context_total: 80))
+      tracker.record(build_result(context_total: 90))
+
+      main = JSON.parse(File.read(@history_file), symbolize_names: true)
+      backup = JSON.parse(File.read("#{@history_file}.bak"), symbolize_names: true)
+
+      assert_equal 2, main.size
+      assert_equal 1, backup.size
+      assert_equal 80, backup.first[:context_total]
+    end
+
     private
 
     def build_result(baseline_total: 30, context_total: 80, eval_name: 'test-eval', skill_names: ['test-skill'])
