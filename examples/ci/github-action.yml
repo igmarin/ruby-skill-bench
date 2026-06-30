@@ -1,0 +1,87 @@
+# ---------------------------------------------------------------------------
+# Ruby Skill Bench — CI gate (COPY-PASTE TEMPLATE)
+# ---------------------------------------------------------------------------
+# Drop this file into your own repository at `.github/workflows/skill-bench.yml`
+# to gate a skill change on every pull request.
+#
+# IMPORTANT: This file lives under `examples/` on purpose. It is NOT placed in
+# `.github/workflows/`, so it does NOT run in the ruby-skill-bench repo's own
+# CI — it is a template for *you* to copy.
+#
+# No secrets required. It runs the bundled `offline-quickstart` eval with the
+# built-in `mock` provider, so there is no API key and no network call. Point
+# the `working-directory` and the eval/skill paths at your own eval once you
+# have it wired up.
+#
+# How the gate works:
+#   `skill-bench run ... --format junit` writes JUnit XML to stdout and sets the
+#   process exit code to 0 on PASS and non-zero (1) on FAIL. We redirect stdout
+#   to `junit.xml` and let the non-zero exit fail the step — that is the gate.
+#   (Diagnostic lines such as "Config load failed, using mock provider" go to
+#   stderr, so the redirected `junit.xml` stays valid XML.)
+# ---------------------------------------------------------------------------
+
+name: skill-bench
+
+on:
+  pull_request:
+    # Only run when a skill or eval actually changes. Adjust these globs to
+    # match where your skills/evals live.
+    paths:
+      - "examples/offline-quickstart/**"
+      - ".github/workflows/skill-bench.yml"
+  workflow_dispatch: {}
+
+jobs:
+  skill-bench:
+    runs-on: ubuntu-latest
+
+    # The offline-quickstart example is self-contained in this directory.
+    # Change it to wherever your `skill-bench.json` / evals / skills live.
+    defaults:
+      run:
+        working-directory: examples/offline-quickstart
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          # Caches gems between runs. Requires a Gemfile + Gemfile.lock in the
+          # working-directory. If you install the gem globally instead (see the
+          # next step), set this to false.
+          bundler-cache: true
+
+      # Option A (used here): install the gem directly. No Gemfile needed.
+      #   bundler-cache above can be set to false in that case.
+      # Option B: add `ruby-skill-bench` to your Gemfile and use `bundle exec`.
+      - name: Install ruby-skill-bench
+        run: gem install ruby-skill-bench
+
+      - name: Run skill eval (offline, mock provider) and emit JUnit
+        # `--format junit` => JUnit XML on stdout, exit 0 on PASS / non-zero on FAIL.
+        # The redirect captures the report; the non-zero exit gates the build.
+        run: skill-bench run evals/improve-greeting --skill skills/greeting-skill --format junit > junit.xml
+
+      - name: Upload JUnit report
+        # `always()` so the artifact is uploaded even when the eval fails,
+        # which is exactly when you want to read the report.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skill-bench-junit
+          path: examples/offline-quickstart/junit.xml
+
+      # Optional: surface the JUnit results as a PR check / annotations.
+      # Uncomment and pick a reporter action that suits your setup, e.g.:
+      #
+      # - name: Publish test report
+      #   if: always()
+      #   uses: dorny/test-reporter@v1
+      #   with:
+      #     name: skill-bench
+      #     path: examples/offline-quickstart/junit.xml
+      #     reporter: java-junit
