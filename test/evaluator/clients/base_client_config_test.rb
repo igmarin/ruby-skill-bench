@@ -89,6 +89,41 @@ module SkillBench
         refute result[:success]
         assert_match(/missing message content/i, result[:response][:error][:message])
       end
+
+      def test_reuses_memoized_connection_across_requests
+        stub_request(:post, 'https://api.example.com/v1/chat')
+          .to_return(status: 200, body: { choices: [{ message: { content: 'ok' } }] }.to_json,
+                     headers: { 'Content-Type' => 'application/json' })
+
+        connection = RequestBuilder.build_connection('https://api.example.com')
+        RequestBuilder.expects(:build_connection).once.returns(connection)
+
+        client = @client_class.new(system_prompt: 'test', messages: [{ role: 'user', content: 'hi' }], api_key: 'key')
+
+        3.times { client.send(:execute_request) }
+      end
+
+      def test_reuses_memoized_connection_across_retries
+        RetryHandler.any_instance.stubs(:wait)
+        stub_request(:post, 'https://api.example.com/v1/chat')
+          .to_return(status: 200, body: { choices: [{ message: { content: 'ok' } }] }.to_json,
+                     headers: { 'Content-Type' => 'application/json' })
+
+        connection = RequestBuilder.build_connection('https://api.example.com')
+        success = RequestBuilder.execute(connection, '/v1/chat',
+                                         headers: { 'Content-Type' => 'application/json' },
+                                         body: { model: 'test-model' })
+
+        RequestBuilder.expects(:build_connection).once.returns(connection)
+        error = Faraday::ServerError.new('unavailable', status: 503)
+        RequestBuilder.stubs(:execute).raises(error).then.raises(error).then.returns(success)
+
+        client = @client_class.new(system_prompt: 'test', messages: [], api_key: 'key')
+        result = client.call
+
+        assert result[:success]
+        assert_equal 'ok', result[:response][:message]['content']
+      end
     end
   end
 end
