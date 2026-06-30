@@ -24,10 +24,15 @@ module SkillBench
 
       # Generates configuration hash for a specific provider.
       #
+      # The built-in `:mock` provider needs no credentials, so it produces a
+      # minimal offline config without a nested `config:` block.
+      #
       # @param provider [Symbol] LLM provider name
       # @return [Hash] Single-provider configuration
       # @raise [ArgumentError] if provider is not registered
       def self.config_for_provider(provider)
+        return { provider: :mock, max_execution_time: 30 } if provider == :mock
+
         {
           provider: provider,
           max_execution_time: 30,

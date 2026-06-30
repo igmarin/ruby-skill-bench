@@ -39,6 +39,10 @@ module SkillBench
           api_key: nil,
           model: 'deepseek-chat'
         }.freeze,
+        mistral: {
+          api_key: nil,
+          model: 'mistral-large-latest'
+        }.freeze,
         opencode: {
           api_key: nil,
           model: 'opencode-model',

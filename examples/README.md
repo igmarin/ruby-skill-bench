@@ -4,6 +4,9 @@ Runnable, copy-paste examples for `ruby-skill-bench`. Each one is offline by
 default — they use the built-in `mock` provider, so they need **no API key and
 no network access**.
 
+> Tip: run `skill-bench init --mock` to scaffold that offline mock config
+> (`{"provider":"mock","max_execution_time":30}`) by hand as a fallback.
+
 ## Index
 
 ### `offline-quickstart/`

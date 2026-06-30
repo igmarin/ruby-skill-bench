@@ -90,6 +90,30 @@ module SkillBench
         assert_equal 'opencode', config[:provider]
       end
 
+      def test_call_with_mock_flag_writes_minimal_offline_config
+        exit_code = InitCommand.call(['--mock'])
+
+        assert_equal 0, exit_code
+        assert_path_exists SkillBench::Config::CONFIG_FILENAME
+        config = JSON.parse(File.read(SkillBench::Config::CONFIG_FILENAME), symbolize_names: true)
+
+        assert_equal 'mock', config[:provider]
+        assert_equal 30, config[:max_execution_time]
+        refute config.key?(:config)
+        refute config.key?(:api_key)
+      end
+
+      def test_call_with_mock_and_force_overwrites_existing
+        File.write(SkillBench::Config::CONFIG_FILENAME, '{"old": true}')
+
+        exit_code = InitCommand.call(['--mock', '--force'])
+
+        assert_equal 0, exit_code
+        config = JSON.parse(File.read(SkillBench::Config::CONFIG_FILENAME), symbolize_names: true)
+
+        assert_equal 'mock', config[:provider]
+      end
+
       def test_call_without_provider_returns_error
         exit_code = InitCommand.call([])
 
