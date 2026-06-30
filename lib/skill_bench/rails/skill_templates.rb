@@ -1,16 +1,30 @@
 # frozen_string_literal: true
 
-require 'active_support/inflector'
-
 module SkillBench
   module Rails
     # Generates Rails-specific skill templates
     class SkillTemplates
+      # Convert a snake_case or kebab-case name to CamelCase.
+      #
+      # Replaces ActiveSupport's +String#camelize+ for the scaffold inputs used
+      # here: it splits on +_+ and +-+ separators, upcases the first letter of
+      # each segment, and preserves any segment that is already CamelCase.
+      #
+      # @example
+      #   SkillTemplates.camelize('user_creator') # => "UserCreator"
+      #   SkillTemplates.camelize('order-service') # => "OrderService"
+      #   SkillTemplates.camelize('UserCreator')   # => "UserCreator"
+      # @param name [String] snake_case, kebab-case, or already-CamelCase name
+      # @return [String] CamelCase name
+      def self.camelize(name)
+        name.split(/[-_]/).map { |segment| segment.empty? ? segment : segment[0].upcase + segment[1..] }.join
+      end
+
       # Generate a service object template
       # @param name [String] Service name (e.g., 'my_service' or 'my-service')
       # @return [String] Service object Ruby class
       def self.service_object(name)
-        class_name = name.split(/[-_]/).map(&:capitalize).join
+        class_name = camelize(name)
         <<~RUBY
           # frozen_string_literal: true
 
@@ -43,7 +57,7 @@ module SkillBench
       # @param name [String] Concern name (e.g., 'my_concern')
       # @return [String] Concern module
       def self.concern(name)
-        module_name = name.camelize
+        module_name = camelize(name)
         <<~RUBY
           # frozen_string_literal: true
 
@@ -67,7 +81,7 @@ module SkillBench
       # @param name [String] Model name (e.g., 'my_model')
       # @return [String] ActiveRecord model class
       def self.active_record_model(name)
-        class_name = name.camelize
+        class_name = camelize(name)
         <<~RUBY
           # frozen_string_literal: true
 

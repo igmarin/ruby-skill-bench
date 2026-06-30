@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'test_helper'
+require 'skill_bench/rails/skill_templates'
 
 module SkillBench
   module Rails
@@ -32,6 +33,22 @@ module SkillBench
 
         assert_includes code, 'class UserProfile < ApplicationRecord'
         assert_includes code, 'validates :name, presence: true'
+      end
+
+      def test_camelize_snake_case
+        assert_equal 'UserCreator', SkillTemplates.camelize('user_creator')
+      end
+
+      def test_camelize_kebab_case
+        assert_equal 'OrderService', SkillTemplates.camelize('order-service')
+      end
+
+      def test_camelize_already_camel_case
+        assert_equal 'UserCreator', SkillTemplates.camelize('UserCreator')
+      end
+
+      def test_camelize_mixed_separators
+        assert_equal 'MyCoolSkill', SkillTemplates.camelize('my-cool_skill')
       end
     end
   end
