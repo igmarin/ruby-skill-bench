@@ -922,12 +922,10 @@ When Docker is available, containers are launched with hardened security setting
 
 ### Reporting Security Issues
 
-If you discover a security vulnerability:
-
-1. **Do Not Open a Public Issue:** Send a private email to the maintainers
-2. **Provide Details:** Include steps to reproduce and potential impact
-3. **Allow Time for Fix:** Give maintainers time to address the issue before disclosure
-4. **Follow Responsible Disclosure:** Follow responsible disclosure practices
+To report a security vulnerability, please follow the process in
+[SECURITY.md](SECURITY.md). **Do not open a public issue** — use GitHub's
+private vulnerability reporting (Security tab) or email the maintainer at
+[ismael.marin@gmail.com](mailto:ismael.marin@gmail.com).
 
 ---
 

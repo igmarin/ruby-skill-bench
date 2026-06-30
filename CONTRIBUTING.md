@@ -134,12 +134,10 @@ When reporting issues, please include:
 
 ## Security Considerations
 
-If you discover a security vulnerability, please:
-
-1. Do not open a public issue
-2. Send an email to the maintainers
-3. Provide details about the vulnerability
-4. Allow time for the maintainers to address the issue
+To report a security vulnerability, please follow the process in
+[SECURITY.md](SECURITY.md): do not open a public issue — use GitHub's private
+vulnerability reporting or email the maintainer at
+[ismael.marin@gmail.com](mailto:ismael.marin@gmail.com).
 
 ## License
 
