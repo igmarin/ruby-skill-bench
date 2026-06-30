@@ -20,6 +20,7 @@ module SkillBench
           max_execution_time: 30,
           allowed_commands: nil,
           allow_host_execution: false,
+          command_argument_constraints: {},
           skill_sources: {},
           llm_providers_config: {
             openai: { api_key: nil, model: 'gpt-4o' },

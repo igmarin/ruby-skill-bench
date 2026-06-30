@@ -902,6 +902,10 @@ Ruby Skill Bench is designed with security as a primary concern. The system exec
 - **Shell Tokenization:** Commands are tokenized before execution to prevent shell injection
 - **Fail-Closed Host Execution:** Container isolation is not yet active, so commands run on the host inside a temporary sandbox directory. To match this reality, `run_command` refuses to execute unless `allow_host_execution: true` is set; it is **disabled by default**.
 
+> **The allowlist is the only real authorization control — and it only checks the base command.** `run_command` authorizes by the first token of the command (`rake`, `find`, `git`, …); it does **not** inspect arguments. Shell tokenization stops metacharacter injection, but it does **not** sandbox what an allowlisted binary can do. Because many common tools are general-purpose execution wrappers, **allowlisting any one of them is equivalent to granting arbitrary host code execution** — for example `rake -e '...'`, `rspec -e`, `make` (arbitrary recipes), `find . -exec ...`, or `git` (hooks, `-c core.fsmonitor=...`, `! ...` aliases). Combined with the fail-closed model above (`run_command` refuses to run on the host unless `allow_host_execution` is explicitly enabled — see `HOST_EXECUTION_REFUSED` in `run_command.rb`), the practical guidance is: **keep `allowed_commands` as minimal as possible — empty for untrusted skills** — and treat every entry as if you were handing the skill a shell.
+>
+> An **optional, default-off** `command_argument_constraints` setting can refuse commands whose arguments contain configured substrings/flags (for example blocking `-e` or `-exec`). It is a defense-in-depth speed bump, **not** a sandbox, and is unset by default; the allowlist remains the control that matters.
+
 #### Docker Security Hardening (Planned — Not Yet Active)
 
 > **Status:** The container isolation model described below is **planned, not shipped**. No Docker build context is packaged, so containers are never launched today — `run_command` runs on the host gated by the allowlist and `allow_host_execution`. The settings below document the intended hardened model for when container isolation lands.

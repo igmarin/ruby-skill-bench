@@ -85,6 +85,53 @@ module SkillBench
           assert_empty err
         end
       end
+
+      def test_call_runs_with_args_when_no_argument_constraints_configured
+        # Default (no command_argument_constraints) leaves behavior unchanged.
+        SkillBench::Config.allow_host_execution = true
+
+        Dir.mktmpdir do |dir|
+          working_dir = Pathname.new(dir).expand_path
+
+          result = RunCommand.call('echo hello world', working_dir)
+
+          assert_match(/STDOUT:\nhello world/, result)
+          assert_match(/Exit Status: 0/, result)
+        end
+      end
+
+      def test_call_refuses_command_whose_args_hit_configured_constraint
+        SkillBench::Config.allow_host_execution = true
+        SkillBench::Config.command_argument_constraints = { 'echo' => ['-n'] }
+
+        Dir.mktmpdir do |dir|
+          working_dir = Pathname.new(dir).expand_path
+
+          # The constraint must block before anything is executed.
+          Open3.expects(:capture3).never
+
+          result = RunCommand.call('echo -n test', working_dir)
+
+          assert_equal(
+            "Error: Command 'echo' arguments are not permitted by the configured argument constraints.",
+            result
+          )
+        end
+      end
+
+      def test_call_runs_when_constrained_command_has_clean_args
+        SkillBench::Config.allow_host_execution = true
+        SkillBench::Config.command_argument_constraints = { 'echo' => ['-n'] }
+
+        Dir.mktmpdir do |dir|
+          working_dir = Pathname.new(dir).expand_path
+
+          result = RunCommand.call('echo hello', working_dir)
+
+          assert_match(/STDOUT:\nhello/, result)
+          assert_match(/Exit Status: 0/, result)
+        end
+      end
     end
   end
 end
