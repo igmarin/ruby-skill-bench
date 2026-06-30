@@ -17,9 +17,9 @@ module SkillBench
     # Records an evaluation result.
     #
     # @param result [Hash] The evaluation result from EvaluationRunner.
+    # @param history [Array<Hash>] Pre-loaded history to append to; defaults to a fresh load.
     # @return [Hash] Service response.
-    def record(result)
-      history = @persistence.load
+    def record(result, history = @persistence.load)
       history << extract_entry(result)
       write_result = @persistence.write(history)
 
@@ -41,11 +41,11 @@ module SkillBench
     # Computes the trend of the given result against the most recent matching history entry.
     #
     # @param result [Hash] The current evaluation result.
+    # @param history [Array<Hash>] Pre-loaded history to compare against; defaults to a fresh load.
     # @return [Hash, nil] Trend data or nil if no matching history exists.
-    def trend_for(result)
-      entries = @persistence.load
+    def trend_for(result, history = @persistence.load)
       current = extract_entry(result)
-      TrendCalculator.compute_trend(entries, current)
+      TrendCalculator.compute_trend(history, current)
     end
 
     private
