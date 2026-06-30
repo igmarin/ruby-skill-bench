@@ -33,6 +33,15 @@ class JudgeTest < Minitest::Test
     assert_equal 'API failure', result[:response][:error][:message]
   end
 
+  def test_system_prompt_treats_delimited_content_as_data_not_instructions
+    system_prompt = SkillBench::Judge::Judge::SYSTEM_PROMPT
+
+    assert_match(/objective judge/, system_prompt)
+    assert_match(/data/i, system_prompt)
+    assert_match(/never.*instruction/i, system_prompt)
+    assert_match(/criteria/i, system_prompt)
+  end
+
   def test_call_returns_error_when_judge_response_invalid
     SkillBench::Client.expects(:call).returns({
                                                 success: true,
