@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'parallel'
+
 module SkillBench
   module Evaluation
     # Orchestrates the evaluation pipeline.
@@ -39,10 +41,8 @@ module SkillBench
       #
       # @return [Hash] Service response with report or error.
       def call
-        baseline_judge = judge_run(baseline_output, nil)
+        baseline_judge, context_judge = run_judges_concurrently
         return baseline_judge unless baseline_judge[:success]
-
-        context_judge = judge_run(context_output, skill_context)
         return context_judge unless context_judge[:success]
 
         compute_deltas(baseline_judge, context_judge)
@@ -54,6 +54,23 @@ module SkillBench
       private
 
       attr_reader :task, :criteria, :skill_context, :baseline_output, :context_output, :judge_params
+
+      # Judges the baseline and context outputs concurrently.
+      #
+      # The two runs are independent blind evaluations that share no mutable
+      # state, so they execute on separate threads (the LLM round-trip is
+      # I/O-bound and releases the GIL). +Parallel.map+ preserves input order,
+      # so the baseline result is always first and the context result second;
+      # callers still apply the sequential failure precedence afterwards.
+      #
+      # @return [Array(Hash, Hash)] Baseline and context judge results, in order.
+      def run_judges_concurrently
+        runs = [
+          -> { judge_run(baseline_output, nil) },
+          -> { judge_run(context_output, skill_context) }
+        ]
+        Parallel.map(runs, in_threads: runs.size, &:call)
+      end
 
       def judge_run(output, context)
         prompt_result = Judge::Prompt.call(
