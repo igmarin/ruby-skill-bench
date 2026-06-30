@@ -159,9 +159,20 @@ module SkillBench
 
       def execute_request
         RetryHandler.call do
-          connection = RequestBuilder.build_connection(base_url)
           RequestBuilder.execute(connection, request_path, headers: request_headers, body: request_body)
         end
+      end
+
+      # Lazily builds and memoizes the Faraday connection for this client instance.
+      #
+      # Reusing one connection across the instance's sequential requests and retry
+      # attempts enables HTTP keep-alive, avoiding a fresh TCP + TLS handshake per turn.
+      # Memoization is intentionally per-instance (never global/shared) so concurrent
+      # agent and judge clients each own a connection, keeping net/http thread-safe.
+      #
+      # @return [Faraday::Connection] the reused connection for this instance.
+      def connection
+        @connection ||= RequestBuilder.build_connection(base_url)
       end
 
       def handle_response(response)
