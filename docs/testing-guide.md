@@ -273,7 +273,7 @@ Both must be true. This prevents two failure modes:
 TREND: baseline ↑ (+2), context ↑ (+7)
 ```
 
-This compares the current run against the **previous run of the same eval + skill** (stored in `.skill-bench-history.json`).
+This compares the current run against the **previous run of the same eval + skill** (stored in `.skill-bench-trends.json`).
 
 - `↑` = improved since last run
 - `↓` = regressed since last run

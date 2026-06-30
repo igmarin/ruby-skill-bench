@@ -19,7 +19,6 @@ examples/
 # Generated eval artifacts — these are created by `skill-bench eval new` and `eval generate`
 evals/*-eval/
 evals/test-*/
-.skill-bench-history.json
 .lean-ctx/*
 plans/
 .windsurf/
