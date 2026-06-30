@@ -338,7 +338,7 @@ skill-bench run my-first-eval --skill=my-service
 3. **Context run** — Agent receives `task.md` + `SKILL.md` as prompt → produces output B
 4. **Blind judging** — LLM judge scores output A and output B independently across the dimensions defined in `criteria.json`
 5. **Delta computation** — Compare scores, compute deltas, apply pass/fail logic
-6. **History recording** — Store result in `.skill-bench-history.json` for trend tracking
+6. **History recording** — Store result in `.skill-bench-trends.json` for trend tracking
 
 Provider is read from `skill-bench.json` — no `--provider` flag needed.
 
@@ -461,7 +461,7 @@ SkillBench creates and manages three files in your project. Understanding them h
 
 ---
 
-### `.skill-bench-history.json` — Evaluation History (Auto-Generated)
+### `.skill-bench-trends.json` — Evaluation History (Auto-Generated)
 
 **What it is:** A JSON array that records every successful eval run. SkillBench appends to it automatically. It stores the timestamp, eval name, skill names, scores, and deltas so you can track improvement over time.
 
@@ -497,13 +497,13 @@ TREND: baseline ↑ (+2), context ↑ (+7)
 
 The trend compares the current run against the *previous run of the same eval + skill*. This tells you at a glance whether your latest skill edit made things better or worse.
 
-**Pro tip:** Commit `.skill-bench-history.json` to git if you want to share trend data with your team. Add it to `.gitignore` if you prefer to keep scores private.
+**Pro tip:** `.skill-bench-trends.json` is git-ignored by default (via the `.skill-bench-trends.json*` line in `.gitignore`). If you want to share trend data with your team, remove that line so the file can be committed.
 
 ---
 
-### `.skill-bench-history.json.bak` — Backup (Auto-Generated)
+### `.skill-bench-trends.json.bak` — Backup (Auto-Generated)
 
-**What it is:** A copy of `.skill-bench-history.json` created every time SkillBench writes a new entry. If the main file gets corrupted (e.g. you kill the process mid-write), SkillBench automatically falls back to the `.bak` file.
+**What it is:** A copy of `.skill-bench-trends.json` created every time SkillBench writes a new entry. If the main file gets corrupted (e.g. you kill the process mid-write), SkillBench automatically falls back to the `.bak` file.
 
 **Who edits it:** Nobody. It is a safety net.
 
@@ -541,7 +541,7 @@ Read the output carefully. Look at **two things:**
 ### Step 3: Inspect the History
 
 ```bash
-cat .skill-bench-history.json | jq '.[-1]'
+cat .skill-bench-trends.json | jq '.[-1]'
 ```
 
 This shows the latest entry. Focus on the dimension with the smallest delta — that is where your skill is weakest.
@@ -774,7 +774,7 @@ These 5 dimensions are **mandatory** in every `criteria.json`. You can add custo
 - **CONTEXT:** The agent's score *with* the skill. This is the "aided" performance.
 - **DELTA:** `CONTEXT - BASELINE`. How much the skill helped.
 - **TOTAL:** Sum of all dimension scores. Max possible is 100.
-- **TREND:** Comparison against the previous run of the same eval + skill (from `.skill-bench-history.json`). Shows whether scores are improving over time.
+- **TREND:** Comparison against the previous run of the same eval + skill (from `.skill-bench-trends.json`). Shows whether scores are improving over time.
 - **VERDICT:** `PASS` only if `CONTEXT >= pass_threshold` AND `DELTA >= minimum_delta`.
 
 **Iteration timeline:**

@@ -268,7 +268,7 @@ Provider is read from `skill-bench.json` — no `--provider` flag needed.
 2. Agent runs **with** skill context → produces context output
 3. Judge scores both independently → per-dimension scores
 4. Engine computes deltas → applies pass/fail logic
-5. Result is recorded in `.skill-bench-history.json` for trend tracking
+5. Result is recorded in `.skill-bench-trends.json` for trend tracking
 
 **Run with multiple skills:**
 
@@ -346,7 +346,7 @@ Both skill contexts are concatenated. The judge evaluates whether the combined c
 | **BASELINE** | Score without skill (unaided performance). Think: "How well does the AI do on its own?" |
 | **CONTEXT** | Score with skill (aided performance). Think: "How well does the AI do when it reads my skill?" |
 | **DELTA** | Improvement = CONTEXT - BASELINE. Think: "How many points did my skill add?" |
-| **TREND** | Change since the *previous* run of this exact eval + skill. Stored in `.skill-bench-history.json`. |
+| **TREND** | Change since the *previous* run of this exact eval + skill. Stored in `.skill-bench-trends.json`. |
 | **VERDICT** | PASS only if CONTEXT >= threshold AND DELTA >= minimum_delta. Both must be true. |
 | **Iterations** | ReAct loop steps for each run: thought → tools → observation. Helps you understand *how* the agent worked. |
 | **What went well** | Dimensions scoring ≥ 80% of max, with judge reasoning. Strengths of your skill. |
@@ -417,10 +417,10 @@ Your first run probably will not pass. That is normal. Here is how to improve.
 
 ### Use the History File
 
-After each run, SkillBench appends to `.skill-bench-history.json`. You can read it to track progress:
+After each run, SkillBench appends to `.skill-bench-trends.json`. You can read it to track progress:
 
 ```bash
-cat .skill-bench-history.json | jq '.[-1]'
+cat .skill-bench-trends.json | jq '.[-1]'
 ```
 
 Look at the dimension with the **smallest delta**. That is where your skill is weakest. Open `SKILL.md` and add a concrete rule targeting that dimension.
@@ -467,7 +467,7 @@ Created by `skill-bench init`. Stores provider, API key, model, timeout, and all
 }
 ```
 
-### `.skill-bench-history.json` — Evaluation History (Auto-Generated)
+### `.skill-bench-trends.json` — Evaluation History (Auto-Generated)
 
 A JSON array recording every successful eval run. SkillBench writes it automatically. It stores timestamps, eval names, skill names, scores, and deltas. This powers the **TREND** line in your output.
 
@@ -487,7 +487,7 @@ A JSON array recording every successful eval run. SkillBench writes it automatic
 
 **Tip:** Commit this file to git if you want to share trend data with your team.
 
-### `.skill-bench-history.json.bak` — Backup (Auto-Generated)
+### `.skill-bench-trends.json.bak` — Backup (Auto-Generated)
 
 A safety copy of the history file. If the main file gets corrupted, SkillBench recovers from this backup automatically. You never need to touch it.
 

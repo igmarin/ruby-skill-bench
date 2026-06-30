@@ -172,7 +172,7 @@ project-root/
 │   └── my-first-eval/
 │       ├── task.md               # Agent prompt
 │       └── criteria.json         # Scoring rules
-└── .skill-bench-history.json     # Benchmark history (auto-generated)
+└── .skill-bench-trends.json      # Benchmark history (auto-generated)
 ```
 
 ### Skill Discovery
