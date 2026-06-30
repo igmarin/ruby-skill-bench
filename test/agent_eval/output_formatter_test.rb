@@ -175,6 +175,38 @@ module SkillBench
       assert_equal 1, OutputFormatter.exit_code(result)
     end
 
+    def test_format_batch_lists_per_eval_verdicts_and_summary
+      aggregate = build_aggregate(passed: 1, failed: 1)
+      output = OutputFormatter.format_batch(aggregate)
+
+      assert_includes output, 'PASS'
+      assert_includes output, 'FAIL'
+      assert_includes output, '1 passed'
+      assert_includes output, '1 failed'
+      assert_includes output, '2 total'
+    end
+
+    def test_format_batch_includes_error_message_for_failed_eval
+      results = [{ success: false, eval_name: 'broken-eval', response: { error: { message: 'connection refused' } } }]
+      aggregate = { results: results, summary: { total: 1, passed: 0, failed: 1 } }
+      output = OutputFormatter.format_batch(aggregate)
+
+      assert_includes output, 'broken-eval'
+      assert_includes output, 'connection refused'
+    end
+
+    def test_batch_exit_code_returns_0_when_all_pass
+      aggregate = build_aggregate(passed: 2, failed: 0)
+
+      assert_equal 0, OutputFormatter.batch_exit_code(aggregate)
+    end
+
+    def test_batch_exit_code_returns_1_when_any_fail
+      aggregate = build_aggregate(passed: 1, failed: 1)
+
+      assert_equal 1, OutputFormatter.batch_exit_code(aggregate)
+    end
+
     def test_format_human_includes_iteration_timeline
       result = build_result_with_iterations(
         baseline_iterations: [
@@ -227,6 +259,13 @@ module SkillBench
     end
 
     private
+
+    def build_aggregate(passed:, failed:)
+      results = []
+      passed.times { |i| results << { success: true, eval_name: "pass-#{i}", response: { report: build_delta_report(verdict: true) } } }
+      failed.times { |i| results << { success: true, eval_name: "fail-#{i}", response: { report: build_delta_report(verdict: false) } } }
+      { results: results, summary: { total: passed + failed, passed: passed, failed: failed } }
+    end
 
     def build_result_with_iterations(baseline_iterations:, context_iterations:)
       report = build_delta_report(verdict: true)

@@ -39,6 +39,48 @@ module SkillBench
       report&.verdict ? 0 : 1
     end
 
+    # Format an aggregate batch result for human output.
+    #
+    # Renders one PASS/FAIL line per eval plus a final summary line.
+    #
+    # @param aggregate [Hash] Aggregate envelope with :results and :summary.
+    # @return [String] Human-readable batch summary.
+    def self.format_batch(aggregate)
+      lines = aggregate[:results].map { |result| batch_result_line(result) }
+      lines << ''
+      lines << batch_summary_line(aggregate[:summary])
+      lines.join("\n")
+    end
+
+    # Determine the exit code for an aggregate batch result.
+    #
+    # @param aggregate [Hash] Aggregate envelope with a :summary.
+    # @return [Integer] 0 when every eval passed, 1 when any failed.
+    def self.batch_exit_code(aggregate)
+      aggregate.dig(:summary, :failed).to_i.positive? ? 1 : 0
+    end
+
+    # Builds a single PASS/FAIL line for one eval result.
+    #
+    # @param result [Hash] A single-eval result envelope.
+    # @return [String] A formatted verdict line.
+    def self.batch_result_line(result)
+      status = exit_code(result).zero? ? 'PASS' : 'FAIL'
+      line = "#{status}  #{result[:eval_name]}"
+      error = result.dig(:response, :error, :message)
+      error ? "#{line} — #{error}" : line
+    end
+    private_class_method :batch_result_line
+
+    # Builds the trailing summary line for a batch run.
+    #
+    # @param summary [Hash] Summary with :passed, :failed and :total counts.
+    # @return [String] A formatted summary line.
+    def self.batch_summary_line(summary)
+      "Summary: #{summary[:passed]} passed / #{summary[:failed]} failed (#{summary[:total]} total)"
+    end
+    private_class_method :batch_summary_line
+
     # Format result as human-readable text.
     #
     # @param result [Hash] Eval result in old or new format.
