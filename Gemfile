@@ -20,4 +20,5 @@ group :development, :test do
   gem 'simplecov', '~> 0.22', require: false
   gem 'skunk', '~> 0.5.4'
   gem 'webmock', '~> 3.23'
+  gem 'yard', '~> 0.9', require: false
 end

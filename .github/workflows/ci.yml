@@ -31,5 +31,8 @@ jobs:
       - name: Run reek
         run: bundle exec reek
 
+      - name: Run YARD doc coverage
+        run: bundle exec rake yard:coverage
+
       - name: Run minitest
         run: bundle exec rake test
