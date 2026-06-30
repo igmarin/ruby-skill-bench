@@ -30,8 +30,8 @@ module SkillBench
         Dir.mktmpdir do |dir|
           working_dir = Pathname.new(dir).expand_path
 
-          # Nothing must be executed when fail-closed refusal triggers.
-          Open3.expects(:capture3).never
+          # Nothing must be spawned when the fail-closed refusal triggers.
+          Open3.expects(:popen3).never
 
           result = RunCommand.call('echo test', working_dir)
 
@@ -47,10 +47,6 @@ module SkillBench
 
         Dir.mktmpdir do |dir|
           working_dir = Pathname.new(dir).expand_path
-
-          status = mock('Process::Status')
-          status.stubs(:exitstatus).returns(0)
-          Open3.expects(:capture3).with('echo', 'test', chdir: working_dir.to_s).returns(['test', '', status])
 
           result = nil
           _out, err = capture_io do
@@ -69,10 +65,13 @@ module SkillBench
           working_dir = Pathname.new(dir).expand_path
           container_id = 'mock-container-id'
 
-          # Mock Open3.capture3 to verify docker call
+          # Stub the spawn/watchdog seam to verify the docker invocation is built
+          # correctly without requiring a real Docker daemon.
           status = mock('Process::Status')
           status.stubs(:exitstatus).returns(0)
-          Open3.expects(:capture3).with('docker', 'exec', '-w', '/sandbox', container_id, 'echo', 'test').returns(['test', '', status])
+          RunCommand.expects(:capture)
+                    .with(['docker', 'exec', '-w', '/sandbox', container_id, 'echo', 'test'], { pgroup: true }, SkillBench::Config.max_execution_time)
+                    .returns(['test', '', status])
 
           result = nil
           _out, err = capture_io do
@@ -130,6 +129,45 @@ module SkillBench
 
           assert_match(/STDOUT:\nhello/, result)
           assert_match(/Exit Status: 0/, result)
+        end
+      end
+
+      def test_call_returns_timeout_result_without_waiting_for_full_runtime
+        SkillBench::Config.allow_host_execution = true
+        SkillBench::Config.allowed_commands = %w[sleep]
+        SkillBench::Config.max_execution_time = 1
+
+        Dir.mktmpdir do |dir|
+          working_dir = Pathname.new(dir).expand_path
+
+          started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          result = RunCommand.call('sleep 30', working_dir)
+          elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started
+
+          # Same timeout shape as before — keyed on by callers/tests.
+          assert_equal 'Error: Command execution timed out after 1 seconds.', result.strip
+          # The watchdog must return shortly after the deadline rather than
+          # blocking on the child for the full 30s sleep (the old bug).
+          assert_operator elapsed, :<, 10, 'timeout must not block for the full child runtime'
+        end
+      end
+
+      def test_call_kills_runaway_child_process_on_timeout
+        SkillBench::Config.allow_host_execution = true
+        SkillBench::Config.allowed_commands = %w[sleep]
+        SkillBench::Config.max_execution_time = 1
+
+        Dir.mktmpdir do |dir|
+          working_dir = Pathname.new(dir).expand_path
+
+          result = RunCommand.call('sleep 30', working_dir)
+
+          assert_match(/timed out after 1 seconds/, result)
+          # Proof the child is actually terminated and reaped: no lingering
+          # `sleep` child remains under this process after the call returns.
+          lingering = `pgrep -P #{Process.pid} sleep`.split
+
+          assert_empty lingering, 'the runaway sleep child must be killed and reaped on timeout'
         end
       end
     end

@@ -90,9 +90,6 @@ require_relative 'skill_bench/trend_tracker'
 require_relative 'skill_bench/trend_tracker/persistence'
 require_relative 'skill_bench/trend_tracker/trend_calculator'
 
-# Rails integrations
-require_relative 'skill_bench/rails/skill_templates'
-
 # Migration utilities
 require_relative 'skill_bench/migration/provider_migrator'
 

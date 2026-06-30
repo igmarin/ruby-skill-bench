@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'open3'
-require 'timeout'
 require 'shellwords'
 require_relative '../config'
 require_relative '../constants'
@@ -26,6 +25,10 @@ module SkillBench
       # `allow_host_execution` is enabled and no container is active.
       HOST_EXECUTION_WARNING = 'Warning: running command directly on the host with NO sandbox isolation ' \
                                '(allow_host_execution is enabled). Commands are not isolated from your machine.'
+
+      # Seconds to wait after SIGTERM before escalating to SIGKILL when a command
+      # exceeds its execution deadline.
+      TERM_GRACE_PERIOD = 2
 
       # @return [Hash] The tool definition for the LLM API.
       def self.definition
@@ -107,42 +110,104 @@ module SkillBench
       # Runs the resolved command and formats its result, enforcing the
       # configured execution timeout.
       #
+      # The command is spawned in its own process group so that, on timeout, the
+      # whole group (the command and any children it forked) can be signalled —
+      # something `Timeout.timeout` around `Open3.capture3` could not do, because
+      # `capture3`'s `ensure` blocks on `wait_thr.value` and never signals the
+      # child.
+      #
       # @param argv [Array<String>] The tokenized command and arguments.
       # @param working_dir_path [Pathname] The host directory for host execution.
       # @param container_id [String, nil] The Docker container ID for isolated execution.
       # @return [String] Formatted exit status, STDOUT, and STDERR, or a timeout message.
       def self.execute(argv, working_dir_path, container_id)
         max_time = SkillBench::Config.max_execution_time
-        Timeout.timeout(max_time) do
-          stdout_str, stderr_str, status = capture(argv, working_dir_path, container_id)
-          <<~RESULT
-            Exit Status: #{status.exitstatus}
-            STDOUT:
-            #{stdout_str}
-            STDERR:
-            #{stderr_str}
-          RESULT
-        end
-      rescue Timeout::Error
-        "Error: Command execution timed out after #{max_time} seconds."
+        command, spawn_opts = resolve_invocation(argv, working_dir_path, container_id)
+        result = capture(command, spawn_opts, max_time)
+        return "Error: Command execution timed out after #{max_time} seconds." if result == :timed_out
+
+        stdout_str, stderr_str, status = result
+        format_result(status, stdout_str, stderr_str)
       end
       private_class_method :execute
 
-      # Captures the command output, in the container when one is active or on
-      # the host otherwise.
+      # Formats the captured command output into the standard result string.
+      #
+      # @param status [Process::Status] The exit status of the command.
+      # @param stdout_str [String] The captured standard output.
+      # @param stderr_str [String] The captured standard error.
+      # @return [String] Formatted exit status, STDOUT, and STDERR.
+      def self.format_result(status, stdout_str, stderr_str)
+        <<~RESULT
+          Exit Status: #{status.exitstatus}
+          STDOUT:
+          #{stdout_str}
+          STDERR:
+          #{stderr_str}
+        RESULT
+      end
+      private_class_method :format_result
+
+      # Builds the command array and spawn options for either container or host
+      # execution. Both run in their own process group (`pgroup: true`) so the
+      # watchdog can kill the whole group on timeout.
       #
       # @param argv [Array<String>] The tokenized command and arguments.
       # @param working_dir_path [Pathname] The host directory for host execution.
       # @param container_id [String, nil] The Docker container ID for isolated execution.
-      # @return [Array(String, String, Process::Status)] STDOUT, STDERR, and status.
-      def self.capture(argv, working_dir_path, container_id)
-        if container_id
-          Open3.capture3('docker', 'exec', '-w', '/sandbox', container_id, *argv)
-        else
-          Open3.capture3(*argv, chdir: working_dir_path.to_s)
+      # @return [Array(Array<String>, Hash)] The full command array and spawn options.
+      def self.resolve_invocation(argv, working_dir_path, container_id)
+        return [['docker', 'exec', '-w', '/sandbox', container_id, *argv], { pgroup: true }] if container_id
+
+        [argv, { chdir: working_dir_path.to_s, pgroup: true }]
+      end
+      private_class_method :resolve_invocation
+
+      # Spawns the command, draining STDOUT/STDERR on separate threads so a chatty
+      # or hung child never deadlocks the reader, and enforces the deadline with a
+      # watchdog that kills the process group when the command overruns.
+      #
+      # @param command [Array<String>] The full command array (no shell).
+      # @param spawn_opts [Hash] Options passed to the spawner (includes `pgroup`).
+      # @param max_time [Integer] Maximum execution time in seconds.
+      # @return [Array(String, String, Process::Status), Symbol] STDOUT, STDERR, and
+      #   status on completion, or `:timed_out` when the deadline is exceeded.
+      def self.capture(command, spawn_opts, max_time)
+        Open3.popen3(*command, **spawn_opts) do |stdin, stdout, stderr, wait_thr|
+          stdin.close
+          readers = [Thread.new { stdout.read }, Thread.new { stderr.read }]
+          completed = wait_thr.join(max_time)
+          terminate_process_group(wait_thr) unless completed
+          stdout_str, stderr_str = readers.map(&:value)
+          completed ? [stdout_str, stderr_str, wait_thr.value] : :timed_out
         end
       end
       private_class_method :capture
+
+      # Terminates the command's entire process group: SIGTERM first, then SIGKILL
+      # after a short grace period if it has not exited. Signalling the negated
+      # process group id reaches the command and any children it forked.
+      #
+      # @param wait_thr [Process::Waiter] The wait thread for the spawned process group leader.
+      # @return [void]
+      def self.terminate_process_group(wait_thr)
+        pgid = wait_thr.pid
+        signal_group('TERM', pgid)
+        signal_group('KILL', pgid) unless wait_thr.join(TERM_GRACE_PERIOD)
+      end
+      private_class_method :terminate_process_group
+
+      # Sends a signal to a whole process group, ignoring an already-exited group.
+      #
+      # @param signal [String] The signal name (e.g. "TERM", "KILL").
+      # @param pgid [Integer] The process group id (leader pid) to signal.
+      # @return [void]
+      def self.signal_group(signal, pgid)
+        Process.kill(signal, -pgid)
+      rescue Errno::ESRCH
+        nil
+      end
+      private_class_method :signal_group
 
       # Emits a single warning that the command will run un-isolated on the host,
       # honoring the test-suite stderr suppression convention.

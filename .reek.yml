@@ -177,6 +177,7 @@ detectors:
     exclude:
       - "SkillBench::Cli::BatchResultPrinter#self.call"   # summary: toggles the JSON gate — part of the documented CI signature
       - "SkillBench::Commands::Init#self.run"
+      - "SkillBench::Clients::BaseUrlValidator#self.call"  # Named transport flags (has_credential/allow_insecure) — security policy inputs
   UtilityFunction:
     enabled: false
   NilCheck:
