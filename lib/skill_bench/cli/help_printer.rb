@@ -45,6 +45,11 @@ module SkillBench
               Auto-generate an eval from a skill
               --name     Name for the generated eval (optional)
 
+            validate (alias: doctor) [--criteria PATH] [--config PATH]
+              Run read-only pre-flight checks (no eval, no network)
+              --criteria  Criteria JSON to validate (default: criteria.json)
+              --config    Config file to validate (default: skill-bench.json)
+
           Global Options:
             -h, --help        Show this help message
         USAGE

@@ -5,6 +5,7 @@ require_relative 'cli/run_command'
 require_relative 'cli/compare_command'
 require_relative 'cli/skill_command'
 require_relative 'cli/eval_command'
+require_relative 'cli/validate_command'
 require_relative 'cli/help_printer'
 require_relative 'cli/result_printer'
 require_relative 'cli/batch_result_printer'
@@ -43,6 +44,7 @@ module SkillBench
       when 'compare' then Cli::CompareCommand.call(@argv)
       when 'skill'   then Cli::SkillCommand.call(@argv)
       when 'eval'    then Cli::EvalCommand.call(@argv)
+      when 'validate', 'doctor' then Cli::ValidateCommand.call(@argv)
       when '-h', '--help', 'help'
         help.call
       else
