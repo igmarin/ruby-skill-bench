@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'test_helper'
+require 'tmpdir'
 
 module SkillBench
   module Services
@@ -133,6 +134,26 @@ module SkillBench
         parsed = JSON.parse(result)
 
         assert_kind_of Hash, parsed
+      end
+
+      def test_criteria_json_round_trips_through_criteria_loader_for_every_category
+        TemplateRegistry::CATEGORIES.each do |category|
+          json = TemplateRegistry.call(:criteria_json, category)
+
+          Dir.mktmpdir do |dir|
+            path = File.join(dir, 'criteria.json')
+            File.write(path, json)
+
+            result = SkillBench::Criteria.call(path: path)
+
+            assert result[:success], "Criteria for #{category} failed to load: #{result.dig(:response, :error, :message)}"
+
+            dimensions = result[:response][:criteria].dimensions
+            total = dimensions.sum(&:max_score)
+
+            assert_equal 100, total, "max_score sum for #{category} should be 100, got #{total}"
+          end
+        end
       end
 
       def test_skill_md_template_contains_expected_structure
