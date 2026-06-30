@@ -20,6 +20,6 @@ Closes #
 - [ ] `bundle exec rake test` passes
 - [ ] `bundle exec rubocop` passes
 - [ ] `bundle exec reek` passes
-- [ ] `bundle exec yard:coverage` passes
+- [ ] `bundle exec rake yard:coverage` passes
 - [ ] CHANGELOG.md has been updated
 - [ ] Documentation has been updated

@@ -5,7 +5,8 @@ default — they use the built-in `mock` provider, so they need **no API key and
 no network access**.
 
 > Tip: run `skill-bench init --mock` to scaffold that offline mock config
-> (`{"provider":"mock","max_execution_time":30}`) by hand as a fallback.
+> (`{"provider":"mock","max_execution_time":30}`) automatically. As a fallback,
+> you can write that same JSON to `skill-bench.json` by hand.
 
 ## Index
 

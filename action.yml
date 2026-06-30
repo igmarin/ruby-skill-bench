@@ -60,14 +60,21 @@ runs:
 
     - name: Run skill-bench
       shell: bash
-      # A non-zero exit here fails the step — that is the CI gate.
+      # Inputs are passed through env (not interpolated into the script) so a
+      # crafted input cannot inject shell before bash parses it. A non-zero exit
+      # here fails the step — that is the CI gate.
+      env:
+        EVALS_DIR: ${{ inputs.evals-dir }}
+        SKILL: ${{ inputs.skill }}
+        FORMAT: ${{ inputs.format }}
+        EXTRA_ARGS: ${{ inputs.args }}
       run: |
-        run_args=(run --all --evals-dir "${{ inputs.evals-dir }}" --format "${{ inputs.format }}")
-        if [ -n "${{ inputs.skill }}" ]; then
-          run_args+=(--skill "${{ inputs.skill }}")
+        run_args=(run --all --evals-dir "$EVALS_DIR" --format "$FORMAT")
+        if [ -n "$SKILL" ]; then
+          run_args+=(--skill "$SKILL")
         fi
-        if [ -n "${{ inputs.args }}" ]; then
+        if [ -n "$EXTRA_ARGS" ]; then
           # Intentionally unquoted so multiple extra flags split into words.
-          run_args+=(${{ inputs.args }})
+          run_args+=($EXTRA_ARGS)
         fi
         skill-bench "${run_args[@]}"
