@@ -77,8 +77,10 @@ module SkillBench
 
     def test_returns_error_when_judge_fails
       criteria = build_criteria
-      Judge::Prompt.expects(:call).returns({ success: true, response: { prompt: 'Prompt' } })
-      Judge::Judge.expects(:call).returns({ success: false, response: { error: { message: 'Judge failed' } } })
+      # Both judges now run concurrently, so stub the shared prompt/judge
+      # paths instead of expecting a single short-circuited call.
+      Judge::Prompt.stubs(:call).returns({ success: true, response: { prompt: 'Prompt' } })
+      Judge::Judge.stubs(:call).returns({ success: false, response: { error: { message: 'Judge failed' } } })
 
       result = Evaluation::Runner.call(
         task: 'Test task',
@@ -91,6 +93,38 @@ module SkillBench
 
       refute result[:success]
       assert_match(/Judge failed/, result[:response][:error][:message])
+    end
+
+    def test_surfaces_baseline_error_with_precedence_when_both_judges_fail
+      criteria = build_criteria
+      stub_prompt_paths
+      Judge::Judge.stubs(:call).with { |args| args[:prompt] == 'Baseline prompt' }
+                               .returns({ success: false, response: { error: { message: 'Baseline judge failed' } } })
+      Judge::Judge.stubs(:call).with { |args| args[:prompt] == 'Context prompt' }
+                               .returns({ success: false, response: { error: { message: 'Context judge failed' } } })
+
+      result = run_with_distinct_outputs(criteria)
+
+      refute result[:success]
+      # The sequential code returned the baseline failure first and never ran
+      # the context judge; the concurrent code must keep that precedence even
+      # though both judges now execute.
+      assert_match(/Baseline judge failed/, result[:response][:error][:message])
+      refute_match(/Context judge failed/, result[:response][:error][:message])
+    end
+
+    def test_surfaces_context_error_when_only_context_judge_fails
+      criteria = build_criteria
+      stub_prompt_paths
+      Judge::Judge.stubs(:call).with { |args| args[:prompt] == 'Baseline prompt' }
+                               .returns({ success: true, response: { judge_response: build_judge_response(10, 8, 6, 4, 2) } })
+      Judge::Judge.stubs(:call).with { |args| args[:prompt] == 'Context prompt' }
+                               .returns({ success: false, response: { error: { message: 'Context judge failed' } } })
+
+      result = run_with_distinct_outputs(criteria)
+
+      refute result[:success]
+      assert_match(/Context judge failed/, result[:response][:error][:message])
     end
 
     def test_handles_non_hash_judge_params
@@ -121,6 +155,24 @@ module SkillBench
     end
 
     private
+
+    def stub_prompt_paths
+      Judge::Prompt.stubs(:call).with { |args| args[:skill_context].nil? }
+                                .returns({ success: true, response: { prompt: 'Baseline prompt' } })
+      Judge::Prompt.stubs(:call).with { |args| args[:skill_context] == 'Skill context' }
+                                .returns({ success: true, response: { prompt: 'Context prompt' } })
+    end
+
+    def run_with_distinct_outputs(criteria)
+      Evaluation::Runner.call(
+        task: 'Test task',
+        criteria: criteria,
+        skill_context: 'Skill context',
+        baseline_output: 'Baseline diff',
+        context_output: 'Context diff',
+        judge_params: {}
+      )
+    end
 
     def build_criteria
       dimensions = [
