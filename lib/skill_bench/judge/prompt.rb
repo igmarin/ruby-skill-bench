@@ -1,12 +1,20 @@
 # frozen_string_literal: true
 
+require 'securerandom'
+
 module SkillBench
   module Judge
     # Builds structured prompts for the LLM judge.
     #
     # Assembles task description, evaluation criteria, skill context,
-    # and agent output into a single prompt for blind scoring.
+    # and agent output into a single prompt for blind scoring. Untrusted
+    # content (task, skill context, and agent output) is wrapped in per-run
+    # random sentinel fences and stripped of that sentinel, so embedded text
+    # cannot forge a boundary and inject instructions into the judge.
     class Prompt
+      # Byte length of the per-run sentinel; SecureRandom.hex yields 2x hex chars.
+      SENTINEL_BYTES = 16
+
       # Builds the judge prompt.
       #
       # @param task [String] The task description from task.md.
@@ -27,6 +35,7 @@ module SkillBench
         @criteria = criteria
         @skill_context = skill_context
         @agent_output = agent_output
+        @sentinel = SecureRandom.hex(SENTINEL_BYTES)
       end
 
       # Assembles and returns the judge prompt.
@@ -47,7 +56,7 @@ module SkillBench
 
       private
 
-      attr_reader :task, :criteria, :skill_context, :agent_output
+      attr_reader :task, :criteria, :skill_context, :agent_output, :sentinel
 
       def missing_task_result
         { success: false, response: { error: { message: 'Task is required' } } }
@@ -84,7 +93,7 @@ module SkillBench
       end
 
       def task_section
-        "## Task\n\n#{task}"
+        "## Task\n\n#{fence('TASK', task)}"
       end
 
       def criteria_section
@@ -102,11 +111,36 @@ module SkillBench
       def skill_context_section
         return nil if skill_context.nil?
 
-        "## Skill Context\n\n#{skill_context}"
+        "## Skill Context\n\n#{fence('SKILL_CONTEXT', skill_context)}"
       end
 
       def agent_output_section
-        "## Agent Output\n\n#{agent_output}"
+        "## Agent Output\n\n#{fence('AGENT_OUTPUT', agent_output)}"
+      end
+
+      # Wraps untrusted content in a per-run sentinel fence it cannot forge.
+      #
+      # The closing marker carries a random per-run sentinel and that sentinel
+      # is stripped from the content, so embedded text can neither reproduce the
+      # boundary nor inject instructions outside its section.
+      #
+      # @param label [String] The fence label, e.g. "AGENT_OUTPUT".
+      # @param content [String] The untrusted content to wrap.
+      # @return [String] The fenced, neutralized content.
+      def fence(label, content)
+        [
+          "<<#{label} #{sentinel}>>",
+          neutralize(content),
+          "<<END_#{label} #{sentinel}>>"
+        ].join("\n")
+      end
+
+      # Removes every occurrence of the run sentinel from untrusted content.
+      #
+      # @param content [String] The untrusted content.
+      # @return [String] The content with the sentinel stripped out.
+      def neutralize(content)
+        content.to_s.gsub(sentinel, '')
       end
 
       def instructions_section
