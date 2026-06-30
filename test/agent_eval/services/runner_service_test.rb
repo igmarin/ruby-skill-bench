@@ -84,6 +84,33 @@ module SkillBench
         assert_equal 'mock', result[:provider_name]
       end
 
+      def test_success_result_includes_tokens_and_cost_for_mock
+        write_mock_config
+
+        SkillBench::Evaluation::Runner.expects(:call).returns({
+                                                                success: true,
+                                                                response: {
+                                                                  report: Struct.new(:verdict, :baseline_total, :context_total, :deltas,
+                                                                                     keyword_init: true).new(
+                                                                                       verdict: true,
+                                                                                       baseline_total: 30,
+                                                                                       context_total: 80,
+                                                                                       deltas: { 'correctness' => 16 }
+                                                                                     )
+                                                                }
+                                                              })
+
+        result = RunnerService.call(
+          eval_name: 'test-eval',
+          skill_names: ['test-skill']
+        )
+
+        assert result[:success]
+        # Mock runs return no real usage: tokens sum to zero and cost is unknown.
+        assert_equal({ prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, result[:tokens])
+        assert_nil result[:cost]
+      end
+
       def test_call_raises_when_eval_not_found
         write_mock_config
 

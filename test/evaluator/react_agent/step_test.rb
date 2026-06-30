@@ -127,6 +127,52 @@ module SkillBench
         assert_equal [], result[:iteration][:tools_used]
         assert_equal 'API Error', result[:iteration][:observation_summary]
       end
+
+      def test_call_includes_usage_on_finish
+        Client.expects(:call).returns(
+          {
+            success: true,
+            usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+            response: { message: { 'content' => 'Final Answer', 'tool_calls' => [] } }
+          }
+        )
+
+        result = Agent::ReactAgent::Step.call(@messages, @config)
+
+        assert_equal({ prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 }, result[:usage])
+      end
+
+      def test_call_includes_usage_when_executing_tools
+        Client.expects(:call).returns(
+          {
+            success: true,
+            usage: { prompt_tokens: 7, completion_tokens: 3, total_tokens: 10 },
+            response: {
+              message: {
+                'content' => 'Thinking...',
+                'tool_calls' => [{ 'id' => 'call_1', 'function' => { 'name' => 'read_file', 'arguments' => '{"path":"a"}' } }]
+              }
+            }
+          }
+        )
+
+        Agent::ReactAgent::ToolExecutor.expects(:call).returns([{ role: 'tool', tool_call_id: 'call_1', content: 'result' }])
+
+        result = Agent::ReactAgent::Step.call(@messages, @config)
+
+        assert result[:continue]
+        assert_equal({ prompt_tokens: 7, completion_tokens: 3, total_tokens: 10 }, result[:usage])
+      end
+
+      def test_call_usage_defaults_to_empty_hash_when_client_omits_it
+        Client.expects(:call).returns(
+          { success: true, response: { message: { 'content' => 'Final Answer', 'tool_calls' => [] } } }
+        )
+
+        result = Agent::ReactAgent::Step.call(@messages, @config)
+
+        assert_equal({}, result[:usage])
+      end
     end
   end
 end

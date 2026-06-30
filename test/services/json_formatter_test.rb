@@ -33,6 +33,25 @@ module SkillBench
         assert_includes output, '  "a": 1'
         assert_includes output, '}'
       end
+
+      def test_format_includes_tokens_and_cost
+        result = {
+          eval_name: 'e',
+          tokens: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 },
+          cost: 0.0125
+        }
+        parsed = JSON.parse(JsonFormatter.format(result))
+
+        assert_equal 150, parsed['tokens']['total_tokens']
+        assert_in_delta(0.0125, parsed['cost'])
+      end
+
+      def test_format_defaults_tokens_and_cost_when_absent
+        parsed = JSON.parse(JsonFormatter.format({ eval_name: 'e' }))
+
+        assert_equal 0, parsed['tokens']['total_tokens']
+        assert_nil parsed['cost']
+      end
     end
   end
 end

@@ -151,5 +151,45 @@ module SkillBench
       assert result[:response][:iterations]
       assert_equal 2, result[:response][:iterations].length
     end
+
+    def test_call_accumulates_usage_across_iterations
+      Client.expects(:call).twice.returns(
+        {
+          success: true,
+          usage: { prompt_tokens: 10, completion_tokens: 4, total_tokens: 14 },
+          response: {
+            message: {
+              'content' => 'Thinking...',
+              'tool_calls' => [{ 'id' => 'call_1', 'function' => { 'name' => 'run_command', 'arguments' => '{"command":"echo 1"}' } }]
+            }
+          }
+        }
+      ).then.returns(
+        {
+          success: true,
+          usage: { prompt_tokens: 6, completion_tokens: 2, total_tokens: 8 },
+          response: { message: { 'content' => 'Final Answer', 'tool_calls' => [] } }
+        }
+      )
+
+      Tools.stubs(:execute).returns('Tool Result')
+
+      result = Agent::ReactAgent::LoopRunner.call('Initial', 10, { working_dir: Dir.pwd, client_params: {} })
+      usage = result[:response][:usage]
+
+      assert_equal 16, usage[:prompt_tokens]
+      assert_equal 6, usage[:completion_tokens]
+      assert_equal 22, usage[:total_tokens]
+    end
+
+    def test_call_usage_defaults_to_zero_without_client_usage
+      Client.expects(:call).returns(
+        { success: true, response: { message: { 'content' => 'Final Answer' } } }
+      )
+
+      result = Agent::ReactAgent::LoopRunner.call('Initial', 10, { client_params: {} })
+
+      assert_equal({ prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, result[:response][:usage])
+    end
   end
 end

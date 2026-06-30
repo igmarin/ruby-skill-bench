@@ -11,6 +11,7 @@ require_relative 'context_loader_service'
 require_relative 'judge_params_builder'
 require_relative 'error_response_builder'
 require_relative 'trend_recorder_service'
+require_relative 'cost_calculator'
 require_relative 'output_formatter'
 
 module SkillBench
@@ -155,17 +156,78 @@ module SkillBench
         trend_result = TrendRecorderService.call(result, eval_name, skill_names)
         return enrich_error_result(trend_result, evaluation, provider) unless trend_result[:success]
 
+        tokens = aggregate_usage(context.baseline_output, context.context_output)
+        cost = CostCalculator.call(usage: tokens, model: agent_model(config, provider))
+
         {
           success: true,
           eval_name: eval_name,
           skill_name: skill_names.join(', '),
           provider_name: provider.name,
+          tokens: tokens,
+          cost: cost,
           response: result[:response].merge(
             trend: trend_result[:trend],
             baseline_iterations: context.baseline_output[:iterations] || [],
             context_iterations: context.context_output[:iterations] || []
           )
         }
+      end
+
+      # Sums the token usage of the baseline and context agent runs.
+      #
+      # Judge-side usage is not yet threaded through (the judge lives under the
+      # untouched `clients/` boundary), so this is scoped to agent usage.
+      #
+      # @param baseline_output [Hash] The baseline agent output (carries :usage).
+      # @param context_output [Hash] The context agent output (carries :usage).
+      # @return [Hash] Combined prompt/completion/total token counts.
+      def aggregate_usage(baseline_output, context_output)
+        add_usage(
+          add_usage(empty_usage, baseline_output[:usage]),
+          context_output[:usage]
+        )
+      end
+
+      # A zeroed token-usage accumulator.
+      #
+      # @return [Hash] Usage hash with prompt/completion/total token counts set to zero.
+      def empty_usage
+        { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+      end
+
+      # Adds one usage hash onto a running total.
+      #
+      # @param total [Hash] The running usage total.
+      # @param usage [Hash, nil] A run's usage hash (may be nil or empty).
+      # @return [Hash] A new summed usage hash.
+      def add_usage(total, usage)
+        usage ||= {}
+        {
+          prompt_tokens: total[:prompt_tokens] + token_count(usage, :prompt_tokens),
+          completion_tokens: total[:completion_tokens] + token_count(usage, :completion_tokens),
+          total_tokens: total[:total_tokens] + token_count(usage, :total_tokens)
+        }
+      end
+
+      # Reads a token count from a usage hash, tolerating string keys.
+      #
+      # @param usage [Hash] The usage hash.
+      # @param key [Symbol] The usage key (e.g. :prompt_tokens).
+      # @return [Integer] The token count, or zero when absent.
+      def token_count(usage, key)
+        (usage[key] || usage[key.to_s] || 0).to_i
+      end
+
+      # Resolves the model name used for pricing from config, falling back to the provider LLM.
+      #
+      # @param config [Hash, nil] Provider config.
+      # @param provider [Object] The resolved provider.
+      # @return [String] The model name (e.g. "gpt-4o").
+      def agent_model(config, provider)
+        return provider.llm unless config.is_a?(Hash)
+
+        config[:model] || config['model'] || provider.llm
       end
     end
   end

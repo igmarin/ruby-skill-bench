@@ -135,6 +135,7 @@ module SkillBench
         "  Eval: #{result[:eval_name] || ''}",
         "  Skill: #{result[:skill_name] || ''}",
         "  Provider: #{result[:provider_name] || ''}",
+        build_usage_line(result),
         ('═' * 55),
         ''
       ]
@@ -151,6 +152,19 @@ module SkillBench
       lines.join("\n")
     end
     private_class_method :format_delta_report
+
+    # Builds the token/cost summary line for the report header.
+    #
+    # @param result [Hash] Eval result envelope; reads :tokens and :cost.
+    # @return [String] A formatted "Tokens / Est. Cost" line.
+    def self.build_usage_line(result)
+      tokens = result[:tokens] || {}
+      total = tokens[:total_tokens] || tokens['total_tokens'] || 0
+      cost = result[:cost]
+      cost_label = cost ? Kernel.format('$%.4f', cost) : '—'
+      "  Tokens: #{total}  |  Est. Cost: #{cost_label}"
+    end
+    private_class_method :build_usage_line
 
     # Builds iteration timeline lines from the result response.
     #
