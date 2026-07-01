@@ -2,9 +2,9 @@ PATH
   remote: .
   specs:
     ruby-skill-bench (1.2.0)
-      cgi (~> 0.5.1)
+      cgi (~> 0.5.2)
       faraday (~> 2.14)
-      json (~> 2.19)
+      json (~> 2.20)
       parallel (~> 1.26)
 
 GEM
@@ -136,7 +136,7 @@ GEM
     rubocop-rake (0.7.1)
       lint_roller (~> 1.1)
       rubocop (>= 1.72.1)
-    rubocop-yard (1.2.0)
+    rubocop-yard (1.3.0)
       lint_roller
       rubocop (~> 1.72)
       yard
@@ -192,7 +192,7 @@ PLATFORMS
 
 DEPENDENCIES
   bundler-audit (~> 0.9)
-  concurrent-ruby (>= 1.3.5)
+  concurrent-ruby (>= 1.3.7)
   minitest (~> 5.0)
   mocha (~> 2.1)
   rake (~> 13.4)
@@ -259,7 +259,7 @@ CHECKSUMS
   rubocop-minitest (0.39.1) sha256=998398d6da4026d297f0f9bf709a1eac5f2b6947c24431f94af08138510cf7ed
   rubocop-performance (1.26.1) sha256=cd19b936ff196df85829d264b522fd4f98b6c89ad271fa52744a8c11b8f71834
   rubocop-rake (0.7.1) sha256=3797f2b6810c3e9df7376c26d5f44f3475eda59eb1adc38e6f62ecf027cbae4d
-  rubocop-yard (1.2.0) sha256=a749b1feccd16ca049d1c65c4b62dbfc8ce39904bfdbc6e5c08f6b5dc0422dc4
+  rubocop-yard (1.3.0) sha256=29bc44274e0b10d7db60655e84089328c0aceadd246d24f8e963c67949a60269
   ruby-progressbar (1.13.0) sha256=80fc9c47a9b640d6834e0dc7b3c94c9df37f08cb072b7761e4a71e22cff29b33
   ruby-skill-bench (1.2.0)
   ruby2_keywords (0.0.5) sha256=ffd13740c573b7301cf7a2e61fc857b2a8e3d3aff32545d6f8300d8bae10e3ef
