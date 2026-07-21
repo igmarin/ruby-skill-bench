@@ -2,8 +2,9 @@
 
 ![Ruby Skill Bench Logo](https://github.com/user-attachments/assets/056d7ca4-8671-41ec-9efb-e323b73fb135)
 
-
 ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/igmarin/ruby-skill-bench?utm_source=oss&utm_medium=github&utm_campaign=igmarin%2Fruby-skill-bench&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/igmarin/ruby-skill-bench)
 
 *A high-fidelity evaluation engine for benchmarking AI agent skills across any stack (Rails-first, but extensible).*
 
