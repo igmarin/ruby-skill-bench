@@ -41,6 +41,22 @@ module SkillBench
       def self.docker_context_path
         File.expand_path('execution/docker', __dir__)
       end
+
+      # Versioned image reference used for build and run.
+      #
+      # @return [String] e.g. "evaluator-sandbox:1.2.0"
+      def self.image_ref
+        require_relative 'version' unless defined?(SkillBench::VERSION)
+
+        "#{DOCKER_IMAGE_NAME}:#{SkillBench::VERSION}"
+      end
+
+      # Floating latest tag applied alongside the versioned tag on build.
+      #
+      # @return [String] e.g. "evaluator-sandbox:latest"
+      def self.latest_image_ref
+        "#{DOCKER_IMAGE_NAME}:latest"
+      end
     end
 
     # Tool Execution Configuration
