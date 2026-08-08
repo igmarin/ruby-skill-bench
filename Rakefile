@@ -62,3 +62,25 @@ namespace :package do
 end
 
 task default: %i[rubocop reek test]
+
+namespace :docker do
+  desc 'Build the evaluator-sandbox image (tags :VERSION and :latest)'
+  task :build do
+    require_relative 'lib/skill_bench/version'
+    require_relative 'lib/skill_bench/constants'
+
+    context = SkillBench::Constants::Sandbox.docker_context_path
+    image = SkillBench::Constants::Sandbox::DOCKER_IMAGE_NAME
+    version = SkillBench::VERSION
+    dockerfile = File.join(context, 'Dockerfile')
+
+    abort("Docker context missing: #{context}") unless File.directory?(context)
+    abort("Dockerfile missing: #{dockerfile}") unless File.file?(dockerfile)
+
+    sh 'docker', 'build',
+       '-t', "#{image}:#{version}",
+       '-t', "#{image}:latest",
+       context
+  end
+end
+
