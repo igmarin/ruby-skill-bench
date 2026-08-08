@@ -83,4 +83,3 @@ namespace :docker do
        context
   end
 end
-
