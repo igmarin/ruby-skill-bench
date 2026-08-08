@@ -1,6 +1,17 @@
-# Minimal evaluator sandbox for SkillBench agent command isolation.
-# Runtime isolation uses --network none; do not rely on package installs during evals.
-# Image contract is refined in milestone container-isolation-v1 (#87).
+# SkillBench evaluator-sandbox image contract (MVP)
+#
+# Purpose: long-lived container for `docker exec` of allowlisted agent commands.
+# Runtime flags (from Sandbox#start_container): --network none, non-root uid/gid,
+#   --security-opt no-new-privileges, --cap-drop ALL (+ CHOUN/DAC_OVERRIDE).
+#
+# Assumptions:
+# - No package installs or gem fetches during an eval (network is disabled at runtime).
+# - Ruby major tracks CI (3.3/3.4). Bookworm image provides a modern baseline.
+# - git is available for tools that shell out to git inside the sandbox mount.
+# - Multi-arch: build on the host arch (arm64 Mac / amd64 CI) via docker build.
+#
+# See docs/docker.md and milestone container-isolation-v1.
+
 FROM ruby:3.4-bookworm
 
 RUN apt-get update \
@@ -9,5 +20,5 @@ RUN apt-get update \
 
 WORKDIR /sandbox
 
-# Keep the container alive so `docker exec` can run allowlisted commands.
+# Keep the container alive so repeated `docker exec` sessions can run commands.
 CMD ["sleep", "infinity"]
