@@ -4,14 +4,13 @@ on:
   push:
     branches: [main, master]
   pull_request:
-    branches: [main, master]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ruby-version: ['3.3', '3.4']
+        ruby-version: ["3.3", "3.4"]
 
     steps:
       - uses: actions/checkout@v4
@@ -36,3 +35,22 @@ jobs:
 
       - name: Run minitest
         run: bundle exec rake test
+
+  container-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Build evaluator-sandbox image
+        run: bundle exec rake docker:build
+
+      - name: Run live Docker integration tests
+        env:
+          SKILL_BENCH_DOCKER_TESTS: "1"
+        run: bundle exec ruby -Itest test/evaluator/sandbox_docker_live_test.rb
