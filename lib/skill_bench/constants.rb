@@ -30,6 +30,17 @@ module SkillBench
     # Sandbox Configuration
     module Sandbox
       DOCKER_IMAGE_NAME = 'evaluator-sandbox'
+
+      # Relative path of the Docker build context as packaged in the gem.
+      DOCKER_CONTEXT_RELATIVE = 'lib/skill_bench/execution/docker'
+
+      # Absolute path to the Docker build context shipped next to the library code.
+      # Resolved from this file so gem installs and git checkouts agree.
+      #
+      # @return [String] absolute path to the docker/ directory
+      def self.docker_context_path
+        File.expand_path('execution/docker', __dir__)
+      end
     end
 
     # Tool Execution Configuration
