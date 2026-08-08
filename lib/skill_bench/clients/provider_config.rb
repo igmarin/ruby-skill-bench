@@ -72,8 +72,14 @@ module SkillBench
         value == true || value.to_s.strip.casecmp?('true')
       end
 
+      # Prefer an option when the key is present — including an explicit `nil`,
+      # which means "unset" and must not fall through to global Config (a prior
+      # `||` treated nil as missing and leaked stored API keys into clients).
       def fetch_config(key)
-        @options[key] || @config[key]
+        return @options[key] if @options.key?(key)
+        return @options[key.to_s] if @options.key?(key.to_s)
+
+        @config[key] || @config[key.to_s]
       end
     end
   end

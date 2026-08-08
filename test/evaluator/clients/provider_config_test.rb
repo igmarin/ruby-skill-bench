@@ -120,6 +120,17 @@ module SkillBench
           )
         end
       end
+
+      def test_call_honors_explicit_nil_api_key_over_global_config
+        Config.setup do |config|
+          config.set_provider_api_key(:openai, 'config_key')
+        end
+
+        # Explicit nil means "unset" — must not fall through to global Config.
+        result = ProviderConfig.call(provider: :openai, options: { api_key: nil, model: 'gpt-4o' })
+
+        assert_nil result[:api_key]
+      end
     end
   end
 end

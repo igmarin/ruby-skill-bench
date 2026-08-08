@@ -17,6 +17,9 @@ module SkillBench
         Dir.chdir(@tmp_dir)
         @saved_env = ENV_KEYS.to_h { |key| [key, ENV.fetch(key, nil)] }
         ENV_KEYS.each { |key| ENV.delete(key) }
+        # Isolate from global Config / home skill-bench.json so provider-key
+        # checks only see this test's skill-bench.json (and ENV above).
+        SkillBench::Config.reset
       end
 
       def teardown
