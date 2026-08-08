@@ -39,11 +39,13 @@ class SandboxDockerLiveTest < Minitest::Test
 
     SkillBench::Execution::Sandbox.run(@source_dir) do |sandbox|
       container_id = sandbox.container_id
+
       refute_nil container_id
     end
 
     _out, _err, status = Open3.capture3('docker', 'inspect', container_id)
-    refute status.success?, 'container should be removed/stopped after sandbox exits'
+
+    refute_predicate status, :success?, 'container should be removed/stopped after sandbox exits'
   end
 
   private
