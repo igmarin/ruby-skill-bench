@@ -70,16 +70,16 @@ namespace :docker do
     require_relative 'lib/skill_bench/constants'
 
     context = SkillBench::Constants::Sandbox.docker_context_path
-    image = SkillBench::Constants::Sandbox::DOCKER_IMAGE_NAME
-    version = SkillBench::VERSION
+    versioned = SkillBench::Constants::Sandbox.image_ref
+    latest = SkillBench::Constants::Sandbox.latest_image_ref
     dockerfile = File.join(context, 'Dockerfile')
 
     abort("Docker context missing: #{context}") unless File.directory?(context)
     abort("Dockerfile missing: #{dockerfile}") unless File.file?(dockerfile)
 
     sh 'docker', 'build',
-       '-t', "#{image}:#{version}",
-       '-t', "#{image}:latest",
+       '-t', versioned,
+       '-t', latest,
        context
   end
 end
