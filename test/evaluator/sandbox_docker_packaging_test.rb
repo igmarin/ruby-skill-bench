@@ -21,7 +21,8 @@ class SandboxDockerPackagingTest < Minitest::Test
 
     assert_match(/FROM /i, contents, 'Dockerfile must declare a base image')
     # Container stays up so `docker exec` can run allowlisted commands.
-    assert_match(/CMD|ENTRYPOINT/i, contents, 'Dockerfile must keep a process alive for docker exec')
+    assert_includes contents, 'CMD ["sleep", "infinity"]',
+                    'Dockerfile must keep a process alive for docker exec'
   end
 
   def test_gemspec_packages_docker_context_assets
@@ -34,6 +35,11 @@ class SandboxDockerPackagingTest < Minitest::Test
 
     assert_includes spec.files, dockerfile_entry,
                     'gemspec must package the Dockerfile (lib/**/*.rb alone is insufficient)'
+
+    dockerignore_entry = 'lib/skill_bench/execution/docker/.dockerignore'
+
+    assert_includes spec.files, dockerignore_entry,
+                    'gemspec must package .dockerignore (Dir globs skip dotfiles)'
   end
 
   def test_sandbox_resolves_same_docker_context_path_as_constant

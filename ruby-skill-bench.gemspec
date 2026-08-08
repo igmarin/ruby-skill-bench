@@ -18,10 +18,12 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = '>= 3.1'
 
   # Include non-Ruby Docker build context so gem installs can activate container isolation.
-  spec.files         = Dir.chdir(__dir__) do
+  # Dir globs skip dotfiles — list .dockerignore explicitly.
+  spec.files = Dir.chdir(__dir__) do
     Dir[
       'lib/**/*.rb',
       'lib/skill_bench/execution/docker/**/*',
+      'lib/skill_bench/execution/docker/.dockerignore',
       'bin/*',
       'docs/**/*.md',
       'README.md',
