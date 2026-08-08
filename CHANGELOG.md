@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- Ship Docker container isolation for `run_command` when a daemon is available: packaged `evaluator-sandbox` image, skip-rebuild when the versioned tag exists, hardened `docker run` flags (`--network none`, non-root, cap-drop). Host execution remains fail-closed via `allow_host_execution` (default `false`) when no container is active (#86–#91).
+
+
 ## [1.2.0]
 
 > In progress — the v1.2.0 quality program (security, performance, documentation, examples). The release date is set when the version is tagged.

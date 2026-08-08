@@ -200,3 +200,10 @@ The eval directory must contain at minimum:
 
 - `task.md` — the agent prompt
 - `criteria.json` — the scoring rules (optional; defaults to empty criteria if missing)
+
+## Command isolation
+
+Agent tool commands prefer a Docker container (`evaluator-sandbox`) when available.
+See [docker.md](docker.md) for the image contract and `rake docker:build`.
+Without Docker, `run_command` refuses host execution unless `allow_host_execution` is true.
+

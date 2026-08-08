@@ -93,7 +93,7 @@ By default, no shell commands are permitted. You must configure `allowed_command
 
 > **Security:** The agent can only execute commands on this list. Dangerous commands (bash, curl, sudo, etc.) are always blocked regardless of configuration.
 >
-> **Where commands run:** Allowed commands run inside a temporary git **sandbox directory** on the host — a copy of your eval files, not your project. True container isolation (Docker) is **not yet shipped**, so the sandbox directory is the only boundary. Because of this, host execution **fails closed**: it is disabled by default and must be explicitly enabled with `"allow_host_execution": true`. With it disabled (the default), `run_command` refuses to execute and returns an error instead of running un-isolated. Enable it only when you accept that allowed commands run directly on your machine.
+> **Where commands run:** Allowed commands run inside a temporary git **sandbox directory** (a copy of your eval files). When Docker is available and the packaged `evaluator-sandbox` image can start, commands run via `docker exec` with hardened flags (`--network none`, non-root, dropped capabilities). When Docker is **not** available, host execution **fails closed**: it is disabled by default and must be explicitly enabled with `"allow_host_execution": true`. With it disabled (the default), `run_command` refuses to execute on the host. Enable it only when you accept that allowed commands run directly on your machine inside the temp sandbox directory. See [docs/docker.md](docs/docker.md).
 
 ### Configuration Hierarchy
 
@@ -527,7 +527,7 @@ SkillBench creates and manages three files in your project. Understanding them h
 - Configuration is loaded in this order: **code defaults** → `~/.skill-bench.json` (user-wide) → `./skill-bench.json` (local) → **environment variables**. Later sources override earlier ones.
 - If `api_key` is `null`, SkillBench looks for the matching environment variable (e.g. `SKILL_BENCH_OPENAI_API_KEY`).
 - `allowed_commands` is a **safeguard**, not a convenience. By default the agent cannot run *any* shell command. Add only what your evals need.
-- `allow_host_execution` (default `false`) gates whether `run_command` may run on the host when no container isolation is active. Since container isolation is not yet shipped, leaving it `false` means `run_command` **fails closed** (refuses to execute). Set it to `true` only if you accept that allowed commands run directly on your machine inside the temporary sandbox directory.
+- `allow_host_execution` (default `false`) gates whether `run_command` may run on the host when no container isolation is active. When Docker starts a container successfully, host execution is not used. When Docker is unavailable, leaving this `false` means `run_command` **fails closed** (refuses to execute). Set it to `true` only if you accept that allowed commands run directly on your machine inside the temporary sandbox directory.
 
 ---
 
@@ -899,7 +899,7 @@ Your eval result depends on **both** conditions. Here is every scenario:
 
 ## Reliability & Security
 
-- **Allowlist-Gated Execution**: The agent can only run commands you add to `allowed_commands`; with an empty allowlist it can run nothing. Commands run inside a temporary git sandbox **directory** (a copy of the eval files) on the host — container isolation is not yet shipped, so host execution is **disabled by default** and must be explicitly opted into with `allow_host_execution: true`.
+- **Allowlist-Gated Execution**: The agent can only run commands you add to `allowed_commands`; with an empty allowlist it can run nothing. Commands prefer Docker isolation when available (see [docs/docker.md](docs/docker.md)); otherwise they would run on the host inside the temporary sandbox directory — so host execution is **disabled by default** and must be explicitly opted into with `allow_host_execution: true`.
 - **Command Blocklist**: Dangerous commands (`bash`, `sh`, `python`, `curl`, etc.) are always blocked, even if listed in `allowed_commands`.
 - **Path Validation**: Eval paths are validated to prevent directory traversal attacks.
 - **Atomic History Writes**: Benchmark history uses file locking to prevent corruption from concurrent writes.
@@ -967,23 +967,24 @@ Ruby Skill Bench is designed with security as a primary concern. The system exec
 - **Command Allowlist:** Only explicitly allowed commands can be executed
 - **Dangerous Commands Blocklist:** Dangerous commands (bash, curl, sudo, etc.) are always blocked
 - **Shell Tokenization:** Commands are tokenized before execution to prevent shell injection
-- **Fail-Closed Host Execution:** Container isolation is not yet active, so commands run on the host inside a temporary sandbox directory. To match this reality, `run_command` refuses to execute unless `allow_host_execution: true` is set; it is **disabled by default**.
+- **Fail-Closed Host Execution:** When no container is active, commands would run on the host inside a temporary sandbox directory. `run_command` refuses to execute unless `allow_host_execution: true` is set; it is **disabled by default**. Prefer installing Docker and building the image (`bundle exec rake docker:build`) so isolation activates automatically.
 
 > **The allowlist is the only real authorization control — and it only checks the base command.** `run_command` authorizes by the first token of the command (`rake`, `find`, `git`, …); it does **not** inspect arguments. Shell tokenization stops metacharacter injection, but it does **not** sandbox what an allowlisted binary can do. Because many common tools are general-purpose execution wrappers, **allowlisting any one of them is equivalent to granting arbitrary host code execution** — for example `rake -e '...'`, `rspec -e`, `make` (arbitrary recipes), `find . -exec ...`, or `git` (hooks, `-c core.fsmonitor=...`, `! ...` aliases). Combined with the fail-closed model above (`run_command` refuses to run on the host unless `allow_host_execution` is explicitly enabled — see `HOST_EXECUTION_REFUSED` in `run_command.rb`), the practical guidance is: **keep `allowed_commands` as minimal as possible — empty for untrusted skills** — and treat every entry as if you were handing the skill a shell.
 >
 > An **optional, default-off** `command_argument_constraints` setting can refuse commands whose arguments contain configured substrings/flags (for example blocking `-e` or `-exec`). It is a defense-in-depth speed bump, **not** a sandbox, and is unset by default; the allowlist remains the control that matters.
 
-#### Docker Security Hardening (Planned — Not Yet Active)
+#### Docker Security Hardening
 
-> **Status:** The container isolation model described below is **planned, not shipped**. No Docker build context is packaged, so containers are never launched today — `run_command` runs on the host gated by the allowlist and `allow_host_execution`. The settings below document the intended hardened model for when container isolation lands.
+> **Status:** Container isolation **ships** when a Docker daemon is available and the packaged build context can produce `evaluator-sandbox:<version>`. Build with `bundle exec rake docker:build` (see [docs/docker.md](docs/docker.md)). Without Docker, `run_command` remains fail-closed on the host unless `allow_host_execution` is set.
 
-When container isolation is enabled in a future release, containers are intended to launch with hardened security settings:
+Containers launch with hardened security settings:
 
-- **Non-root User:** Containers run as a non-root user
+- **Non-root User:** Containers run as the host `uid:gid`
 - **Privilege Prevention:** `--security-opt no-new-privileges` prevents privilege escalation
-- **Capability Dropping:** All Linux capabilities are dropped except minimal needed ones
+- **Capability Dropping:** `--cap-drop ALL` with only `CHOWN`/`DAC_OVERRIDE` restored for volume ops
 - **Network Isolation:** `--network none` disables network access
-- **Read-only Root:** Container filesystem is read-only (except for mounted volumes)
+- **Sandbox mount:** Host temp sandbox is bind-mounted at `/sandbox` read-write
+- **Read-only root (future):** Not yet applied; tracked as follow-up hardening
 
 #### Resource Limits
 
@@ -1041,8 +1042,8 @@ private vulnerability reporting (Security tab) or email the maintainer at
 - **Check:** Verify the command isn't hanging or waiting for input
 
 **Problem:** "Command execution refused: no sandbox isolation is active and 'allow_host_execution' is not enabled"
-- **Cause:** Container isolation is not yet shipped, so commands would run on the host. SkillBench fails closed by default rather than run un-isolated.
-- **Solution:** Set `"allow_host_execution": true` in `skill-bench.json` to permit allowed commands to run directly on the host (inside the temporary sandbox directory). Enable it only when you accept that trade-off.
+- **Cause:** No Docker container was started (daemon missing, image missing, or build failed), so commands would run on the host. SkillBench fails closed by default rather than run un-isolated.
+- **Solution:** Install Docker and run `bundle exec rake docker:build`, **or** set `"allow_host_execution": true` in `skill-bench.json` to permit allowed commands on the host (inside the temporary sandbox directory). Prefer Docker when possible.
 
 **Problem:** "Context hydration failed"
 - **Solution:** Verify the source path exists and is a directory
