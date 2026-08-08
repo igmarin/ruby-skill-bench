@@ -26,6 +26,8 @@ module SkillBench
       lib/skill_bench/config/store.rb
       lib/skill_bench/package_verifier.rb
       lib/skill_bench/execution/source_path_resolver.rb
+      lib/skill_bench/execution/docker/Dockerfile
+      lib/skill_bench/execution/docker/.dockerignore
       lib/skill_bench/runner.rb
     ].freeze
 

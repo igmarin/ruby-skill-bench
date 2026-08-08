@@ -10,11 +10,11 @@ module SkillBench
     # Manages isolated sandbox environments for running agent evaluations.
     # Handles copying files, initializing git, and capturing diffs.
     #
-    # NOTE: Container isolation is not yet shipped. No Docker build context is
-    # packaged, so `docker_available?` always returns false and `start_container`
-    # is never reached — `container_id` stays nil and commands run on the host
-    # (gated by the allowlist and `Config.allow_host_execution`). The container
-    # code below is the planned isolation model, retained but currently inactive.
+    # NOTE: A Docker build context is packaged under execution/docker so gem
+    # installs can activate container isolation when a Docker daemon is present.
+    # When `docker_available?` is false (no context, no daemon, or docker missing),
+    # `container_id` stays nil and commands run on the host only if
+    # `Config.allow_host_execution` is enabled (fail closed by default).
     class Sandbox
       attr_reader :path, :container_id
 
@@ -42,6 +42,13 @@ module SkillBench
       # @return [Array<String>] full argv beginning with `git` and the flags.
       def self.git_command(*args)
         ['git', *GIT_HARDENING, *args]
+      end
+
+      # Absolute path to the packaged Docker build context.
+      #
+      # @return [String] path to lib/skill_bench/execution/docker
+      def self.docker_context_path
+        Constants::Sandbox.docker_context_path
       end
 
       # Runs a block of code within a temporary, isolated sandbox directory.
@@ -180,7 +187,7 @@ module SkillBench
       #
       # @return [Boolean] true if Docker is available, false otherwise.
       def docker_available?
-        docker_dir = File.expand_path('docker', __dir__)
+        docker_dir = self.class.docker_context_path
         return false unless File.directory?(docker_dir)
 
         _stdout, _stderr, status = Open3.capture3('docker', 'info')
@@ -196,7 +203,7 @@ module SkillBench
       # @raise [RuntimeError] when the Docker image cannot be built or the container fails to start.
       def start_container
         image_name = Constants::Sandbox::DOCKER_IMAGE_NAME
-        docker_dir = File.expand_path('docker', __dir__)
+        docker_dir = self.class.docker_context_path
 
         # Build image (Docker layer cache handles no-op builds)
         raise "Failed to build Docker image #{image_name}" unless system('docker', 'build', '-t', image_name, docker_dir, '--quiet')

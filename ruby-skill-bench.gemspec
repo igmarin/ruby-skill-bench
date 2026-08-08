@@ -17,7 +17,19 @@ Gem::Specification.new do |spec|
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 3.1'
 
-  spec.files         = Dir.chdir(__dir__) { Dir['lib/**/*.rb', 'bin/*', 'docs/**/*.md', 'README.md', 'LICENSE'] }
+  # Include non-Ruby Docker build context so gem installs can activate container isolation.
+  # Dir globs skip dotfiles — list .dockerignore explicitly.
+  spec.files = Dir.chdir(__dir__) do
+    Dir[
+      'lib/**/*.rb',
+      'lib/skill_bench/execution/docker/**/*',
+      'lib/skill_bench/execution/docker/.dockerignore',
+      'bin/*',
+      'docs/**/*.md',
+      'README.md',
+      'LICENSE'
+    ]
+  end
   spec.bindir        = 'bin'
   spec.executables   = ['skill-bench']
   spec.require_paths = ['lib']
