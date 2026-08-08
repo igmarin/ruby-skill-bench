@@ -7,13 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-08-08
+
 ### Security
-- Ship Docker container isolation for `run_command` when a daemon is available: packaged `evaluator-sandbox` image, skip-rebuild when the versioned tag exists, hardened `docker run` flags (`--network none`, non-root, cap-drop). Host execution remains fail-closed via `allow_host_execution` (default `false`) when no container is active (#86–#91).
+- Ship Docker container isolation for `run_command` when a Docker daemon is available: packaged `evaluator-sandbox` image, skip-rebuild when the versioned tag exists, hardened `docker run` flags (`--network none`, non-root, cap-drop). Host execution remains fail-closed via `allow_host_execution` (default `false`) when no container is active (#86–#91).
+- `ProviderConfig#fetch_config` honors explicit `nil` option values so a missing API key is not replaced by a global/home config key (fixes flaky/wrong credential resolution in validate and clients).
 
+### Added
+- `docs/docker.md` image contract and `rake docker:build` (tags `evaluator-sandbox:<VERSION>` and `:latest`).
+- Opt-in live Docker integration tests (`SKILL_BENCH_DOCKER_TESTS=1`) and CI `container-integration` job.
 
-## [1.2.0]
+## [1.2.0] - 2026-07-01
 
-> In progress — the v1.2.0 quality program (security, performance, documentation, examples). The release date is set when the version is tagged.
 
 ### Added
 - `skill-bench validate` (alias `doctor`): a pre-flight check that validates `criteria.json` via `CriteriaValidator`, schema-checks `skill-bench.json`, and reports missing provider API keys — all without running an eval or hitting the network (#45).
