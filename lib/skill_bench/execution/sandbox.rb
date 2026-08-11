@@ -127,12 +127,12 @@ module SkillBench
       #
       # @raise [RuntimeError] when any git command fails.
       def setup_git
-        subcommands = [
-          ['init', '--quiet'],
-          ['config', 'user.email', 'evaluator@tessl.io'],
-          ['config', 'user.name', 'Evaluator Sandbox'],
-          ['add', '.'],
-          ['commit', '--quiet', '-m', 'Initial commit']
+        cmds = [
+          ['git', 'init', '--quiet'],
+          ['git', 'config', 'user.email', 'evaluator@example.com'],
+          ['git', 'config', 'user.name', 'Evaluator Sandbox'],
+          ['git', 'add', '.'],
+          ['git', 'commit', '--quiet', '-m', 'Initial commit']
         ]
 
         subcommands.each do |args|
