@@ -1,6 +1,32 @@
+# .reek.yml — code-smell gate for CI (`bundle exec reek` / `rake reek`)
+#
+# Policy (triage, not zero-noise):
+#   HIGH-SIGNAL — stay ENABLED for lib/. Exclude only intentional / deferred debt
+#     with a short reason comment:
+#       TooManyMethods, LongParameterList, DataClump, ControlParameter,
+#       InstanceVariableAssumption, RepeatedConditional, TooManyStatements,
+#       TooManyInstanceVariables, BooleanParameter, UnusedParameters
+#
+#   LOW-SIGNAL / CHRONIC FALSE POSITIVES — disabled globally under detectors:
+#       FeatureEnvy, NilCheck, NestedIterators, ManualDispatch,
+#       UtilityFunction, MissingSafeMethod
+#
+#   TUNED (enabled, less twitchy):
+#       DuplicateMethodCall max_calls: 3
+#       UncommunicativeVariableName accept: _, c, m, and common short names
+#
+#   TEST TREE ONLY — the directories."test" block disables detectors for files
+#     under test/. It does NOT disable those detectors for lib/. High-signal
+#     rules (DataClump, LongParameterList, …) remain enabled on production code.
+#
+# When adding an exclude: name the smell, the context, and why it is intentional.
+# Prefer fixing structure over growing this file for high-signal detectors.
+
 exclude_paths:
   - "examples/evals/**/source"
 
+# Scope: path prefix "test" only. Detectors listed here are off for specs;
+# they stay on for lib/ unless disabled under the top-level detectors: key.
 directories:
   "test":
     IrresponsibleModule:
@@ -27,29 +53,111 @@ directories:
       enabled: false
     UncommunicativeMethodName:
       enabled: false
+    NilCheck:
+      enabled: false
+    ManualDispatch:
+      enabled: false
+    DataClump:
+      enabled: false
+    LongParameterList:
+      enabled: false
 
 detectors:
-  Attribute:
-    exclude:
-      - "SkillBench::Config"
-      - "SkillBench::Config::Store"
-  InstanceVariableAssumption:
-    exclude:
-      - "SkillBench::Clients::Providers::Anthropic"
-      - "SkillBench::Clients::Providers::AzureOpenAI"
-      - "SkillBench::Clients::Providers::DeepSeek"
-      - "SkillBench::Clients::Providers::Gemini"
-      - "SkillBench::Clients::Providers::Groq"
-      - "SkillBench::Clients::Providers::Ollama"
-      - "SkillBench::Clients::Providers::OpenAI"
-      - "SkillBench::Clients::Providers::OpenCode"
-      - "SkillBench::Clients::Providers::OpenRouter"
-      - "SkillBench::Config::Store"
-      - "SkillBench::Cli::Eval::NewEvalOptions"                 # @options set by parent BaseEvalOptions#initialize — Template Method
-      - "SkillBench::Cli::Eval::GenerateEvalOptions"            # @options set by parent BaseEvalOptions#initialize — Template Method
+  # --- disabled globally (low signal for this project) ---
+  FeatureEnvy:
+    enabled: false
+  NilCheck:
+    enabled: false
+  NestedIterators:
+    enabled: false
+  ManualDispatch:
+    enabled: false
+  UtilityFunction:
+    enabled: false
   MissingSafeMethod:
     enabled: false
+
+  # --- tuned ---
+  DuplicateMethodCall:
+    enabled: true
+    max_calls: 3
+    # Exclude only methods that intentionally call the same expression 3+ times
+    # for distinct semantic reasons (rescue pairs, multi-branch formatting, etc.).
+    exclude:
+      - "SkillBench::TrendTracker#record"                        # Two rescue blocks each use e.message
+      - "SkillBench::Services::RunnerService#record_and_compute_trend"
+      - "SkillBench::TrendTracker::Persistence#write"            # Two rescue blocks each use e.message
+      - "SkillBench::Models::CriteriaValidator#validate_dimensions" # dim[:max_score] in all? and sum
+      - "SkillBench::Cli::CompareCommand#call"                   # options[:variant_*] across validation + dispatch
+      - "SkillBench::Services::RunnerService#evaluate_and_record_trend" # context.baseline/context_output across judge + tokens
+      - "SkillBench::Services::AgentSpawnerService#run_agent"    # provider/sandbox fields used in success and error paths
+      - "SkillBench::Clients::ResponseParser#self.parse_body"   # response.body branches (empty/string/JSON) — intentional
+
+  UncommunicativeVariableName:
+    enabled: true
+    accept:
+      - "_"
+      - "c"
+      - "d"
+      - "e"
+      - "f"
+      - "id"
+      - "m"
+      - "t"
+      - "v"
+
+  # --- high-signal: size / structure (explicitly enabled for lib/) ---
+  TooManyMethods:
+    enabled: true
+    max_methods: 15
+    exclude:
+      - "SkillBench::Clients::BaseClient"
+      - "SkillBench::Clients::Providers::Anthropic"
+      - "SkillBench::Config::Store"
+      - "SkillBench::Config"
+      - "SkillBench::Services::RunnerService"              # orchestration class — refactor deferred
+      - "SkillBench::Cli::ValidateCommand"                 # multi-check CLI; split deferred
+
+  # High-signal: ENABLED. The exclude list is debt, not a global off-switch.
+  LongParameterList:
+    enabled: true
+    max_params: 6
+    exclude:
+      - "SkillBench::Evaluation::Runner#initialize"
+      - "SkillBench::Models::Eval#initialize"
+      - "SkillBench::Services::ResponseCache#key"           # cache key parts are the domain; group object deferred
+
+  TooManyStatements:
+    enabled: true
+    max_statements: 25
+    exclude:
+      - "SkillBench::Commands::Run"
+
+  TooManyInstanceVariables:
+    enabled: true
+    max_instance_variables: 6
+    exclude:
+      - "SkillBench::Clients::BaseClient"
+      - "SkillBench::DeltaReport"
+
+  TooManyConstants:
+    enabled: true
+    exclude:
+      - "SkillBench::Services::TemplateRegistry"            # lookup tables are the domain
+
+  # High-signal: ENABLED. The exclude list is debt, not a global off-switch.
+  DataClump:
+    enabled: true
+    exclude:
+      - "SkillBench::Tools"
+      - "SkillBench::Services::RunnerService"
+      - "SkillBench::Judge::Response"                       # dimension name+hash travel together
+      - "SkillBench::Cli::ValidateCommand"                 # check result (name, message) pairs
+      - "SkillBench::Registry::PackResolver"               # skill_name + visited cycle-guard pair
+      - "SkillBench::Services::ComparisonReporter"         # report_a/report_b comparison pair
+
   ControlParameter:
+    enabled: true
     exclude:
       - "SkillBench::Cli::BatchResultPrinter#self.batch_output"
       - "SkillBench::Commands::Run#validate_api_key"
@@ -58,207 +166,52 @@ detectors:
       - "SkillBench::OutputFormatter#self.format"
       - "SkillBench::Tools::Base"
       - "SkillBench::Client#self.call"
-  DuplicateMethodCall:
-    exclude:
-      - "SkillBench::Agent::Runner#print_header"
-      - "SkillBench::TrendTracker#record"                        # Two different rescue blocks each use e.message — standard pattern
-      - "SkillBench::DeltaReport#compute_totals"
-      - "SkillBench::OutputFormatter#self.format_delta_report"
-      - "SkillBench::OutputFormatter#self.format_legacy_human"
-      - "SkillBench::CLI#call"
-      - "SkillBench::Client#call"
-      - "SkillBench::Clients::BaseClient#execute_request"
-      - "SkillBench::Clients::Providers::Gemini#initialize"
-      - "SkillBench::Clients::RequestBuilder#self.build_connection"
-      - "SkillBench::Clients::ResponseErrorHandler#self.failure_response"
-      - "SkillBench::Clients::ResponseErrorHandler#self.log_error"
-      - "SkillBench::Clients::ResponseParser#self.extract_openai_message"
-      - "SkillBench::Clients::ResponseParser#self.parse_body"
-      - "SkillBench::Commands::Run"
-      - "SkillBench::Config#load_and_merge_json"
-      - "SkillBench::Execution::ContextHydrator#call"
-      - "SkillBench::ErrorLogger#log_error"
-      - "SkillBench::HistoryRecorder::PersistenceService#self.log_error"
-      - "SkillBench::Migration::ProviderMigrator#self.migrate"
-      - "SkillBench::Models::Config#self.load"
-      - "SkillBench::OutputFormatter#self.format_human"
-      - "SkillBench::OutputFormatter#self.format_junit"
-      - "SkillBench::Agent::ReactAgent#call"
-      - "SkillBench::Runner#call"
-      - "SkillBench::Services::RunnerService#spawn_agent"
-      - "SkillBench::Services::RunnerService#call"
-      - "SkillBench::Services::RunnerService#record_and_compute_trend"  # Two rescue blocks each use record_result.is_a?(Hash) — standard pattern
-      - "SkillBench::Tools::Base#verify_component_safety!"
-      - "SkillBench::Tools::Dispatcher#log_error"
-      - "SkillBench::Tools::WriteFile#self.call"
-      - "SkillBench::Models::CriteriaValidator#validate_dimensions" # dim[:max_score] accessed in all? and sum — different semantic purposes
-      - "SkillBench::TrendTracker::Persistence#write"               # Two rescue blocks each use e.message — standard pattern
-  UncommunicativeVariableName:
-    accept:
-      - d
-      - e
-      - f
-      - id
-      - t
-      - v
-  TooManyInstanceVariables:
-    max_instance_variables: 6
-    exclude:
-      - "SkillBench::Clients::BaseClient"
-      - "SkillBench::DeltaReport"
-  TooManyStatements:
-    max_statements: 25
-    exclude:
-      - "SkillBench::Commands::Run"
-  TooManyMethods:
-    max_methods: 15
-    exclude:
-      - "SkillBench::Clients::BaseClient"
-      - "SkillBench::Clients::Providers::Anthropic"
-      - "SkillBench::Config::Store"
-      - "SkillBench::Config"
-      - "SkillBench::Services::RunnerService"                    # 16 methods — orchestration class, refactor deferred
-  DataClump:
-    exclude:
-      - "SkillBench::Tools"
-      - "SkillBench::Services::RunnerService"
-      - "SkillBench::Judge::Response"                      # Dimension name+hash pair naturally travel together in hash iteration
-  FeatureEnvy:
-    exclude:
-      - "SkillBench::CLI#call"
-      - "SkillBench::Criteria#assign_attributes"
-      - "SkillBench::Dimension#=="
-      - "SkillBench::Evaluation::Runner#compute_deltas"
-      - "SkillBench::Services::SummaryFormatter#total_cost"   # Reduces a collected costs array — array manipulation is the domain
-      - "SkillBench::Judge::Prompt#criteria_section"
-      - "SkillBench::Judge::Response#extract_dimensions"
-      - "SkillBench::CLI#handle_eval"
-      - "SkillBench::CLI#handle_eval_new"
-      - "SkillBench::CLI#handle_run"
-      - "SkillBench::CLI#handle_skill"
-      - "SkillBench::CLI#handle_skill_new"
-      - "SkillBench::CLI#print_result"
-      - "SkillBench::Cli::EvalCommand#handle_new"
-      - "SkillBench::Cli::InitCommand#build_parser"
-      - "SkillBench::Cli::RunCommand#build_parser"
-      - "SkillBench::Cli::SkillCommand#handle_new"
-      - "SkillBench::Clients::BaseClient#config_error"
-      - "SkillBench::Clients::BaseClient#handle_response"
-      - "SkillBench::Clients::BaseClient#missing_message_response"
-      - "SkillBench::Clients::Providers::Anthropic#config_error"
-      - "SkillBench::Clients::Providers::Anthropic#translate_single_message"
-      - "SkillBench::Clients::Providers::AzureOpenAI#config_error"
-      - "SkillBench::Clients::Providers::Gemini#config_error"
-      - "SkillBench::Execution::ContextHydrator#build_xml"
-      - "SkillBench::EvaluateCommand#safe_expand_path"
-      - "SkillBench::HistoryRecorder::HistoryFile#write"
-      - "SkillBench::HistoryRecorder::HistoryPathResolver#contained?"
-      - "SkillBench::Judge::Judge#call"                     # Orchestration method — coordinates multiple collaborators
-      - "SkillBench::Judge::Response#validate_dimension"    # Validates a single dimension hash — hash access is the domain
-      - "SkillBench::Models::Config#find_provider"
-      - "SkillBench::Models::Config#providers"
-      - "SkillBench::Execution::Sandbox#copy_tree"
-      - "SkillBench::Services::OptionParserService#parser"
-      - "SkillBench::Services::RunnerService#spawn_agent"           # Builds LLM request from provider config — config manipulation is the domain
-      - "SkillBench::Services::RunnerService#build_context_system_prompt"
-      - "SkillBench::Services::RunnerService#resolve_source_path"
-      - "SkillBench::Services::RunnerService#load_combined_skill_context"  # Combines multiple skill contexts — skill manipulation is the domain
-      - "SkillBench::Evaluation::Generator#generate_eval"            # Delegates to provider registry and client — provider interaction is the domain
-      - "SkillBench::Evaluation::Generator#write_eval_files"         # Writes generated JSON criteria hash — data serialization is the domain
-      - "SkillBench::Evaluation::Generator#build_criteria_hash"      # Builds criteria hash from parsed JSON — data transformation is the domain
-      - "SkillBench::Models::CriteriaValidator#validate_dimensions"   # Iterating dimension hash entries — hash access is the domain
-      - "SkillBench::Services::RunnerService#resolve_provider_config"  # Thin delegation wrapper — calling provider is the purpose
-      - "SkillBench::Services::RunnerService#safe_merged_config"       # Thin delegation wrapper — calling provider is the purpose
-      - "SkillBench::Services::RunnerService#build_judge_params"        # Builds hash from provider attrs — config extraction is the domain
-      - "SkillBench::Services::RunnerService#record_and_compute_trend"  # Orchestration method — coordinates trend tracking and error handling
-      - "SkillBench::Agent::Runner#validate_mode"                       # Validates against allowed list — domain is the allowed array
-      - "SkillBench::Services::RunnerService#build_client_params"       # Builder method — naturally manipulates params and provider hashes
-  BooleanParameter:
-    exclude:
-      - "SkillBench::Cli::BatchResultPrinter#self.call"   # summary: toggles the JSON gate — part of the documented CI signature
-      - "SkillBench::Commands::Init#self.run"
-      - "SkillBench::Clients::BaseUrlValidator#self.call"  # Named transport flags (has_credential/allow_insecure) — security policy inputs
-  UtilityFunction:
-    enabled: false
-  NilCheck:
-    exclude:
-      - "SkillBench::CLI#handle_eval"
-      - "SkillBench::CLI#handle_skill"
-      - "SkillBench::Cli::EvalCommand#call"
-      - "SkillBench::Cli::SkillCommand#call"
-      - "SkillBench::Clients::BaseClient#handle_response"
-      - "SkillBench::Clients::BaseClient#missing_config_keys"
-      - "SkillBench::Clients::Providers::Anthropic#parse_tool_arguments"
-      - "SkillBench::Clients::ResponseParser#self.valid_message?"
-      - "SkillBench::Execution::ContextHydrator#initialize"
-      - "SkillBench::EvaluateCommand#call"
-      - "SkillBench::EvaluateCommand#print_task_result"
-      - "SkillBench::HistoryRecorder#normalize_score"
-      - "SkillBench::HistoryRecorder#self.summarize"
-      - "SkillBench::HistoryRecorder::HistoryPathResolverTest#with_env"
-      - "SkillBench::Judge::Prompt#call"
-      - "SkillBench::Judge::Prompt#valid_skill_context?"            # nil is valid for baseline runs — deliberate nil check
-      - "SkillBench::Judge::Response#extract_dimensions"
-      - "SkillBench::Judge::Response#validate_dimension"
-      - "SkillBench::Judge::Response#validate_structure"
-      - "SkillBench::Models::Config#to_provider"
-      - "SkillBench::Agent::ReactAgent#call"
-      - "SkillBench::Execution::SourcePathResolver#self.call"
-      - "SkillBench::Tools::RunCommand#self.call"
-      - "SkillBench::Evaluation::Generator#generate_eval"   # Guards against missing provider config — nil is a valid state here
-      - "SkillBench::Evaluation::Generator#sanitize_eval_name" # Guards against nil/blank input — defensive boundary
-      - "SkillBench::Services::RunnerService#resolve_source_path"          # Guard against nil return from SourcePathResolver — valid defensive check
-      - "SkillBench::Services::RunnerService#load_combined_skill_context"  # Guards against nil skills array — defensive boundary
-      - "SkillBench::Clients::Providers::OpenCode#missing_config_keys"     # Base URL is optional; nil check validates required config
-      - "SkillBench::Models::Provider#merged_config"                       # API key is mandatory; nil check provides clear error message
-      - "SkillBench::Cli::Eval::EvalCommandRegistry#self.get_command"      # argv.shift can return nil — defensive boundary
-      - "SkillBench::Models::CriteriaValidator#validate_required_fields"   # Hash key presence check — necessary validation
-  NestedIterators:
-    exclude:
-      - "SkillBench::CLI#handle_eval_new"
-      - "SkillBench::CLI#handle_run"
-      - "SkillBench::CLI#handle_skill_new"
-      - "SkillBench::Cli::EvalCommand#handle_new"           # OptionParser block + message formatting — both are shallow
-      - "SkillBench::Cli::EvalCommand#handle_generate"      # OptionParser block + result printing — both are shallow
-      - "SkillBench::Cli::RunCommand#build_parser"
-      - "SkillBench::Cli::SkillCommand#handle_new"
-      - "SkillBench::EvaluateCommand#parse_options"
-      - "SkillBench::OutputFormatter#self.format_delta_report"
-      - "SkillBench::Services::OptionParserService#parser"
-      - "SkillBench::Cli::Eval::NewEvalOptions#create_parser"     # OptionParser block + opts.on block — inherent API
-      - "SkillBench::Cli::Eval::GenerateEvalOptions#create_parser" # OptionParser block + opts.on block — inherent API
+      - "SkillBench::Services::CostCalculator#initialize"  # usage hash gates free-tier vs priced path
+
   RepeatedConditional:
+    enabled: true
     exclude:
       - "SkillBench::OutputFormatter"
       - "SkillBench::Commands::Run"
       - "SkillBench::Config"
+      - "SkillBench::Registry::PackResolver"               # resolved-nil cycle / miss branches
+
+  # --- high-signal: inheritance / state ---
+  InstanceVariableAssumption:
+    enabled: true
+    exclude:
+      # Provider subclasses read BaseClient-initialized config ivars by design
+      - "SkillBench::Clients::Providers::Anthropic"
+      - "SkillBench::Clients::Providers::AzureOpenAI"
+      - "SkillBench::Clients::Providers::DeepSeek"
+      - "SkillBench::Clients::Providers::Gemini"
+      - "SkillBench::Clients::Providers::Groq"
+      - "SkillBench::Clients::Providers::Mistral"
+      - "SkillBench::Clients::Providers::Ollama"
+      - "SkillBench::Clients::Providers::OpenAI"
+      - "SkillBench::Clients::Providers::OpenCode"
+      - "SkillBench::Clients::Providers::OpenRouter"
+      - "SkillBench::Config::Store"
+      - "SkillBench::Cli::Eval::NewEvalOptions"            # @options from BaseEvalOptions#initialize
+      - "SkillBench::Cli::Eval::GenerateEvalOptions"       # @options from BaseEvalOptions#initialize
+      - "SkillBench::Services::SkillResolverService"       # thin facade; @call is module-level alias pattern
+
+  Attribute:
+    enabled: true
+    exclude:
+      - "SkillBench::Config"
+      - "SkillBench::Config::Store"
+
+  BooleanParameter:
+    enabled: true
+    exclude:
+      - "SkillBench::Cli::BatchResultPrinter#self.call"    # summary: documented CI signature gate
+      - "SkillBench::Commands::Init#self.run"
+      - "SkillBench::Clients::BaseUrlValidator#self.call"  # has_credential/allow_insecure security inputs
+
   UnusedParameters:
+    enabled: true
     exclude:
       - "SkillBench::Skills::New#initialize"
       - "SkillBench::Skills::TestService#initialize"
-      - "SkillBench::Cli::Eval::BaseEvalCommand#call"           # Abstract base class — argv is interface contract for subclasses
-  LongParameterList:
-    max_params: 6
-    exclude:
-      - "SkillBench::Evaluation::Runner#initialize"
-      - "SkillBench::Models::Eval#initialize"
-  TooManyConstants:
-    exclude:
-      - "SkillBench::Services::TemplateRegistry"                   # Registry class — lookup tables are the domain
-  ManualDispatch:
-    exclude:
-      - "SkillBench::Services::TemplateRegistry#fetch_template"    # Dynamic dispatch to build_* methods — template type selects builder
-      - "SkillBench::Clients::ResponseErrorHandler#self.log_error"
-      - "SkillBench::ErrorLogger#log_error"
-      - "SkillBench::HistoryRecorder::PersistenceService#self.log_error"
-      - "SkillBench::HistoryRecorder::PersistenceService#self.record"
-      - "SkillBench::Models::Config#self.load"
-      - "SkillBench::OutputFormatter#self.delta_report?"
-      - "SkillBench::Tools::Dispatcher#log_error"
-      - "SkillBench::TrendTracker#extract_entry"            # Duck-type guard for report objects from both production and test fixtures
-      - "SkillBench::Clients::RetryHandler#extract_status"   # Duck-type dispatch across Faraday error classes with different APIs
-      - "SkillBench::OutputFormatter#self.format_junit"      # Duck-type dispatch for backward compatibility with legacy result format
-      - "SkillBench::Services::FeedbackGenerator#self.feedback_applicable?"  # Duck-type guard for DeltaReport vs plain objects
-      - "SkillBench::Services::JUnitFormatter#self.passing?"  # Duck-type dispatch for backward compatibility with legacy result format
-      - "SkillBench::Services::JUnitFormatter#self.score_for" # Duck-type dispatch for backward compatibility with legacy result format
-      - "SkillBench::Services::SummaryFormatter#delta_entry"  # Duck-type guard for DeltaReport vs results without a report
+      - "SkillBench::Cli::Eval::BaseEvalCommand#call"      # abstract base — argv is subclass contract

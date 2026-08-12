@@ -127,12 +127,13 @@ module SkillBench
       #
       # @raise [RuntimeError] when any git command fails.
       def setup_git
-        cmds = [
-          ['git', 'init', '--quiet'],
-          ['git', 'config', 'user.email', 'evaluator@example.com'],
-          ['git', 'config', 'user.name', 'Evaluator Sandbox'],
-          ['git', 'add', '.'],
-          ['git', 'commit', '--quiet', '-m', 'Initial commit']
+        # Subcommands only — git_command prepends the binary + GIT_HARDENING flags.
+        subcommands = [
+          ['init', '--quiet'],
+          ['config', 'user.email', 'evaluator@example.com'],
+          ['config', 'user.name', 'Evaluator Sandbox'],
+          ['add', '.'],
+          ['commit', '--quiet', '-m', 'Initial commit']
         ]
 
         subcommands.each do |args|

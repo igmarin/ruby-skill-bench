@@ -80,18 +80,13 @@ module SkillBench
 
       def test_resolve_reads_config_file_once_across_calls
         write_mock_config
-        loads = 0
         stub_config = Models::Config.new({ provider: 'mock', max_execution_time: 30, config: {} })
 
-        Models::Config.stub(:load, lambda { |*_args|
-          loads += 1
-          stub_config
-        }) do
-          ProviderResolver.call
-          ProviderResolver.call
-        end
+        # Mocha (project standard) — avoid minitest Object#stub / minitest-mock.
+        Models::Config.expects(:load).once.returns(stub_config)
 
-        assert_equal 1, loads
+        ProviderResolver.call
+        ProviderResolver.call
       end
 
       private

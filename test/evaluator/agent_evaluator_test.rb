@@ -12,7 +12,7 @@ module SkillBench
     def test_version_is_accessible
       assert(defined?(SkillBench::VERSION))
       assert_match(/\A\d+\.\d+\.\d+\z/, SkillBench::VERSION)
-      assert_equal '1.3.0', SkillBench::VERSION
+      assert_equal '1.3.1', SkillBench::VERSION
     end
 
     def test_module_is_already_loaded?

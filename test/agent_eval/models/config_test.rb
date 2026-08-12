@@ -84,20 +84,15 @@ module SkillBench
       def test_loaded_memoizes_and_reads_file_once
         Config.instance_variable_set(:@loaded, nil)
         File.write('skill-bench.json', JSON.generate({ provider: 'mock', max_execution_time: 30, config: {} }))
-        loads = 0
         stub_config = Config.new({ provider: 'mock', max_execution_time: 30, config: {} })
 
-        Config.stub(:load, lambda { |*_args|
-          loads += 1
-          stub_config
-        }) do
-          first = Config.loaded
-          second = Config.loaded
+        # Mocha (project standard) — avoid minitest Object#stub / minitest-mock.
+        Config.expects(:load).once.returns(stub_config)
 
-          assert_same first, second
-        end
+        first = Config.loaded
+        second = Config.loaded
 
-        assert_equal 1, loads
+        assert_same first, second
       ensure
         Config.instance_variable_set(:@loaded, nil)
       end

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-08-11
+
+### Fixed
+- Restore `Sandbox#setup_git` after a broken rename left a `NameError` on `subcommands` and incorrectly prefixed git args (broke sandbox init and live Docker CI).
+- Convert config memoization tests to Mocha so they no longer depend on minitest `Object#stub` / `minitest-mock`.
+
+### Security
+- Require `json` `>= 2.21.2` (CVE-2026-71847). Constraint is `~> 2.21, >= 2.21.2`.
+
+### Changed
+- Reek policy: high-signal detectors only for CI; documented triage in `.reek.yml`.
+- Test helper strips provider `MODEL` / `BASE_URL` / related env vars (not only API keys) for hermetic runs.
+
 ## [1.3.0] - 2026-08-08
 
 ### Security
