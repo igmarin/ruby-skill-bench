@@ -18,4 +18,4 @@ Shipped: `Clients::Providers::Bedrock` (Runtime OpenAI-compatible path + Bedrock
 
 ## 4. Judge reliability
 
-In progress. Golden parser fixture: `test/fixtures/judge_traces/canonical.json`. Sample variance: `Judge::Variance`. Remaining: record inter-run totals from live evals (no verdict-math change).
+Shipped: golden parser fixture `test/fixtures/judge_traces/canonical.json`, `Judge::Variance`, and inter-run stats on the existing trend history (same eval+skill). Verdict math unchanged. IAM SigV4 for Bedrock is still deferred (item 3).

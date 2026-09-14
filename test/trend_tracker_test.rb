@@ -73,6 +73,18 @@ module SkillBench
       assert_equal 10, trend[:context_delta]
     end
 
+    def test_includes_judge_variance_from_matching_history_plus_current
+      tracker = TrendTracker.new(history_file: @history_file)
+      tracker.record(build_result(context_total: 80))
+
+      trend = tracker.trend_for(build_result(context_total: 86))
+      stats = trend[:judge_variance]
+
+      assert_equal 2, stats[:n]
+      assert_in_delta 83.0, stats[:mean]
+      assert_in_delta 6.0, stats[:spread]
+    end
+
     def test_returns_no_trend_when_no_matching_eval_or_skill
       tracker = TrendTracker.new(history_file: @history_file)
       tracker.record(build_result(eval_name: 'eval-a', skill_names: ['skill-a'], context_total: 80))

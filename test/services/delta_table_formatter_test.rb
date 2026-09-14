@@ -51,6 +51,22 @@ module SkillBench
         assert_includes output, 'TREND: baseline ↑ (+5), context ↓ (-3)'
       end
 
+      def test_format_includes_judge_variance_when_present
+        report = build_delta_report(verdict: true)
+        result = {
+          trend: {
+            baseline_trend: :unchanged,
+            context_trend: :unchanged,
+            baseline_delta: 0,
+            context_delta: 0,
+            judge_variance: { n: 3, mean: 83.0, stddev: 3.0, spread: 6.0 }
+          }
+        }
+        output = DeltaTableFormatter.format(report, result)
+
+        assert_includes output, 'JUDGE n=3 mean=83.0 σ=3.0 spread=6.0'
+      end
+
       def test_format_omits_trend_when_absent
         report = build_delta_report(verdict: true)
         output = DeltaTableFormatter.format(report)

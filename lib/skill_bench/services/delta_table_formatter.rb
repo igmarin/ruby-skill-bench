@@ -65,7 +65,23 @@ module SkillBench
         context_icon = trend_icon(trend[:context_trend])
         baseline_delta = trend[:baseline_delta]
         context_delta = trend[:context_delta]
-        "  TREND: baseline #{baseline_icon} (#{delta_str(baseline_delta)}), context #{context_icon} (#{delta_str(context_delta)})"
+        lines = [
+          "  TREND: baseline #{baseline_icon} (#{delta_str(baseline_delta)}), context #{context_icon} (#{delta_str(context_delta)})"
+        ]
+        lines << format_judge_variance(trend[:judge_variance])
+        lines.compact.join("\n")
+      end
+
+      private_class_method def self.format_judge_variance(stats)
+        return nil unless stats.is_a?(Hash) && stats[:n].to_i >= 2
+
+        Kernel.format(
+          '  JUDGE n=%<n>d mean=%<mean>.1f σ=%<stddev>.1f spread=%<spread>.1f',
+          n: stats[:n],
+          mean: stats[:mean],
+          stddev: stats[:stddev],
+          spread: stats[:spread]
+        )
       end
     end
   end
