@@ -1,0 +1,10 @@
+{
+  "dimensions": {
+    "correctness": { "score": 24, "max_score": 30, "reasoning": "Behavior matches the task." },
+    "skill_adherence": { "score": 20, "max_score": 25, "reasoning": "Follows the skill contract." },
+    "code_quality": { "score": 16, "max_score": 20, "reasoning": "Clear structure." },
+    "test_coverage": { "score": 12, "max_score": 15, "reasoning": "Starting tests still pass." },
+    "documentation": { "score": 8, "max_score": 10, "reasoning": "Public API is documented." }
+  },
+  "overall_reasoning": "Canonical golden trace for parser lock-in. Total 80."
+}

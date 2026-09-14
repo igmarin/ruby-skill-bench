@@ -10,18 +10,12 @@ Do: turn a small set of those evals into fixture-backed tasks with `task.md`, `c
 
 ## 2. xAI / Grok provider
 
-No `Clients::Providers` class exists for xAI. The surrounding skill ecosystem already runs on Grok. Pattern to copy: OpenAI-compatible subclass (see Mistral and OpenRouter).
-
-Do not fold Bedrock into this item.
+Shipped: `Clients::Providers::Xai`, `skill-bench init --xai`.
 
 ## 3. AWS Bedrock provider
 
-Closed issue [#47](https://github.com/igmarin/ruby-skill-bench/issues/47) named Bedrock as the larger follow-up to Mistral. This is not a one-file client: auth, regions, and model IDs differ from the OpenAI-compatible adapters.
-
-Do not start this before OpenRouter (already shipped) is documented and xAI is decided.
+Shipped: `Clients::Providers::Bedrock` (Runtime OpenAI-compatible path + Bedrock API key). IAM SigV4 is still deferred.
 
 ## 4. Judge reliability
 
-Scores come from an LLM judge (`Evaluation::Runner` → `Judge`) with no golden-trace fixture set and no recorded inter-run variance. Deltas are not product truth until that exists.
-
-Do not change dimension names or verdict math in the same change as adding traces.
+In progress. Golden parser fixture: `test/fixtures/judge_traces/canonical.json`. Sample variance: `Judge::Variance`. Remaining: record inter-run totals from live evals (no verdict-math change).
