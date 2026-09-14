@@ -1,14 +1,19 @@
 # Eval: refactor-process-basic
 
+The sandbox starts with `order_processor.rb` and `order_processor_test.rb`.
+`process_standard` and `process_express` duplicate sku/quantity guards and unit pricing.
+The tests already capture current behavior and pass.
+
 ## Task
-Refactor the provided `OrderProcessor` class to clean up duplication, extract methods, and improve code structure.
-Ensure that:
-1. You have a full set of characterization tests that pass (are Green) BEFORE making any changes.
-2. You make only ONE atomic transformation at a time.
-3. You run your tests after every single micro-change to ensure nothing breaks.
-4. You do NOT change any behavior or return values.
+
+1. Run `ruby order_processor_test.rb` and confirm Green before any edit.
+2. Extract the duplicated validation (and optionally pricing) into a private helper. One atomic transformation at a time.
+3. Re-run the tests after each step. If Red, revert that step.
+4. Do not change return hashes, error strings, or shipping amounts.
+5. Do not fix bugs, add YARD, or extract a `ProcessOrder` service as the main change.
 
 ## Success Criteria
-- The code structure of `OrderProcessor` is simplified and cleaner.
-- No functional regressions are introduced.
-- Tests are run and remain Green throughout the process.
+
+- Duplicated sku/quantity checks live in one place.
+- `ruby order_processor_test.rb` exits 0.
+- Public methods `process_standard` and `process_express` still exist with the same results.

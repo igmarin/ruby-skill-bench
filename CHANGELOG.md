@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixture-backed `evals/skills/create-service-object/basic`: fat `OrdersController`, passing starting tests, and a condensed `skills/create-service-object/SKILL.md`.
 - Fixture-backed `evals/skills/write-yard-docs/basic`: undocumented `PriceCalculator`, passing starting tests, and a condensed `skills/write-yard-docs/SKILL.md`.
 - Fixture-backed `evals/skills/triage-bug/basic`: buggy `Discount.apply` (integer division), passing happy-path tests, and a condensed `skills/triage-bug/SKILL.md`.
+- Fixture-backed `evals/skills/refactor-process/basic`: duplicated `OrderProcessor` methods, passing characterization tests, and a condensed `skills/refactor-process/SKILL.md`.
 
 ### Documentation
 - Align user docs with shipped 1.3.1: OpenRouter and mock in the provider list, Azure env var `SKILL_BENCH_AZURE_OPENAI_API_KEY`, Mistral key via `skill-bench.json` (no env mapping).
