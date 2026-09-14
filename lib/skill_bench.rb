@@ -22,6 +22,7 @@ require_relative 'skill_bench/judge'
 require_relative 'skill_bench/judge/judge'
 require_relative 'skill_bench/judge/prompt'
 require_relative 'skill_bench/judge/response'
+require_relative 'skill_bench/judge/variance'
 
 # Agent subsystem
 require_relative 'skill_bench/agent'
