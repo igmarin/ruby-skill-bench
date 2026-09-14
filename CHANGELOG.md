@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `Evaluation::Runner` no longer forwards `skill_context` to either judge. Callers still pass the argument; both prompts get `skill_context: nil`. See `docs/blind-comparisons.md`.
+
 ### Added
 - Fixture-backed `evals/skills/create-service-object/basic`: fat `OrdersController`, passing starting tests, and a condensed `skills/create-service-object/SKILL.md`.
 - Fixture-backed `evals/skills/write-yard-docs/basic`: undocumented `PriceCalculator`, passing starting tests, and a condensed `skills/write-yard-docs/SKILL.md`.

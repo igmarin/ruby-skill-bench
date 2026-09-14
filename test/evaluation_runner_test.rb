@@ -31,7 +31,7 @@ module SkillBench
       Judge::Prompt.expects(:call).with(
         task: 'Test task',
         criteria: criteria,
-        skill_context: 'Skill context',
+        skill_context: nil,
         agent_output: context_output
       ).returns({ success: true, response: { prompt: 'Context prompt' } })
 
@@ -154,12 +154,32 @@ module SkillBench
       assert result[:success]
     end
 
+    def test_all_conditions_receive_identical_judge_context_without_treatment_instructions
+      prompts = []
+      Judge::Judge.stubs(:call).with do |args|
+        prompts << args[:prompt].gsub(/[0-9a-f]{32}/, 'SENTINEL')
+        true
+      end.returns({ success: true, response: { judge_response: build_judge_response(10, 8, 6, 4, 2) } })
+
+      [nil, 'CURRENT_SKILL_SECRET', 'REVISED_SKILL_SECRET'].each do |context|
+        result = Evaluation::Runner.call(task: 'Solve this task', criteria: build_criteria,
+                                         skill_context: context, baseline_output: 'same output',
+                                         context_output: 'same output')
+
+        assert result[:success]
+      end
+
+      assert_equal 6, prompts.length
+      assert_equal 1, prompts.uniq.length
+      refute_match(/CURRENT_SKILL_SECRET|REVISED_SKILL_SECRET|## Skill Context/, prompts.first)
+    end
+
     private
 
     def stub_prompt_paths
-      Judge::Prompt.stubs(:call).with { |args| args[:skill_context].nil? }
+      Judge::Prompt.stubs(:call).with { |args| args[:agent_output] == 'Baseline diff' }
                                 .returns({ success: true, response: { prompt: 'Baseline prompt' } })
-      Judge::Prompt.stubs(:call).with { |args| args[:skill_context] == 'Skill context' }
+      Judge::Prompt.stubs(:call).with { |args| args[:agent_output] == 'Context diff' }
                                 .returns({ success: true, response: { prompt: 'Context prompt' } })
     end
 

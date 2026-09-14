@@ -62,7 +62,7 @@ Exact order for `skill-bench run <eval> --skill <name>`:
 6. `ProviderResolver` builds a `Models::Provider` from `Config` (defaults, then `~/.skill-bench.json`, then `./skill-bench.json`, then `ENV`).
 7. `ContextLoaderService` / `Execution::ContextHydrator` reads skill files. Allowed extensions: `.md`, `.rb`, `.json`, `.yml`, `.yaml`, `.txt`. Per-file cap 50_000 bytes. Total cap 1_000_000 bytes. Symlinks are skipped. Empty context is an error.
 8. `RunnerService` runs baseline and context agents concurrently (`Parallel.map`, two threads). Each agent runs inside `Execution::Sandbox.run`: copy sources into `Dir.mktmpdir`, hardened `git init`, start Docker if available, yield, stop container, delete the tempdir.
-9. `Evaluation::Runner` judges baseline and context concurrently. Baseline judge gets an empty skill context. Context judge gets the XML skill bundle. The judge never sees both outputs in one call.
+9. `Evaluation::Runner` judges baseline and context concurrently. Both judges get `skill_context: nil` (skill text is only for the executing agent). The judge never sees both outputs in one call.
 10. `DeltaReport` computes per-dimension deltas. Verdict is `context_total >= pass_threshold AND total_delta >= minimum_delta`.
 11. `TrendRecorderService` appends `.skill-bench-trends.json` and keeps `.skill-bench-trends.json.bak`.
 12. `CostCalculator` estimates USD from aggregated token usage.
