@@ -31,7 +31,7 @@ See the [Ecosystem Overview](https://github.com/igmarin/agent-mcp-runtime/blob/m
 - **Isolated Git Sandboxes**: Every run operates in a temporary repo. Clean diffs, zero side-effects, 100% reproducibility.
 - **Blind Judging with Dimensions**: LLM judge scores baseline and context independently across 5 canonical dimensions (Correctness, Skill Adherence, Code Quality, Test Coverage, Documentation). Eval authors configure weights and thresholds via `criteria.json`.
 - **Sophisticated ReAct Loop**: Employs a robust `Thought → Tool → Observation` loop to handle complex, multi-step engineering tasks.
-- **Multi-Provider Ecosystem**: Native support for **OpenAI**, **Anthropic**, **Google Gemini**, **Azure OpenAI**, **Ollama**, **Groq**, **DeepSeek**, **Mistral**, **OpenCode**, **OpenRouter**, and **xAI**.
+- **Multi-Provider Ecosystem**: Native support for **OpenAI**, **Anthropic**, **Google Gemini**, **Azure OpenAI**, **Ollama**, **Groq**, **DeepSeek**, **Mistral**, **OpenCode**, **OpenRouter**, **xAI**, and **Amazon Bedrock**.
 - **Standardized Intelligence**: Consistent reporting format regardless of the underlying LLM provider.
 
 ---
@@ -69,6 +69,7 @@ CLI / API → RunnerService → Sandbox + ReAct Agent → LLM Client Layer → P
 | **OpenCode** | `SKILL_BENCH_OPENCODE_API_KEY`, `SKILL_BENCH_OPENCODE_BASE_URL` | `:opencode` |
 | **OpenRouter** | `SKILL_BENCH_OPENROUTER_API_KEY` | `:openrouter` |
 | **xAI** | `SKILL_BENCH_XAI_API_KEY` or `XAI_API_KEY` | `:xai` |
+| **Bedrock** | `SKILL_BENCH_BEDROCK_API_KEY` or `AWS_BEARER_TOKEN_BEDROCK` | `:bedrock` |
 | **Mock** | — (offline, `skill-bench init --mock`) | `:mock` |
 
 > **Note:** Environment variables are loaded automatically. You can also configure provider settings in `skill-bench.json` (created by `skill-bench init`).
@@ -80,6 +81,8 @@ CLI / API → RunnerService → Sandbox + ReAct Agent → LLM Client Layer → P
 > **OpenRouter** uses OpenRouter's OpenAI-compatible API (default model `anthropic/claude-3.5-sonnet`). Set `SKILL_BENCH_OPENROUTER_API_KEY` and scaffold with `skill-bench init --openrouter`.
 >
 > **xAI** uses xAI's OpenAI-compatible chat completions API (default model `grok-4`). Set `SKILL_BENCH_XAI_API_KEY` or `XAI_API_KEY` and scaffold with `skill-bench init --xai`.
+>
+> **Amazon Bedrock** uses the Runtime OpenAI-compatible Chat Completions path (`https://bedrock-runtime.<region>.amazonaws.com/openai/v1/chat/completions`) with a Bedrock API key. Default region `us-east-1` (`SKILL_BENCH_BEDROCK_REGION` or `AWS_REGION`), default model `amazon.nova-lite-v1:0`. Scaffold with `skill-bench init --bedrock`. IAM SigV4 signing is not in this client.
 
 ### Command Allowlist
 
@@ -151,7 +154,7 @@ skill-bench init --openai
 }
 ```
 
-**Available providers:** `--openai`, `--anthropic`, `--gemini`, `--ollama`, `--azure`, `--groq`, `--deepseek`, `--mistral`, `--opencode`, `--openrouter`, `--xai`, plus `--mock` for an offline config with no API key.
+**Available providers:** `--openai`, `--anthropic`, `--gemini`, `--ollama`, `--azure`, `--groq`, `--deepseek`, `--mistral`, `--opencode`, `--openrouter`, `--xai`, `--bedrock`, plus `--mock` for an offline config with no API key.
 
 **Zero-config offline path:** `skill-bench init --mock` scaffolds a minimal offline config that needs no API key and no network — `{"provider":"mock","max_execution_time":30}`. Use it to try the full flow (and run the bundled examples) before wiring up a real provider.
 

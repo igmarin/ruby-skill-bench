@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixture-backed `evals/skills/triage-bug/basic`: buggy `Discount.apply` (integer division), passing happy-path tests, and a condensed `skills/triage-bug/SKILL.md`.
 - Fixture-backed `evals/skills/refactor-process/basic`: duplicated `OrderProcessor` methods, passing characterization tests, and a condensed `skills/refactor-process/SKILL.md`.
 - xAI (Grok) provider: OpenAI-compatible client at `https://api.x.ai/v1/chat/completions`, default model `grok-4`, `skill-bench init --xai`, env `SKILL_BENCH_XAI_API_KEY` or `XAI_API_KEY`.
+- Amazon Bedrock provider: Runtime OpenAI-compatible Chat Completions with a Bedrock API key (`AWS_BEARER_TOKEN_BEDROCK` or `SKILL_BENCH_BEDROCK_API_KEY`), default region `us-east-1`, default model `amazon.nova-lite-v1:0`. IAM SigV4 is not included.
 
 ### Documentation
 - Align user docs with shipped 1.3.1: OpenRouter and mock in the provider list, Azure env var `SKILL_BENCH_AZURE_OPENAI_API_KEY`, Mistral key via `skill-bench.json` (no env mapping).

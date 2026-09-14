@@ -36,6 +36,22 @@ module SkillBench
         assert_equal({}, result[:response][:overrides])
       end
 
+      def test_maps_bedrock_bearer_token_and_region
+        result = EnvOverrides.call(
+          env: {
+            'AWS_BEARER_TOKEN_BEDROCK' => 'bedrock-token',
+            'SKILL_BENCH_BEDROCK_REGION' => 'eu-west-1',
+            'SKILL_BENCH_BEDROCK_MODEL' => 'amazon.nova-lite-v1:0'
+          }
+        )
+
+        assert result[:success]
+        assert_equal(
+          { bedrock: { api_key: 'bedrock-token', location: 'eu-west-1', model: 'amazon.nova-lite-v1:0' } },
+          result[:response][:overrides]
+        )
+      end
+
       def test_maps_xai_api_key_from_prefixed_and_native_env
         result = EnvOverrides.call(
           env: {

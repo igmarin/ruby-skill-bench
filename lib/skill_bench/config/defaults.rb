@@ -37,7 +37,8 @@ module SkillBench
             deepseek: { api_key: nil, model: 'deepseek-chat' },
             opencode: { api_key: nil, model: 'opencode-model', base_url: nil },
             openrouter: { api_key: nil, model: 'anthropic/claude-3.5-sonnet' },
-            xai: { api_key: nil, model: 'grok-4' }
+            xai: { api_key: nil, model: 'grok-4' },
+            bedrock: { api_key: nil, model: 'amazon.nova-lite-v1:0', location: 'us-east-1' }
           }
         }
       end
