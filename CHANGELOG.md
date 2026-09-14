@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Document `--cache` and `--mock` in `skill-bench --help`.
 - Refresh `docs/architecture.md` to the live CLI → RunnerService → sandbox/Docker → blind judge path.
 - Add `ROADMAP.md`; mark `plans/` as historical.
+- Expand `AGENTS.md` with docs pointers, TDD, and service-object conventions.
 
 ## [1.3.1] - 2026-08-11
 
