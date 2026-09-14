@@ -35,6 +35,22 @@ module SkillBench
         assert result[:success]
         assert_equal({}, result[:response][:overrides])
       end
+
+      def test_maps_xai_api_key_from_prefixed_and_native_env
+        result = EnvOverrides.call(
+          env: {
+            'SKILL_BENCH_XAI_API_KEY' => 'prefixed-key',
+            'XAI_API_KEY' => 'native-key',
+            'SKILL_BENCH_XAI_MODEL' => 'grok-4'
+          }
+        )
+
+        assert result[:success]
+        assert_equal(
+          { xai: { api_key: 'native-key', model: 'grok-4' } },
+          result[:response][:overrides]
+        )
+      end
     end
   end
 end

@@ -36,7 +36,8 @@ module SkillBench
             groq: { api_key: nil, model: 'llama-3.3-70b-versatile' },
             deepseek: { api_key: nil, model: 'deepseek-chat' },
             opencode: { api_key: nil, model: 'opencode-model', base_url: nil },
-            openrouter: { api_key: nil, model: 'anthropic/claude-3.5-sonnet' }
+            openrouter: { api_key: nil, model: 'anthropic/claude-3.5-sonnet' },
+            xai: { api_key: nil, model: 'grok-4' }
           }
         }
       end

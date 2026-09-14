@@ -111,7 +111,7 @@ Owns per-dimension arithmetic and the boolean verdict. Does not call the network
 
 ### `Clients::BaseClient` and `ProviderRegistry`
 
-Own HTTP to LLM providers (Faraday, retries, response normalization). Registered providers: openai, anthropic, gemini, ollama, azure, groq, deepseek, mistral, opencode, openrouter, plus mock and null. Do not own eval files.
+Own HTTP to LLM providers (Faraday, retries, response normalization). Registered providers: openai, anthropic, gemini, ollama, azure, groq, deepseek, mistral, opencode, openrouter, xai, plus mock and null. Do not own eval files.
 
 ### `Config`
 
