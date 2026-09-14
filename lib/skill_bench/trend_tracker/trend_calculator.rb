@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../judge/variance'
+
 module SkillBench
   class TrendTracker
     # Calculates performance trends between evaluation results
@@ -25,7 +27,8 @@ module SkillBench
           context_trend: trend_direction(current_context, previous_context),
           baseline_delta: current_baseline - previous_baseline,
           context_delta: current_context - previous_context,
-          previous_run: previous[:timestamp]
+          previous_run: previous[:timestamp],
+          judge_variance: judge_variance(matching, current_context)
         }
       end
 
@@ -53,6 +56,12 @@ module SkillBench
           return :unchanged if current == previous
 
           current > previous ? :improved : :regressed
+        end
+
+        def judge_variance(matching, current_context)
+          totals = matching.filter_map { |entry| entry[:context_total] } + [current_context]
+          result = SkillBench::Judge::Variance.call(totals: totals)
+          result[:success] ? result[:response] : nil
         end
       end
     end
