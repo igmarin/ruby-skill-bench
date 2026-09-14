@@ -21,7 +21,7 @@ This repo is one of 6 in a composable AI skill ecosystem:
 | [`agent-mcp-runtime`](https://github.com/igmarin/agent-mcp-runtime) | Rust CLI runtime (pack resolution, MCP) |
 | [**`ruby-skill-bench`**](https://github.com/igmarin/ruby-skill-bench) | Benchmark/eval engine |
 
-See the [Ecosystem Overview](https://github.com/igmarin/agent-mcp-runtime/blob/main/docs/ecosystem.md) for the full architecture.
+See the [Ecosystem Overview](https://github.com/igmarin/agent-mcp-runtime/blob/main/docs/ecosystem.md) for the full architecture. What comes next in this repo: [ROADMAP.md](ROADMAP.md).
 
 ---
 
