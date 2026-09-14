@@ -23,6 +23,12 @@ graph TD
     Gemini[Gemini]
     Azure[AzureOpenAI]
     Ollama[Ollama]
+    Groq[Groq]
+    DeepSeek[DeepSeek]
+    Mistral[Mistral]
+    OpenCode[OpenCode]
+    OpenRouter[OpenRouter]
+    Mock[Mock]
 
     %% Connections
     Dispatcher -->|1. resolve| Registry
@@ -34,6 +40,12 @@ graph TD
         Base -.-> Gemini
         Base -.-> Azure
         Base -.-> Ollama
+        Base -.-> Groq
+        Base -.-> DeepSeek
+        Base -.-> Mistral
+        Base -.-> OpenCode
+        Base -.-> OpenRouter
+        Base -.-> Mock
     end
 
     %% Styling

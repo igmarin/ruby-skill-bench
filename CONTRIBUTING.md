@@ -9,6 +9,7 @@ Thank you for your interest in contributing to Ruby Skill Bench! This document p
 - Ruby >= 3.1
 - Bundler
 - Git
+- Docker (optional). Needed only for container-isolation work. Live Docker tests are opt-in: `SKILL_BENCH_DOCKER_TESTS=1 bundle exec rake test`. See [docs/docker.md](docs/docker.md).
 
 ### Setting Up the Development Environment
 
