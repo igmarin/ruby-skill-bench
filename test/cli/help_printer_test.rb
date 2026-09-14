@@ -38,6 +38,18 @@ module SkillBench
           HelpPrinter.call
         end
       end
+
+      def test_call_includes_cache_flag
+        assert_output(/--cache/) do
+          HelpPrinter.call
+        end
+      end
+
+      def test_call_includes_mock_provider
+        assert_output(/--mock/) do
+          HelpPrinter.call
+        end
+      end
     end
   end
 end

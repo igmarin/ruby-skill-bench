@@ -21,7 +21,7 @@ This repo is one of 6 in a composable AI skill ecosystem:
 | [`agent-mcp-runtime`](https://github.com/igmarin/agent-mcp-runtime) | Rust CLI runtime (pack resolution, MCP) |
 | [**`ruby-skill-bench`**](https://github.com/igmarin/ruby-skill-bench) | Benchmark/eval engine |
 
-See the [Ecosystem Overview](https://github.com/igmarin/agent-mcp-runtime/blob/main/docs/ecosystem.md) for the full architecture.
+See the [Ecosystem Overview](https://github.com/igmarin/agent-mcp-runtime/blob/main/docs/ecosystem.md) for the full architecture. What comes next in this repo: [ROADMAP.md](ROADMAP.md).
 
 ---
 
@@ -31,7 +31,7 @@ See the [Ecosystem Overview](https://github.com/igmarin/agent-mcp-runtime/blob/m
 - **Isolated Git Sandboxes**: Every run operates in a temporary repo. Clean diffs, zero side-effects, 100% reproducibility.
 - **Blind Judging with Dimensions**: LLM judge scores baseline and context independently across 5 canonical dimensions (Correctness, Skill Adherence, Code Quality, Test Coverage, Documentation). Eval authors configure weights and thresholds via `criteria.json`.
 - **Sophisticated ReAct Loop**: Employs a robust `Thought → Tool → Observation` loop to handle complex, multi-step engineering tasks.
-- **Multi-Provider Ecosystem**: Native support for **OpenAI**, **Anthropic**, **Google Gemini**, **Azure OpenAI**, **Ollama**, **Groq**, **DeepSeek**, **Mistral**, and **OpenCode**.
+- **Multi-Provider Ecosystem**: Native support for **OpenAI**, **Anthropic**, **Google Gemini**, **Azure OpenAI**, **Ollama**, **Groq**, **DeepSeek**, **Mistral**, **OpenCode**, and **OpenRouter**.
 - **Standardized Intelligence**: Consistent reporting format regardless of the underlying LLM provider.
 
 ---
@@ -61,18 +61,22 @@ CLI / API → RunnerService → Sandbox + ReAct Agent → LLM Client Layer → P
 | **OpenAI** | `SKILL_BENCH_OPENAI_API_KEY` | `:openai` |
 | **Anthropic** | `SKILL_BENCH_ANTHROPIC_API_KEY` | `:anthropic` |
 | **Gemini** | `SKILL_BENCH_GEMINI_API_KEY` | `:gemini` |
-| **Azure** | `SKILL_BENCH_AZURE_API_KEY` | `:azure` |
+| **Azure** | `SKILL_BENCH_AZURE_OPENAI_API_KEY` | `:azure` |
 | **Ollama** | — | `:ollama` |
 | **Groq** | `SKILL_BENCH_GROQ_API_KEY` | `:groq` |
 | **DeepSeek** | `SKILL_BENCH_DEEPSEEK_API_KEY` | `:deepseek` |
-| **Mistral** | `SKILL_BENCH_MISTRAL_API_KEY` | `:mistral` |
+| **Mistral** | set `api_key` in `skill-bench.json` (no env mapping) | `:mistral` |
 | **OpenCode** | `SKILL_BENCH_OPENCODE_API_KEY`, `SKILL_BENCH_OPENCODE_BASE_URL` | `:opencode` |
+| **OpenRouter** | `SKILL_BENCH_OPENROUTER_API_KEY` | `:openrouter` |
+| **Mock** | — (offline, `skill-bench init --mock`) | `:mock` |
 
 > **Note:** Environment variables are loaded automatically. You can also configure provider settings in `skill-bench.json` (created by `skill-bench init`).
 >
 > **OpenCode requires a custom `base_url`:** OpenCode does not host a public LLM API. You must provide your own OpenAI-compatible endpoint (e.g. a LiteLLM proxy, self-hosted vLLM, or company gateway) via the `base_url` config key. Without it, the provider will fail with "Base URL not set for Opencode".
 >
-> **Mistral** uses Mistral's OpenAI-compatible chat completions API (default model `mistral-large-latest`). Set `SKILL_BENCH_MISTRAL_API_KEY` and scaffold it with `skill-bench init --mistral`.
+> **Mistral** uses Mistral's OpenAI-compatible chat completions API (default model `mistral-large-latest`). Scaffold with `skill-bench init --mistral` and set `config.api_key` in `skill-bench.json`. There is no `SKILL_BENCH_MISTRAL_API_KEY` env mapping.
+>
+> **OpenRouter** uses OpenRouter's OpenAI-compatible API (default model `anthropic/claude-3.5-sonnet`). Set `SKILL_BENCH_OPENROUTER_API_KEY` and scaffold with `skill-bench init --openrouter`.
 
 ### Command Allowlist
 
@@ -144,7 +148,7 @@ skill-bench init --openai
 }
 ```
 
-**Available providers:** `--openai`, `--anthropic`, `--gemini`, `--ollama`, `--azure`, `--groq`, `--deepseek`, `--mistral`, `--opencode`
+**Available providers:** `--openai`, `--anthropic`, `--gemini`, `--ollama`, `--azure`, `--groq`, `--deepseek`, `--mistral`, `--opencode`, `--openrouter`, plus `--mock` for an offline config with no API key.
 
 **Zero-config offline path:** `skill-bench init --mock` scaffolds a minimal offline config that needs no API key and no network — `{"provider":"mock","max_execution_time":30}`. Use it to try the full flow (and run the bundled examples) before wiring up a real provider.
 
@@ -908,7 +912,7 @@ Your eval result depends on **both** conditions. Here is every scenario:
 - **Traceability**: Every thought and tool call is logged with full backtrace for post-mortem analysis.
 - **Robust Error Recovery**: Handles provider outages and rate limits gracefully with standardized error logging.
 - **XML-Safe Output**: JUnit XML output is properly escaped to prevent injection attacks.
-- **Test Coverage**: 700+ tests covering core engine, CLI commands, and all provider clients. Run `bundle exec rake test` to see the current count.
+- **Test Coverage**: 910 tests covering core engine, CLI commands, and all provider clients. Run `bundle exec rake test` to see the current count.
 
 ## Testing
 

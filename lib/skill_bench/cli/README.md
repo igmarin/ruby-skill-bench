@@ -19,8 +19,10 @@ graph TD
     Dispatcher -->|empty argv| HelpPrinter[Cli::HelpPrinter]
     Dispatcher -->|init| InitCommand[Cli::InitCommand]
     Dispatcher -->|run| RunCommand[Cli::RunCommand]
+    Dispatcher -->|compare| CompareCommand[Cli::CompareCommand]
     Dispatcher -->|skill| SkillCommand[Cli::SkillCommand]
     Dispatcher -->|eval| EvalCommand[Cli::EvalCommand]
+    Dispatcher -->|validate / doctor| ValidateCommand[Cli::ValidateCommand]
     Dispatcher -->|-h/--help| HelpPrinter
     
     %% Command delegation
@@ -54,8 +56,10 @@ graph TD
 
 - **`CLI`**: The top-level dispatcher. Receives raw `ARGV`, routes to subcommand handlers via `case/when`, and handles unknown subcommands.
 - **`InitCommand`**: Parses provider flags (`--openai`, `--gemini`, etc.) and `--force`. Delegates to `Commands::Init` to generate `skill-bench.json`.
-- **`RunCommand`**: Parses `--skill` and `--format` flags. Validates required arguments before delegating to `Commands::Run`.
-- **`SkillCommand` / `EvalCommand`**: Action dispatchers that route to `new` sub-actions (`skill new`, `eval new`) with their own OptionParsers.
+- **`RunCommand`**: Parses `--skill`, `--format`, `--pack`, `--all`, `--evals-dir`, `--summary`, and `--cache`. Delegates a single eval to `Commands::Run` or a directory to `BatchRunnerService`.
+- **`CompareCommand`**: Runs the same eval against two skill variants (`--variant-a`, `--variant-b`).
+- **`ValidateCommand`**: Read-only pre-flight (`validate` / `doctor`): criteria JSON, config shape, provider key presence. No eval, no network.
+- **`SkillCommand` / `EvalCommand`**: Action dispatchers that route to `new` (and `eval generate`) with their own OptionParsers.
 - **`HelpPrinter`**: Renders the global usage message with all subcommands and their flags.
 - **`ResultPrinter`**: Formats evaluation results and returns the appropriate exit code (0 for pass, 1 for fail).
 

@@ -39,8 +39,7 @@ Proof command:
 bundle exec ruby examples/api/generate_scaffold.rb
 ```
 
-> Note: this directory is added in a separate PR (#71); it is listed here so the
-> index is complete.
+The script is in this repo: `examples/api/generate_scaffold.rb`.
 
 ### `ci/`
 
