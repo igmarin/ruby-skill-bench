@@ -2,6 +2,7 @@
 
 require 'test_helper'
 require 'open3'
+require 'tempfile'
 
 module SkillBench
   class CreateServiceObjectBasicEvalTest < Minitest::Test
@@ -27,6 +28,26 @@ module SkillBench
 
       assert_predicate status, :success?, "fixture tests failed:\n#{stdout}\n#{stderr}"
       assert_includes stdout, '0 failures'
+    end
+
+    def test_skill_example_is_valid_ruby_with_yard_on_entry_points
+      skill = File.read(File.expand_path('../../skills/create-service-object/SKILL.md', __dir__))
+      example = skill[/```ruby\n(.*?)```/m, 1]
+
+      refute_nil example, 'SKILL.md must include a ruby example'
+
+      %w[sku quantity paid].each do |name|
+        assert_includes example, "@param #{name}"
+      end
+      assert_equal 2, example.scan('@return').size, 'self.call and #call each need @return'
+
+      Tempfile.create(['process_order', '.rb']) do |file|
+        file.write(example)
+        file.flush
+        _stdout, stderr, status = Open3.capture3('ruby', '-c', file.path)
+
+        assert_predicate status, :success?, stderr
+      end
     end
   end
 end

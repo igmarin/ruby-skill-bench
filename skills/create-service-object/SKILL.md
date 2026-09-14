@@ -8,6 +8,12 @@ Use when extracting or writing a Ruby service that callers invoke with `.call`.
 # frozen_string_literal: true
 
 class ProcessOrder
+  # Process an order from sku, quantity, and payment flag.
+  #
+  # @param sku [String] product identifier
+  # @param quantity [Integer] units to purchase
+  # @param paid [Boolean] whether payment has been captured
+  # @return [Hash] `{ success: true, response: Hash }` or `{ success: false, response: { error: { message: String } } }`
   def self.call(sku:, quantity:, paid:)
     new(sku: sku, quantity: quantity, paid: paid).call
   end
@@ -18,8 +24,12 @@ class ProcessOrder
     @paid = paid
   end
 
+  # @return [Hash] `{ success: true, response: Hash }` or `{ success: false, response: { error: { message: String } } }`
   def call
-    { success: true, response: { ... } }
+    {
+      success: true,
+      response: { order_id: 1, sku: @sku, quantity: @quantity, total_cents: @quantity * 1000 }
+    }
   rescue StandardError => e
     { success: false, response: { error: { message: e.message } } }
   end
