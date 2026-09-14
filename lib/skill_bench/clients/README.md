@@ -29,6 +29,7 @@ graph TD
     OpenCode[OpenCode]
     OpenRouter[OpenRouter]
     Xai[Xai]
+    Bedrock[Bedrock]
     Mock[Mock]
 
     %% Connections
@@ -47,6 +48,7 @@ graph TD
         Base -.-> OpenCode
         Base -.-> OpenRouter
         Base -.-> Xai
+        Base -.-> Bedrock
         Base -.-> Mock
     end
 
@@ -80,6 +82,7 @@ graph TD
 | **DeepSeek** | `:deepseek` | `DEEPSEEK_*` | Cost-effective alternative |
 | **OpenCode** | `:opencode` | `OPENCODE_*` | **Custom endpoint required** (self-hosted proxy / LiteLLM / vLLM) |
 | **xAI** | `:xai` | `SKILL_BENCH_XAI_*` / `XAI_*` | Grok via `https://api.x.ai` |
+| **Bedrock** | `:bedrock` | `SKILL_BENCH_BEDROCK_*` / `AWS_BEARER_TOKEN_BEDROCK` | Runtime OpenAI-compatible Chat Completions |
 | **Null Client** | `:null` | N/A | Mock / Fallback testing |
 
 ---

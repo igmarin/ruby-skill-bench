@@ -53,7 +53,12 @@ module SkillBench
         'SKILL_BENCH_XAI_API_KEY' => %i[xai api_key],
         'XAI_API_KEY' => %i[xai api_key],
         'SKILL_BENCH_XAI_MODEL' => %i[xai model],
-        'XAI_MODEL' => %i[xai model]
+        'XAI_MODEL' => %i[xai model],
+        'SKILL_BENCH_BEDROCK_API_KEY' => %i[bedrock api_key],
+        'AWS_BEARER_TOKEN_BEDROCK' => %i[bedrock api_key],
+        'SKILL_BENCH_BEDROCK_MODEL' => %i[bedrock model],
+        'SKILL_BENCH_BEDROCK_REGION' => %i[bedrock location],
+        'AWS_REGION' => %i[bedrock location]
       }.freeze
 
       # Returns provider overrides from the given environment.

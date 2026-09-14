@@ -55,6 +55,11 @@ module SkillBench
         xai: {
           api_key: nil,
           model: 'grok-4'
+        }.freeze,
+        bedrock: {
+          api_key: nil,
+          model: 'amazon.nova-lite-v1:0',
+          location: 'us-east-1'
         }.freeze
       }.freeze
 

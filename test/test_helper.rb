@@ -21,9 +21,10 @@ require_relative '../lib/skill_bench'
 #
 # Strip both SKILL_BENCH_<PROVIDER>_<SETTING> and legacy <PROVIDER>_<SETTING>
 # for every EnvOverrides-capable setting on every registered provider.
-%w[OPENAI ANTHROPIC GEMINI OLLAMA AZURE GROQ DEEPSEEK MISTRAL OPENCODE OPENROUTER XAI]
-  .product(%w[API_KEY MODEL BASE_URL ENDPOINT LOCATION PROJECT_ID API_VERSION])
+%w[OPENAI ANTHROPIC GEMINI OLLAMA AZURE GROQ DEEPSEEK MISTRAL OPENCODE OPENROUTER XAI BEDROCK]
+  .product(%w[API_KEY MODEL BASE_URL ENDPOINT LOCATION PROJECT_ID API_VERSION REGION])
   .each do |provider, setting|
     ENV.delete("#{provider}_#{setting}")
     ENV.delete("SKILL_BENCH_#{provider}_#{setting}")
   end
+%w[AWS_REGION AWS_DEFAULT_REGION AWS_BEARER_TOKEN_BEDROCK].each { |key| ENV.delete(key) }
