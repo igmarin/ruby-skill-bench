@@ -1,5 +1,5 @@
 {
-  "context": "Evaluate ruby task",
+  "context": "Evaluate whether skill context helps add complete YARD (@param, @return, @raise) to PriceCalculator public methods without changing behavior",
   "dimensions": [
     { "name": "correctness", "max_score": 30 },
     { "name": "skill_adherence", "max_score": 25 },

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Fixture-backed `evals/skills/create-service-object/basic`: fat `OrdersController`, passing starting tests, and a condensed `skills/create-service-object/SKILL.md`.
+- Fixture-backed `evals/skills/write-yard-docs/basic`: undocumented `PriceCalculator`, passing starting tests, and a condensed `skills/write-yard-docs/SKILL.md`.
 
 ### Documentation
 - Align user docs with shipped 1.3.1: OpenRouter and mock in the provider list, Azure env var `SKILL_BENCH_AZURE_OPENAI_API_KEY`, Mistral key via `skill-bench.json` (no env mapping).
