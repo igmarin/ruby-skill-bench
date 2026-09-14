@@ -5,7 +5,7 @@ All notable changes to `ruby-skill-bench` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.4.0] - 2026-09-13
 
 ### Changed
 - `Evaluation::Runner` no longer forwards `skill_context` to either judge. Callers still pass the argument; both prompts get `skill_context: nil`. See `docs/blind-comparisons.md`.
