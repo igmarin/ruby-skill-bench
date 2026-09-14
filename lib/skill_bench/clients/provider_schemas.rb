@@ -51,6 +51,10 @@ module SkillBench
         openrouter: {
           api_key: nil,
           model: 'anthropic/claude-3.5-sonnet'
+        }.freeze,
+        xai: {
+          api_key: nil,
+          model: 'grok-4'
         }.freeze
       }.freeze
 

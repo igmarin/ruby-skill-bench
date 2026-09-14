@@ -49,7 +49,11 @@ module SkillBench
         'SKILL_BENCH_OPENCODE_MODEL' => %i[opencode model],
         'OPENCODE_MODEL' => %i[opencode model],
         'SKILL_BENCH_OPENROUTER_API_KEY' => %i[openrouter api_key],
-        'SKILL_BENCH_OPENROUTER_MODEL' => %i[openrouter model]
+        'SKILL_BENCH_OPENROUTER_MODEL' => %i[openrouter model],
+        'SKILL_BENCH_XAI_API_KEY' => %i[xai api_key],
+        'XAI_API_KEY' => %i[xai api_key],
+        'SKILL_BENCH_XAI_MODEL' => %i[xai model],
+        'XAI_MODEL' => %i[xai model]
       }.freeze
 
       # Returns provider overrides from the given environment.

@@ -28,6 +28,7 @@ graph TD
     Mistral[Mistral]
     OpenCode[OpenCode]
     OpenRouter[OpenRouter]
+    Xai[Xai]
     Mock[Mock]
 
     %% Connections
@@ -45,6 +46,7 @@ graph TD
         Base -.-> Mistral
         Base -.-> OpenCode
         Base -.-> OpenRouter
+        Base -.-> Xai
         Base -.-> Mock
     end
 
@@ -77,6 +79,7 @@ graph TD
 | **Groq** | `:groq` | `GROQ_*` | High-speed inference |
 | **DeepSeek** | `:deepseek` | `DEEPSEEK_*` | Cost-effective alternative |
 | **OpenCode** | `:opencode` | `OPENCODE_*` | **Custom endpoint required** (self-hosted proxy / LiteLLM / vLLM) |
+| **xAI** | `:xai` | `SKILL_BENCH_XAI_*` / `XAI_*` | Grok via `https://api.x.ai` |
 | **Null Client** | `:null` | N/A | Mock / Fallback testing |
 
 ---
