@@ -42,7 +42,7 @@ skill-bench init --openai
 
 This creates `skill-bench.json` with the OpenAI provider config. Use `--force` to overwrite.
 
-**Available providers:** `--openai`, `--anthropic`, `--gemini`, `--ollama`, `--azure`, `--groq`, `--deepseek`, `--opencode`
+**Available providers:** `--openai`, `--anthropic`, `--gemini`, `--ollama`, `--azure`, `--groq`, `--deepseek`, `--mistral`, `--opencode`, `--openrouter`, plus `--mock` for an offline config with no API key.
 
 > **What is `skill-bench.json`?** This is your config file. It stores your API key, chosen LLM model, timeout, and allowed shell commands. Think of it as `.env` but structured as JSON. You edit it; SkillBench reads it.
 

@@ -8,7 +8,7 @@ module SkillBench
       #
       # @return [Integer] Exit code (always 0)
       def self.call
-        providers = SkillBench::Clients::ProviderSchemas.names.map { |name| "--#{name}" }.join(', ')
+        providers = (SkillBench::Clients::ProviderSchemas.names.map { |name| "--#{name}" } + ['--mock']).join(', ')
 
         puts <<~USAGE
           Usage: skill-bench <subcommand> [options]
@@ -28,6 +28,7 @@ module SkillBench
               --all      Run every eval under evals/ (batch mode)
               --evals-dir DIR  Run every eval under DIR (batch mode)
               --summary  Emit a JSON summary gate for a batch run (batch mode)
+              --cache    Enable content-addressed response caching
 
             compare <skill-name> --variant-a SPEC --variant-b SPEC --eval PATH
               Compare the same skill across two pack variants

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+- Align user docs with shipped 1.3.1: OpenRouter and mock in the provider list, Azure env var `SKILL_BENCH_AZURE_OPENAI_API_KEY`, Mistral key via `skill-bench.json` (no env mapping).
+- Document `--cache` and `--mock` in `skill-bench --help`.
+
 ## [1.3.1] - 2026-08-11
 
 ### Fixed
