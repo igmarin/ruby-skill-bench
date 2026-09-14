@@ -31,6 +31,7 @@ module SkillBench
       def initialize(task:, criteria:, skill_context:, baseline_output:, context_output:, judge_params: {})
         @task = task
         @criteria = criteria
+        # Callers still pass skill_context; it is not forwarded to judges.
         @skill_context = skill_context
         @baseline_output = baseline_output
         @context_output = context_output
@@ -66,17 +67,17 @@ module SkillBench
       # @return [Array(Hash, Hash)] Baseline and context judge results, in order.
       def run_judges_concurrently
         runs = [
-          -> { judge_run(baseline_output, nil) },
-          -> { judge_run(context_output, skill_context) }
+          -> { judge_run(baseline_output) },
+          -> { judge_run(context_output) }
         ]
         Parallel.map(runs, in_threads: runs.size, &:call)
       end
 
-      def judge_run(output, context)
+      def judge_run(output)
         prompt_result = Judge::Prompt.call(
           task: task,
           criteria: criteria,
-          skill_context: context,
+          skill_context: nil,
           agent_output: output
         )
         return prompt_result unless prompt_result[:success]
