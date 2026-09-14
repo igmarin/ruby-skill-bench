@@ -25,7 +25,7 @@ module SkillBench
     def test_starting_controller_tests_pass
       stdout, stderr, status = Open3.capture3('ruby', 'orders_controller_test.rb', chdir: EVAL_DIR)
 
-      assert status.success?, "fixture tests failed:\n#{stdout}\n#{stderr}"
+      assert_predicate status, :success?, "fixture tests failed:\n#{stdout}\n#{stderr}"
       assert_includes stdout, '0 failures'
     end
   end
