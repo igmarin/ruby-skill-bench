@@ -81,16 +81,16 @@ module SkillBench
     def test_falls_back_to_skill_sources_when_local_not_found
       Dir.mktmpdir do |tmpdir|
         source_path = File.join(tmpdir, 'code-quality')
-        skill_dir = File.join(source_path, 'write-yard-docs')
+        skill_dir = File.join(source_path, 'unshipped-skill')
         FileUtils.mkdir_p(skill_dir)
-        File.write(File.join(skill_dir, 'SKILL.md'), '# Write YARD Docs')
+        File.write(File.join(skill_dir, 'SKILL.md'), '# Unshipped Skill')
 
         resolved = Execution::SourcePathResolver.call(
-          eval_folder_path: 'tmp/evals/skills/write-yard-docs/basic',
+          eval_folder_path: 'tmp/evals/skills/unshipped-skill/basic',
           skill_sources: { 'core' => tmpdir }
         )
 
-        assert_equal File.join(source_path, 'write-yard-docs'), resolved
+        assert_equal File.join(source_path, 'unshipped-skill'), resolved
       end
     end
 
@@ -98,21 +98,21 @@ module SkillBench
       Dir.mktmpdir do |tmpdir_a|
         Dir.mktmpdir do |tmpdir_b|
           source_a = File.join(tmpdir_a, 'code-quality')
-          skill_a = File.join(source_a, 'write-yard-docs')
+          skill_a = File.join(source_a, 'unshipped-skill')
           FileUtils.mkdir_p(skill_a)
           File.write(File.join(skill_a, 'SKILL.md'), '# A')
 
           source_b = File.join(tmpdir_b, 'patterns')
-          skill_b = File.join(source_b, 'write-yard-docs')
+          skill_b = File.join(source_b, 'unshipped-skill')
           FileUtils.mkdir_p(skill_b)
           File.write(File.join(skill_b, 'SKILL.md'), '# B')
 
           resolved = Execution::SourcePathResolver.call(
-            eval_folder_path: 'custom/evals/skills/write-yard-docs/basic',
+            eval_folder_path: 'custom/evals/skills/unshipped-skill/basic',
             skill_sources: { 'first' => tmpdir_a, 'second' => tmpdir_b }
           )
 
-          assert_equal File.join(source_a, 'write-yard-docs'), resolved
+          assert_equal File.join(source_a, 'unshipped-skill'), resolved
         end
       end
     end
