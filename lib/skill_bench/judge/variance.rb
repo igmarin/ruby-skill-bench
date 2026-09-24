@@ -20,15 +20,16 @@ module SkillBench
       # @return [Hash]
       def call
         nums = Array(@totals).map { |total| Float(total) }
-        return empty_result(count: nums.size) if nums.size < 2
+        count = nums.size
+        return empty_result(count: count) if count < 2
 
-        mean = nums.sum / nums.size
-        sample_variance = nums.sum { |value| (value - mean)**2 } / (nums.size - 1)
+        mean = nums.sum / count
+        sample_variance = nums.sum { |value| (value - mean)**2 } / (count - 1)
 
         {
           success: true,
           response: {
-            n: nums.size,
+            n: count,
             mean: mean,
             stddev: Math.sqrt(sample_variance),
             spread: nums.max - nums.min

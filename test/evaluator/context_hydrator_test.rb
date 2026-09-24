@@ -174,14 +174,14 @@ module SkillBench
     # to the real implementations so behavior is preserved.
     def io_spy(tracked, read_counts, size_counts)
       Module.new do
-        define_method(:read) do |*args, &block|
+        define_method(:read) do |*args, **kwargs, &block|
           read_counts[args.first] += 1 if tracked.include?(args.first)
-          super(*args, &block)
+          super(*args, **kwargs, &block)
         end
 
-        define_method(:size) do |*args, &block|
+        define_method(:size) do |*args, **kwargs, &block|
           size_counts[args.first] += 1 if tracked.include?(args.first)
-          super(*args, &block)
+          super(*args, **kwargs, &block)
         end
       end
     end

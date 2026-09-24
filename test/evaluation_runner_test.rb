@@ -99,9 +99,9 @@ module SkillBench
       criteria = build_criteria
       stub_prompt_paths
       Judge::Judge.stubs(:call).with { |args| args[:prompt] == 'Baseline prompt' }
-                               .returns({ success: false, response: { error: { message: 'Baseline judge failed' } } })
+                  .returns({ success: false, response: { error: { message: 'Baseline judge failed' } } })
       Judge::Judge.stubs(:call).with { |args| args[:prompt] == 'Context prompt' }
-                               .returns({ success: false, response: { error: { message: 'Context judge failed' } } })
+                  .returns({ success: false, response: { error: { message: 'Context judge failed' } } })
 
       result = run_with_distinct_outputs(criteria)
 
@@ -117,9 +117,9 @@ module SkillBench
       criteria = build_criteria
       stub_prompt_paths
       Judge::Judge.stubs(:call).with { |args| args[:prompt] == 'Baseline prompt' }
-                               .returns({ success: true, response: { judge_response: build_judge_response(10, 8, 6, 4, 2) } })
+                  .returns({ success: true, response: { judge_response: build_judge_response(10, 8, 6, 4, 2) } })
       Judge::Judge.stubs(:call).with { |args| args[:prompt] == 'Context prompt' }
-                               .returns({ success: false, response: { error: { message: 'Context judge failed' } } })
+                  .returns({ success: false, response: { error: { message: 'Context judge failed' } } })
 
       result = run_with_distinct_outputs(criteria)
 
@@ -178,9 +178,9 @@ module SkillBench
 
     def stub_prompt_paths
       Judge::Prompt.stubs(:call).with { |args| args[:agent_output] == 'Baseline diff' }
-                                .returns({ success: true, response: { prompt: 'Baseline prompt' } })
+                   .returns({ success: true, response: { prompt: 'Baseline prompt' } })
       Judge::Prompt.stubs(:call).with { |args| args[:agent_output] == 'Context diff' }
-                                .returns({ success: true, response: { prompt: 'Context prompt' } })
+                   .returns({ success: true, response: { prompt: 'Context prompt' } })
     end
 
     def run_with_distinct_outputs(criteria)

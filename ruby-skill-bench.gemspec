@@ -15,7 +15,7 @@ Gem::Specification.new do |spec|
     and LLM-powered judges.
   DESC
   spec.license = 'MIT'
-  spec.required_ruby_version = '>= 3.1'
+  spec.required_ruby_version = '>= 3.3'
 
   # Include non-Ruby Docker build context so gem installs can activate container isolation.
   # Dir globs skip dotfiles — list .dockerignore explicitly.
@@ -37,8 +37,8 @@ Gem::Specification.new do |spec|
   # Runtime dependencies
   spec.add_dependency 'cgi',      '~> 0.5.2'
   spec.add_dependency 'faraday',  '~> 2.14'
-  spec.add_dependency 'json',     '~> 2.21', '>= 2.21.2'
-  spec.add_dependency 'parallel', '~> 1.26'
+  spec.add_dependency 'json',     '~> 3.0'
+  spec.add_dependency 'parallel', '~> 2.0'
   spec.metadata['rubygems_mfa_required'] = 'true'
   spec.metadata['source_code_uri'] = 'https://github.com/igmarin/ruby-skill-bench'
 end

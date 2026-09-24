@@ -24,6 +24,8 @@ module SkillBench
       assert_includes step_names, 'rubocop'
       assert_includes step_names, 'reek'
       assert_includes step_names, 'minitest'
+      assert_equal %w[3.3 3.4 4.0], workflow.dig('jobs', 'test', 'strategy', 'matrix', 'ruby-version')
+      assert workflow.dig('jobs', 'container-integration'), 'Docker integration job should remain in CI'
     end
   end
 end

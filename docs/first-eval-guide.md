@@ -6,13 +6,13 @@ Get started with Ruby Skill Bench in 5 minutes. No prior AI eval experience requ
 
 ## Prerequisites
 
-- Ruby 3.1+
+- Ruby 3.3+
 - Bundler
 
 Not sure? Run:
 
 ```bash
-ruby --version   # Should be 3.1 or higher
+ruby --version   # Should be 3.3 or higher
 bundle --version # Should print a version number
 ```
 
@@ -42,6 +42,14 @@ skill-bench init --openai
 
 This creates `skill-bench.json` with the OpenAI provider config. Use `--force` to overwrite.
 
+Before running an eval, set your OpenAI key in the shell. Do not commit API keys to your repository:
+
+```bash
+export SKILL_BENCH_OPENAI_API_KEY=your-api-key
+```
+
+To try the commands without an API key or network access, initialize the offline mock provider instead: `skill-bench init --mock`. The mock provider is useful for learning the workflow; it does not measure a real model.
+
 **Available providers:** `--openai`, `--anthropic`, `--gemini`, `--ollama`, `--azure`, `--groq`, `--deepseek`, `--mistral`, `--opencode`, `--openrouter`, `--xai`, `--bedrock`, plus `--mock` for an offline config with no API key.
 
 > **What is `skill-bench.json`?** This is your config file. It stores your API key, chosen LLM model, timeout, and allowed shell commands. Think of it as `.env` but structured as JSON. You edit it; SkillBench reads it.
@@ -66,7 +74,7 @@ This creates `skills/my-service/SKILL.md` with a Rails service object template.
 
 **Example `SKILL.md`:**
 
-```markdown
+````markdown
 # Service Object Skill
 
 ## Pattern
@@ -82,7 +90,7 @@ All service objects use the `.call` class method and return a standardized hash:
 1. Every `.rb` file begins with `# frozen_string_literal: true`
 2. Every public method has YARD docs (`@param`, `@return`, `@raise`)
 3. `rescue StandardError` blocks must log backtrace
-```ruby
+````
 
 ---
 

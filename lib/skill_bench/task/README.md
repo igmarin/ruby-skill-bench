@@ -13,6 +13,9 @@ Manages individual evaluation tasks.
 ## Find eval task directories
 
 ```ruby
+require 'pathname'
+require 'skill_bench'
+
 root = Pathname.new('evals')
 task_dirs = SkillBench::Task::DirectoryFinder.call(root)
 ```

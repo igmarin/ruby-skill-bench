@@ -10,7 +10,7 @@ execution when a Docker daemon is available.
 |------|--------|
 | Image name | `evaluator-sandbox` (`Constants::Sandbox::DOCKER_IMAGE_NAME`) |
 | Tags | `evaluator-sandbox:<SkillBench::VERSION>` and `evaluator-sandbox:latest` |
-| Base | `ruby:3.4-bookworm` (aligns with CI Ruby 3.4; 3.3 hosts still run evals via host Ruby for the orchestrator) |
+| Base | `ruby:3.4-bookworm` (commands inside the container use Ruby 3.4; the gem also supports Ruby 3.3 and 4.0 on the host) |
 | Preinstalled | Ruby (from base), `git`, minimal Debian tools from base image |
 | Working directory | `/sandbox` (host sandbox dir is bind-mounted here read-write) |
 | Default process | `sleep infinity` — container stays up for `docker exec` |
