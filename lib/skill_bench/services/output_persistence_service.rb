@@ -70,7 +70,7 @@ module SkillBench
       #
       # @raise [SystemCallError] when file write operation fails
       def write_json_file
-        File.write(@output_path, JSON.generate(@result, pretty: true))
+        File.write(@output_path, JSON.pretty_generate(@result))
       end
     end
   end

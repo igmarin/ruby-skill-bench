@@ -16,6 +16,17 @@ module SkillBench
       assert_equal 'true', @spec.metadata['rubygems_mfa_required']
     end
 
+    def test_package_requires_ruby_3_3_or_newer
+      assert_equal Gem::Requirement.new('>= 3.3'), @spec.required_ruby_version
+    end
+
+    def test_runtime_dependencies_use_the_updated_json_and_parallel_majors
+      dependencies = @spec.dependencies.to_h { |dependency| [dependency.name, dependency.requirement] }
+
+      assert_equal Gem::Requirement.new('~> 3.0'), dependencies.fetch('json')
+      assert_equal Gem::Requirement.new('~> 2.0'), dependencies.fetch('parallel')
+    end
+
     def test_package_includes_readme_and_license
       assert_includes @spec.files, 'README.md'
       assert_includes @spec.files, 'LICENSE'

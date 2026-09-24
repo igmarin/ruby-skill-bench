@@ -4,7 +4,7 @@ require 'pathname'
 require 'parallel'
 require_relative 'runner_service'
 require_relative '../output_formatter'
-require_relative '../runner'
+require_relative '../task/directory_finder'
 
 module SkillBench
   module Services
@@ -14,9 +14,7 @@ module SkillBench
     # {RunnerService} over each, returning an aggregate envelope with
     # per-eval results and a pass/fail summary.
     #
-    # Discovery reuses {SkillBench::Runner.discover_task_dirs} but never
-    # routes through the deprecated {SkillBench::Task::Evaluator}: each eval
-    # is executed by the supported {RunnerService}.
+    # Each discovered eval is executed by the supported {RunnerService}.
     class BatchRunnerService
       # Default directory scanned for evals when none is supplied.
       DEFAULT_EVALS_DIR = 'evals'
@@ -80,7 +78,7 @@ module SkillBench
       #
       # @return [Array<Pathname>] Directories that contain a task.md
       def discover_eval_dirs
-        SkillBench::Runner.discover_task_dirs(Pathname.new(evals_dir))
+        Task::DirectoryFinder.call(Pathname.new(evals_dir))
       end
 
       # Runs every eval directory through {RunnerService} concurrently.

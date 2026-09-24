@@ -2,6 +2,7 @@
 
 require 'pathname'
 require 'parallel'
+require_relative 'task/directory_finder'
 require_relative 'task/evaluator'
 require_relative 'error_logger'
 
@@ -79,11 +80,7 @@ module SkillBench
     # @param root_path [Pathname] The root directory to search.
     # @return [Array<Pathname>] A list of task directory paths.
     def self.discover_task_dirs(root_path)
-      if File.exist?(root_path.join('task.md'))
-        [root_path]
-      else
-        Dir.glob(root_path.join('**/task.md')).map { |f| Pathname.new(f).parent }.uniq.sort
-      end
+      Task::DirectoryFinder.call(root_path)
     end
   end
 end

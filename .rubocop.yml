@@ -5,7 +5,7 @@ plugins:
 
 AllCops:
   SuggestExtensions: false
-  TargetRubyVersion: 3.1
+  TargetRubyVersion: 3.3
   NewCops: enable
   Exclude:
     - 'evals/**/*'

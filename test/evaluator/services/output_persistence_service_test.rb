@@ -28,10 +28,12 @@ module SkillBench
         assert result[:success]
         assert_path_exists output_path
 
-        content = JSON.parse(File.read(output_path))
+        output = File.read(output_path)
+        content = JSON.parse(output)
 
         assert content['success']
         assert_equal 1, content['tasks'].length
+        assert_match(/\n  "success"/, output)
       end
 
       def test_call_with_nil_output_path

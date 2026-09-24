@@ -6,7 +6,7 @@
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/igmarin/ruby-skill-bench)
 
-*A high-fidelity evaluation engine for benchmarking AI agent skills across any stack (Rails-first, but extensible).*
+Ruby Skill Bench compares how an AI coding agent completes the same task with and without a skill. It runs both attempts in temporary Git sandboxes, then scores them against criteria you define. You can use it with Ruby projects and other stacks.
 
 ## Part of the AI Skill Ecosystem
 
@@ -27,12 +27,11 @@ See the [Ecosystem Overview](https://github.com/igmarin/agent-mcp-runtime/blob/m
 
 ## Features
 
-- **Side-by-Side Evaluation**: Quantify the "ROI of Context" by comparing baseline vs. skill-enhanced agent runs.
-- **Isolated Git Sandboxes**: Every run operates in a temporary repo. Clean diffs, zero side-effects, 100% reproducibility.
-- **Blind Judging with Dimensions**: LLM judge scores baseline and context independently across 5 canonical dimensions (Correctness, Skill Adherence, Code Quality, Test Coverage, Documentation). Eval authors configure weights and thresholds via `criteria.json`.
-- **Sophisticated ReAct Loop**: Employs a robust `Thought → Tool → Observation` loop to handle complex, multi-step engineering tasks.
-- **Multi-Provider Ecosystem**: Native support for **OpenAI**, **Anthropic**, **Google Gemini**, **Azure OpenAI**, **Ollama**, **Groq**, **DeepSeek**, **Mistral**, **OpenCode**, **OpenRouter**, **xAI**, and **Amazon Bedrock**.
-- **Standardized Intelligence**: Consistent reporting format regardless of the underlying LLM provider.
+- **Compare two runs**: See what changes when an agent receives a skill.
+- **Isolate evaluation work**: Each attempt runs in its own temporary Git sandbox.
+- **Score against your criteria**: Configure dimensions, weights, and pass thresholds in `criteria.json`.
+- **Use your provider**: OpenAI, Anthropic, Google Gemini, Azure OpenAI, Ollama, Groq, DeepSeek, Mistral, OpenCode, OpenRouter, xAI, and Amazon Bedrock are supported.
+- **Get consistent reports**: The output format stays the same across providers.
 
 ---
 
@@ -118,6 +117,8 @@ Configuration is loaded in this order (later sources override earlier ones):
 
 ## Getting Started
 
+Ruby Skill Bench requires Ruby 3.3 or newer. For a guided first run, see the [5-minute first eval guide](docs/first-eval-guide.md).
+
 ### Installation
 
 ```bash
@@ -184,7 +185,7 @@ skills/
 
 **Example `SKILL.md`:**
 
-```markdown
+````markdown
 # Service Object Skill
 
 ## Pattern
@@ -200,7 +201,7 @@ All service objects use the `.call` class method and return a standardized hash:
 1. Every `.rb` file begins with `# frozen_string_literal: true`
 2. Every public method has YARD docs (`@param`, `@return`, `@raise`)
 3. `rescue StandardError` blocks must log backtrace
-```
+````
 
 ---
 
@@ -1153,7 +1154,7 @@ jobs:
 
 The action installs the gem and runs `skill-bench run --all --evals-dir <evals-dir> --format <format>` (adding `--skill` when set and appending `args` verbatim). The run step's exit code is the gate. For a full copy-paste workflow template, see [`examples/ci/`](examples/ci/).
 
-> The gem's own repository CI (`.github/workflows/ci.yml`) runs the test suite — rubocop, reek, and minitest against Ruby 3.3 and 3.4, on push and pull requests — and is separate from the reusable action above.
+> The gem's own repository CI (`.github/workflows/ci.yml`) runs RuboCop, Reek, and Minitest on Ruby 3.3, 3.4, and 4.0. This is separate from the reusable action above.
 
 To preview the machine-readable output locally:
 

@@ -191,6 +191,8 @@ detectors:
       - "SkillBench::Clients::Providers::OpenAI"
       - "SkillBench::Clients::Providers::OpenCode"
       - "SkillBench::Clients::Providers::OpenRouter"
+      - "SkillBench::Clients::Providers::Xai"
+      - "SkillBench::Clients::Providers::Bedrock"
       - "SkillBench::Config::Store"
       - "SkillBench::Cli::Eval::NewEvalOptions"            # @options from BaseEvalOptions#initialize
       - "SkillBench::Cli::Eval::GenerateEvalOptions"       # @options from BaseEvalOptions#initialize

@@ -21,10 +21,10 @@ module SkillBench
       # @param system_prompt [String] The system instruction for the LLM.
       # @param messages [Array<Hash>] The list of conversation messages.
       # @param tools [Array<Hash>] (optional) Array of tool definitions.
-      # @param options [Hash] (optional) Additional provider-specific options.
+      # Additional keyword options are passed to the selected provider client.
       # @return [Hash] with :success [Boolean] and :response [Hash] keys.
-      def self.call(system_prompt:, messages:, tools: [], **options)
-        new(system_prompt: system_prompt, messages: messages, tools: tools, **options).call
+      def self.call(system_prompt:, messages:, tools: [], **)
+        new(system_prompt: system_prompt, messages: messages, tools: tools, **).call
       end
 
       # Initializes the client with validated parameters.
