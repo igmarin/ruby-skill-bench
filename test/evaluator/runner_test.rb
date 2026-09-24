@@ -15,6 +15,10 @@ module SkillBench
       FileUtils.rm_rf(@base_path)
     end
 
+    def test_top_level_entry_point_keeps_deprecated_runner_available
+      assert SkillBench.const_defined?(:Runner)
+    end
+
     def test_call_runs_baseline_and_context_and_returns_judge_scores
       create_eval_fixture('evals/skills/ruby-service-objects/basic-service-object')
 
@@ -59,6 +63,31 @@ module SkillBench
 
       refute result[:success]
       assert_equal 'multiple (batch run)', result[:response][:source_path]
+    end
+
+    def test_discover_task_dirs_returns_root_task_without_nested_tasks
+      root = @base_path.join('evals')
+      create_eval_fixture('evals')
+      create_eval_fixture('evals/nested')
+
+      assert_equal [root], Runner.discover_task_dirs(root)
+    end
+
+    def test_discover_task_dirs_returns_nested_tasks_in_sorted_order
+      create_eval_fixture('evals/z-last')
+      create_eval_fixture('evals/a-first')
+
+      task_dirs = Runner.discover_task_dirs(@base_path.join('evals'))
+      task_names = task_dirs.map { |path| path.basename.to_s }
+
+      assert_equal %w[a-first z-last], task_names
+    end
+
+    def test_discover_task_dirs_returns_empty_array_when_no_tasks_exist
+      root = @base_path.join('evals')
+      root.mkpath
+
+      assert_empty Runner.discover_task_dirs(root)
     end
 
     private

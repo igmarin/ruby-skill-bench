@@ -34,6 +34,7 @@ require_relative 'skill_bench/agent/react_agent'
 require_relative 'skill_bench/task'
 require_relative 'skill_bench/task/evaluator'
 require_relative 'skill_bench/task/file_reader'
+require_relative 'skill_bench/runner'
 
 # Evaluation orchestration
 require_relative 'skill_bench/evaluation'
